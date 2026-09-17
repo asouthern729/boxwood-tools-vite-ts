@@ -1,0 +1,170 @@
+@import url('https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap');
+@import 'tailwindcss';
+
+@plugin 'daisyui' {
+  themes: false;
+}
+
+@plugin 'daisyui/theme' {
+  name: 'boxwood';
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: oklch(100% 0 0); /* #ffffff = --bg/--card light */
+  --color-base-200: oklch(97.3% 0 0); /* #f6f6f6 = --social-bg light */
+  --color-base-300: oklch(91.3% 0 0); /* #e2e2e2 = --border light */
+  --color-base-content: oklch(14.5% 0 0); /* #0a0a0a = --text light */
+
+  --color-primary: oklch(55.9% 0.105 229); /* #157fa5 = --accent-cyan-solid */
+  --color-primary-content: oklch(100% 0 0);
+  --color-secondary: oklch(54.9% 0.155 357.4); /* #b44272 = --accent-pink-solid */
+  --color-secondary-content: oklch(100% 0 0);
+  --color-accent: oklch(55% 0.149 38.9); /* #b74b25 = --accent-clay-solid */
+  --color-accent-content: oklch(100% 0 0);
+
+  --color-neutral: oklch(20% 0 0); /* = --footer-neutral light */
+  --color-neutral-content: oklch(80% 0.0081 61.42); /* = --footer-neutral-content light */
+
+  --color-info: oklch(55.9% 0.105 229); /* cyan, same as primary */
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(55.9% 0.105 229); /* cyan — matches source's cyan "success" badge */
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(82% 0.16 38.8); /* clay hue, brightened — not from source */
+  --color-warning-content: oklch(14.5% 0 0);
+  --color-error: oklch(53.5% 0.187 26.3); /* #c22c2c = --fail light */
+  --color-error-content: oklch(100% 0 0);
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.375rem; /* 6px, matches reference inputs/buttons */
+  --radius-box: 0.625rem; /* 10px, matches reference .item cards */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0; /* reference design is flat, no 3D button effect */
+  --noise: 0;
+}
+
+@plugin 'daisyui/theme' {
+  name: 'boxwood-dark';
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: oklch(0% 0 0); /* #000000 = --bg dark */
+  --color-base-200: oklch(18.8% 0.006 285.8); /* #131316 = --card dark */
+  --color-base-300: oklch(26.9% 0 0); /* #262626 = --border dark */
+  --color-base-content: oklch(96.1% 0 0); /* #f2f2f2 = --text dark */
+
+  /* On a dark ground the raw brand colors already clear 6:1+, so use them
+     as-is instead of the darkened light-mode "solid" variants. */
+  --color-primary: oklch(73.7% 0.125 229); /* #40b8e8 = --accent-cyan */
+  --color-primary-content: oklch(14.5% 0 0);
+  --color-secondary: oklch(75.9% 0.13 357.5); /* #f28cb1 = --accent-pink */
+  --color-secondary-content: oklch(14.5% 0 0);
+  --color-accent: oklch(67.2% 0.131 38.8); /* #d97757 = --accent-clay */
+  --color-accent-content: oklch(14.5% 0 0);
+
+  --color-neutral: oklch(35% 0 0); /* = --footer-neutral dark */
+  --color-neutral-content: oklch(100% 0 0); /* = --footer-neutral-content dark */
+
+  --color-info: oklch(73.7% 0.125 229);
+  --color-info-content: oklch(14.5% 0 0);
+  --color-success: oklch(73.7% 0.125 229);
+  --color-success-content: oklch(14.5% 0 0);
+  --color-warning: oklch(82% 0.16 38.8);
+  --color-warning-content: oklch(14.5% 0 0);
+  --color-error: oklch(73.5% 0.163 21.9); /* #ff7a7a = --fail dark */
+  --color-error-content: oklch(14.5% 0 0);
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.375rem;
+  --radius-box: 0.625rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@theme {
+  --font-sans: 'Play', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(1.9rem, 4.5vw, 2.5rem);
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+a {
+  color: var(--color-primary);
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background: color-mix(in oklch, var(--color-secondary) 20%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
