@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Play:wght@400;700&family=Teko:wght@400;500;600&display=swap');
 @import 'tailwindcss';
 
 @plugin 'daisyui' {
@@ -90,81 +90,84 @@
 @theme {
   --font-sans: 'Play', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-display: 'Teko', var(--font-sans);
 }
 
 /* ==========================================================================
    Base
    ========================================================================== */
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-base-100);
-  color: var(--color-base-content);
-  font-family: var(--font-sans);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-
-#root {
-  display: flex;
-  flex-direction: column;
-  flex: 1 0 auto;
-}
-
-h1,
-h2,
-h3 {
-  letter-spacing: -0.02em;
-  text-wrap: balance;
-}
-
-h1 {
-  font-size: clamp(1.9rem, 4.5vw, 2.5rem);
-  font-weight: 700;
-  margin: 0 0 0.75rem;
-}
-
-a {
-  color: var(--color-primary);
-}
-
-code,
-kbd,
-pre,
-samp {
-  font-family: var(--font-mono);
-}
-
-::selection {
-  background: color-mix(in oklch, var(--color-secondary) 20%, transparent);
-}
-
-:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
+@layer base {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: clamp(1.9rem, 4.5vw, 2.5rem);
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+  }
+
+  a {
+    color: var(--color-primary);
+  }
+
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: var(--font-mono);
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--color-secondary) 20%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
