@@ -6,24 +6,41 @@ import { teamNavDescriptions } from "./utils"
 // Types
 import type * as AppTypes from '@context/App/types'
 
+// Components
+import FadeIn from "@utils/animations/FadeIn"
+import SlideInLeft from "@utils/animations/SlideInLeft"
+import SlideInRight from "@utils/animations/SlideInRight"
+
 export const TeamNavBtns = () => {
   const { pathname } = useLocation()
 
-  const descriptions = pathname.startsWith("/commercial") ?
+  const team = pathname.startsWith("/commercial") ?
+    "commercial" :
+    "personal"
+
+  const descriptions = team === "commercial" ?
     teamNavDescriptions[0] :
     teamNavDescriptions[1]
 
+  const Animation = team === "commercial" ?
+    SlideInLeft :
+    SlideInRight
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {[...descriptions].map(([title, { to, description, output }]) => (
-        <TeamNavBtn
-          key={to}
-          to={to}
-          title={title}
-          description={description}
-          output={output} />
-      ))}
-    </div>
+    <FadeIn>
+      <Animation damping={30}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[...descriptions].map(([title, { to, description, output }]) => (
+            <TeamNavBtn
+              key={to}
+              to={to}
+              title={title}
+              description={description}
+              output={output} />
+          ))}
+        </div>
+      </Animation>
+    </FadeIn>
   )
 }
 

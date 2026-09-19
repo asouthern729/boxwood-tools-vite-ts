@@ -1,8 +1,22 @@
 import { useDownloadReportFile } from "./hooks"
-import { formatFileSize, formatReportDate } from "./utils"
+import { formatFileSize, formatReportDate, formatSyncedUntil } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
+
+export const LastSyncBanner = ({ lastSync }: { lastSync: AppTypes.DownloadReportLastSync | null }) => {
+  if(!lastSync) return null
+
+  const { syncedUntil, tablesTouched, rowsEntered } = lastSync
+
+  return (
+    <p className="px-4 py-2 text-sm text-base-content/60">
+      Last sync ({ formatSyncedUntil(syncedUntil) }): { rowsEntered === 0 ?
+        "no new rows" :
+        `${ rowsEntered } row${ rowsEntered === 1 ? "" : "s" } from ${ tablesTouched.join(", ") }` }
+    </p>
+  )
+}
 
 export const ReportList = ({ reports }: { reports: AppTypes.DownloadReportManifestEntry[] }) => {
   if(reports.length === 0) {
@@ -10,11 +24,13 @@ export const ReportList = ({ reports }: { reports: AppTypes.DownloadReportManife
   }
 
   return (
-    <ul className="divide-y divide-base-300">
-      {reports.map((report) => (
-        <ReportRow key={report.filename} report={report} />
-      ))}
-    </ul>
+      <ul className="divide-y divide-base-300">
+        {reports.map((report) => (
+          <ReportRow 
+            key={report.filename} 
+            report={report} />
+        ))}
+      </ul>
   )
 }
 
@@ -29,7 +45,7 @@ const ReportRow = ({ report }: { report: AppTypes.DownloadReportManifestEntry })
         type="button"
         disabled={isPending}
         onClick={() => downloadFile(report.filename)}
-        className="btn btn-sm ml-auto">
+        className="btn btn-neutral btn-sm ml-auto hover:bg-secondary">
         {isPending ? "Downloading…" : "Download"}
       </button>
     </li>

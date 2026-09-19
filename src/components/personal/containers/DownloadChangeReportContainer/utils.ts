@@ -3,6 +3,11 @@ export const formatReportDate = (dateStr: string) => {
   return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })
 }
 
+export const formatSyncedUntil = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+}
+
 export const formatFileSize = (bytes: number) => {
   if(bytes < 1024) return `${ bytes } B`
 

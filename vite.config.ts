@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
         '@components': path.resolve(import.meta.dirname, 'src/components'),
         '@context': path.resolve(import.meta.dirname, 'src/context'),
         '@pages': path.resolve(import.meta.dirname, 'src/pages'),
+        '@utils': path.resolve(import.meta.dirname, 'src/utils'),
       },
     },
   }
