@@ -1,3 +1,4 @@
+import { useLocation } from "react-router"
 import { useHandleToolName } from "./hooks"
 import { handleToolContent } from "./utils"
 
@@ -10,8 +11,11 @@ export const ToolName = () => {
 }
 
 export const ToolContent = () => {
+  const { pathname } = useLocation()
   const toolName = useHandleToolName()
-  const Component = handleToolContent(toolName)
+  const Component = handleToolContent(pathname.split('/')[1], toolName)
+
+  if(!Component) return null
 
   return (
     <Component />

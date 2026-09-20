@@ -1,3 +1,3 @@
-import { useHandleVisibilityChange } from "./hooks"
+import { useHandleVisibilityChange, useSetTheme } from "./hooks"
 
-export { useHandleVisibilityChange }
+export { useHandleVisibilityChange, useSetTheme }

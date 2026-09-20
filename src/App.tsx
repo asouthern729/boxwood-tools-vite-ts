@@ -25,8 +25,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/commercial" element={<Commercial />}>
               <Route index element={<TeamContainer />} />
-              <Route path="pre-renewal-risk-profile" element={<Tool />} />
               <Route path="renewal-premium-summary" element={<Tool />} />
+              <Route path="pre-renewal-risk-profile" element={<Tool />} />
               <Route path="renewal-summary" element={<Tool />} />
             </Route>
             <Route path="/personal" element={<Personal />}>

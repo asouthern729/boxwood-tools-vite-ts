@@ -65,3 +65,57 @@ export type RenewalPremiumSummaryChatTurn = {
   session_id: string
   tool_calls: { name: string; input: unknown }[]
 }
+
+export type RenewalPremiumSummaryRefreshChange = {
+  row: number
+  polnos: string[]
+  field: "current" | "renewal"
+  old_value: number | null
+  new_value: number
+}
+
+export type RenewalPremiumSummaryRefreshSkippedRow = {
+  row: number
+  polnos: string[]
+  reason: string
+}
+
+export type RenewalPremiumSummaryRefreshResult = {
+  filename: string
+  refreshed_at: string
+  changes: RenewalPremiumSummaryRefreshChange[]
+  skipped_rows: RenewalPremiumSummaryRefreshSkippedRow[]
+}
+
+export type PreRenewalRiskProfileManifestEntry = {
+  filename: string
+  generated_at: string
+  csr_code: string | null
+  csr_name: string | null
+  client_name: string
+  polnos: string
+  renewal_date: string
+  renewal_date_label: string
+  sizeBytes: number
+}
+
+export type PreRenewalRiskProfileCsrGroup = {
+  csr_code: string | null
+  csr_name: string | null
+  summaries: PreRenewalRiskProfileManifestEntry[]
+}
+
+export type PreRenewalRiskProfileManifest = {
+  groups: PreRenewalRiskProfileCsrGroup[]
+}
+
+export type PreRenewalRiskProfileChatMessage = {
+  role: "user" | "assistant"
+  text: string
+}
+
+export type PreRenewalRiskProfileChatTurn = {
+  reply: string
+  session_id: string
+  tool_calls: { name: string; input: unknown }[]
+}

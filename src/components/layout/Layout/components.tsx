@@ -36,7 +36,7 @@ export const Footer = () => (
       Boxwood Tools
     </div>
 
-    <div className="relative h-40 shrink-0 overflow-hidden bg-[linear-gradient(to_right,var(--color-neutral),var(--color-base-300))]">
+    <div className="relative h-40 shrink-0 overflow-hidden bg-[linear-gradient(to_left,var(--color-neutral),var(--color-base-300))] dark:bg-[linear-gradient(to_right,var(--color-neutral),var(--color-base-300))]">
       <a
         href="https://tyneside.io"
         target="_blank"
@@ -81,5 +81,5 @@ const Magpie = () => (
     alt=""
     width={164}
     height={144}
-    className="absolute right-0 bottom-0 z-1 hidden h-36 w-auto opacity-25 sm:block dark:invert" />
+    className="absolute right-0 bottom-0 z-10 hidden h-36 w-auto opacity-25 invert sm:block" />
 )

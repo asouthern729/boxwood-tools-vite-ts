@@ -5,69 +5,33 @@ import * as AppActions from '@context/App/AppActions'
 // Types
 import type * as AppTypes from "@context/App/types"
 
-const MANIFEST_QUERY_KEY = ["renewal-premium-summary-manifest"]
-const CHAT_SESSION_KEY = "boxwood_renewal_premium_summary_chat_session"
+const MANIFEST_QUERY_KEY = ["pre-renewal-risk-profile-manifest"]
+const CHAT_SESSION_KEY = "boxwood_pre_renewal_risk_profile_chat_session"
 
-export const useRenewalPremiumSummaryManifest = () => useQuery({
+export const usePreRenewalRiskProfileManifest = () => useQuery({
   queryKey: MANIFEST_QUERY_KEY,
-  queryFn: AppActions.getRenewalPremiumSummaryManifest,
+  queryFn: AppActions.getPreRenewalRiskProfileManifest,
 })
 
-export const useDownloadRenewalPremiumSummaryFile = () => useMutation({
-  mutationFn: AppActions.downloadRenewalPremiumSummaryFile,
+export const useDownloadPreRenewalRiskProfileFile = () => useMutation({
+  mutationFn: AppActions.downloadPreRenewalRiskProfileFile,
 })
 
-export const useRefreshRenewalPremiumSummaryFile = () => useMutation({
-  mutationFn: AppActions.refreshRenewalPremiumSummaryFile,
-})
-
-export const useDeleteRenewalPremiumSummaryFile = () => {
+export const usePreRenewalRiskProfileChat = () => {
   const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: AppActions.deleteRenewalPremiumSummaryFile,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: MANIFEST_QUERY_KEY }),
-  })
-}
-
-const CONFIRM_TIMEOUT_MS = 3000
-
-export const useHandleConfirmButton = (onConfirm: () => void) => {
-  const [armed, setArmed] = useState(false)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  useEffect(() => () => clearTimeout(timeoutRef.current), [])
-
-  const handleClick = () => {
-    if(armed) {
-      clearTimeout(timeoutRef.current)
-      setArmed(false)
-      onConfirm()
-      return
-    }
-
-    setArmed(true)
-    timeoutRef.current = setTimeout(() => setArmed(false), CONFIRM_TIMEOUT_MS)
-  }
-
-  return { armed, handleClick }
-}
-
-export const useRenewalPremiumSummaryChat = () => {
-  const queryClient = useQueryClient()
-  const [messages, setMessages] = useState<AppTypes.RenewalPremiumSummaryChatMessage[]>([])
+  const [messages, setMessages] = useState<AppTypes.PreRenewalRiskProfileChatMessage[]>([])
   const [sessionId, setSessionId] = useState<string | undefined>(() => sessionStorage.getItem(CHAT_SESSION_KEY) ?? undefined)
   const [scrollSignal, setScrollSignal] = useState(0)
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (message: string) => AppActions.postRenewalPremiumSummaryChat(message, sessionId),
+    mutationFn: (message: string) => AppActions.postPreRenewalRiskProfileChat(message, sessionId),
     onSuccess: async (turn) => {
       sessionStorage.setItem(CHAT_SESSION_KEY, turn.session_id)
       setSessionId(turn.session_id)
       setMessages((prev) => [...prev, { role: "assistant", text: turn.reply || "(no reply)" }])
 
-      const builtWorkbook = turn.tool_calls.some((call) => call.name.endsWith("renewal_premium_summary"))
-      if(builtWorkbook) {
+      const builtProfile = turn.tool_calls.some((call) => call.name.endsWith("risk_profile"))
+      if(builtProfile) {
         await queryClient.invalidateQueries({ queryKey: MANIFEST_QUERY_KEY })
         setScrollSignal((n) => n + 1)
       }
@@ -100,7 +64,7 @@ export const useHandleChatPanel = (onSend: (message: string) => void) => {
   return { messagesRef, send, draft, setDraft }
 }
 
-export const useHandleCsrGroupList = (groups: AppTypes.RenewalPremiumSummaryCsrGroup[], scrollSignal: number) => {
+export const useHandleCsrGroupList = (groups: AppTypes.PreRenewalRiskProfileCsrGroup[], scrollSignal: number) => {
   const rowRefs = useRef(new Map<string, HTMLLIElement>())
   const lastHandledSignal = useRef(0)
   const [highlightedFilename, setHighlightedFilename] = useState<string | null>(null)

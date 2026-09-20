@@ -2,11 +2,11 @@ import FadeIn from '@utils/animations/FadeIn'
 import LoadingMsg from '@components/team/utils/LoadingMsg'
 import ErrorMsg from '@components/team/utils/ErrorMsg'
 import * as Components from './components'
-import { useRenewalPremiumSummaryChat, useRenewalPremiumSummaryManifest } from './hooks'
+import { usePreRenewalRiskProfileChat, usePreRenewalRiskProfileManifest } from './hooks'
 
-function RenewalPremiumSummaryContainer() {
-  const { data: manifest, isLoading, isError } = useRenewalPremiumSummaryManifest()
-  const { messages, sendMessage, isPending, scrollSignal } = useRenewalPremiumSummaryChat()
+function PreRenewalRiskProfileContainer() {
+  const { data: manifest, isLoading, isError } = usePreRenewalRiskProfileManifest()
+  const { messages, sendMessage, isPending, scrollSignal } = usePreRenewalRiskProfileChat()
 
   const isReady = !isLoading && !isError
 
@@ -19,7 +19,7 @@ function RenewalPremiumSummaryContainer() {
           isPending={isPending} />
 
         {isLoading && <LoadingMsg />}
-        {isError && <ErrorMsg message="Couldn't load renewal premium summaries right now." />}
+        {isError && <ErrorMsg message="Couldn't load pre-renewal risk profiles right now." />}
         {isReady && (
           <Components.CsrGroupList
             groups={manifest?.groups ?? []}
@@ -30,4 +30,4 @@ function RenewalPremiumSummaryContainer() {
   )
 }
 
-export default RenewalPremiumSummaryContainer
+export default PreRenewalRiskProfileContainer

@@ -41,13 +41,24 @@ const ReportRow = ({ report }: { report: AppTypes.DownloadReportManifestEntry })
     <li className="flex flex-wrap items-center gap-3 px-4 py-3">
       <span className="min-w-48 font-semibold">{formatReportDate(report.date)}</span>
       <span className="text-sm text-base-content/60">{formatFileSize(report.sizeBytes)}</span>
-      <button
-        type="button"
-        disabled={isPending}
-        onClick={() => downloadFile(report.filename)}
-        className="btn btn-neutral btn-sm ml-auto hover:bg-secondary">
-        {isPending ? "Downloading…" : "Download"}
-      </button>
+      <DownloadButton
+        isPending={isPending}
+        onClick={() => downloadFile(report.filename)} />
     </li>
   )
 }
+
+type DownloadButtonProps = {
+  isPending: boolean
+  onClick: () => void
+}
+
+const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => (
+  <button
+    type="button"
+    disabled={isPending}
+    onClick={onClick}
+    className="btn btn-neutral btn-sm ml-auto hover:bg-secondary">
+    {isPending ? "Downloading…" : "Download"}
+  </button>
+)

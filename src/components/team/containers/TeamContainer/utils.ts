@@ -13,7 +13,7 @@ export const teamNavDescriptions: [Map<AppTypes.CommercialTools, TeamNavDescript
     ["Pre-Renewal Risk Profile", {
       description: "Pulls current exposures to prep for a client's pre-renewal meeting, no premiums or coverages included.",
       to: "/commercial/pre-renewal-risk-profile",
-      output: "xlsx",
+      output: "docx",
     }],
     ["Renewal Summary", {
       description: "Generates a branded pre-renewal review document for a commercial policy, ready to send or walk through with the client.",

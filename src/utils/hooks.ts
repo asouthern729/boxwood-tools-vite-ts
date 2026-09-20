@@ -1,6 +1,4 @@
 import { useEffect } from "react"
-
-// Types
 import { QueryClient } from "@tanstack/react-query"
 
 export const useHandleVisibilityChange = (queryClient: QueryClient) => {
@@ -16,4 +14,20 @@ export const useHandleVisibilityChange = (queryClient: QueryClient) => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
+}
+
+export const useSetTheme = (theme: string) => {
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    return () => {
+      delete document.documentElement.dataset.theme
+    }
+  }, [theme])
+}
+
+export const useHandleChatScrolling = <T,>(messagesRef: React.RefObject<HTMLDivElement | null>, messages: T[], isPending: boolean) => {
+  useEffect(() => {
+    const el = messagesRef.current
+    if(el) el.scrollTop = el.scrollHeight
+  }, [messages, isPending])
 }

@@ -12,7 +12,7 @@ export const HomeBtns = () => (
       const SlideIn = index === 0 ? SlideInLeft : SlideInRight
 
       return (
-        <FadeIn key={to} duration={2}>
+        <FadeIn key={to} duration={1}>
           <SlideIn>
             <Link
               to={to}

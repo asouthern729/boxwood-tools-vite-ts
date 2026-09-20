@@ -1,21 +1,14 @@
 import claudeIcon from "@assets/claude.png"
-import refreshIcon from "@assets/icons/refersh/refresh.svg"
-import trashIcon from "@assets/icons/trash/trash.svg"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import { useHandleChatScrolling } from "@utils/hooks"
-import {
-  useDownloadRenewalPremiumSummaryFile,
-  useRefreshRenewalPremiumSummaryFile,
-  useDeleteRenewalPremiumSummaryFile,
-  useHandleChatPanel,
-  useHandleCsrGroupList,
-  useHandleConfirmButton,
-} from "./hooks"
+import { useDownloadPreRenewalRiskProfileFile, useHandleChatPanel, useHandleCsrGroupList } from "./hooks"
 import { AVAILABLE_MCP_TOOLS } from "./utils"
+
+// Types
 import type * as AppTypes from "@context/App/types"
 
 type ChatPanelProps = {
-  messages: AppTypes.RenewalPremiumSummaryChatMessage[]
+  messages: AppTypes.PreRenewalRiskProfileChatMessage[]
   onSend: (message: string) => void
   isPending: boolean
 }
@@ -62,12 +55,12 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
   )
 }
 
-export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.RenewalPremiumSummaryCsrGroup[], scrollSignal: number }) => {
+export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRenewalRiskProfileCsrGroup[], scrollSignal: number }) => {
   const { rowRefs, highlightedFilename } = useHandleCsrGroupList(groups, scrollSignal)
 
   if(groups.length === 0) {
     return (
-      <p className="py-8 text-center text-base-content/70">No renewal premium summaries generated yet.</p>
+      <p className="py-8 text-center text-base-content/70">No pre-renewal risk profiles generated yet.</p>
     )
   }
 
@@ -85,7 +78,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
 }
 
 type CsrSectionProps = {
-  group: AppTypes.RenewalPremiumSummaryCsrGroup
+  group: AppTypes.PreRenewalRiskProfileCsrGroup
   rowRefs: Map<string, HTMLLIElement>
   highlightedFilename: string | null
 }
@@ -110,15 +103,13 @@ const CsrSection = ({ group, rowRefs, highlightedFilename }: CsrSectionProps) =>
 )
 
 type SummaryRowProps = {
-  summary: AppTypes.RenewalPremiumSummaryManifestEntry
+  summary: AppTypes.PreRenewalRiskProfileManifestEntry
   rowRefs: Map<string, HTMLLIElement>
   highlighted: boolean
 }
 
 const SummaryRow = ({ summary, rowRefs, highlighted }: SummaryRowProps) => {
-  const { mutate: downloadFile, isPending: isDownloading } = useDownloadRenewalPremiumSummaryFile()
-  const { mutate: refreshFile, isPending: isRefreshing, data: refreshResult, error: refreshError } = useRefreshRenewalPremiumSummaryFile()
-  const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeleteRenewalPremiumSummaryFile()
+  const { mutate: downloadFile, isPending } = useDownloadPreRenewalRiskProfileFile()
 
   return (
     <li
@@ -131,81 +122,13 @@ const SummaryRow = ({ summary, rowRefs, highlighted }: SummaryRowProps) => {
         <span className="font-semibold">{summary.client_name}</span>
         <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
         <span className="text-sm text-base-content/60">{summary.polnos}</span>
-        <RefreshFeedback result={refreshResult} error={refreshError} />
-        {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
       </div>
-      <div className="flex items-center gap-2">
-        <DeleteButton
-          isPending={isDeleting}
-          disabled={isRefreshing}
-          onConfirm={() => deleteFile(summary.filename)} />
-        <RefreshButton
-          isPending={isRefreshing}
-          disabled={isDeleting}
-          onClick={() => refreshFile(summary.filename)} />
-        <DownloadButton
-          isPending={isDownloading}
-          onClick={() => downloadFile(summary.filename)} />
-      </div>
+      <DownloadButton
+        isPending={isPending}
+        onClick={() => downloadFile(summary.filename)} />
     </li>
   )
 }
-
-type RefreshFeedbackProps = {
-  result: AppTypes.RenewalPremiumSummaryRefreshResult | undefined
-  error: Error | null
-}
-
-const RefreshFeedback = ({ result, error }: RefreshFeedbackProps) => {
-  if(error) return <span className="text-sm text-error">{error.message}</span>
-  if(!result) return null
-
-  return (
-    <span className="text-sm text-success">
-      {result.changes.length === 0 ?
-        "Refreshed — already up to date" :
-        `Refreshed — ${ result.changes.length } value${ result.changes.length === 1 ? "" : "s" } updated`}
-    </span>
-  )
-}
-
-type DeleteButtonProps = {
-  isPending: boolean
-  disabled: boolean
-  onConfirm: () => void
-}
-
-const DeleteButton = ({ isPending, disabled, onConfirm }: DeleteButtonProps) => {
-  const { armed, handleClick } = useHandleConfirmButton(onConfirm)
-
-  return (
-    <button
-      type="button"
-      disabled={isPending || disabled}
-      onClick={handleClick}
-      title={armed ? "Click again to permanently delete" : "Delete this report"}
-      className={`btn btn-sm btn-square ${ armed ? "btn-error" : "btn-ghost hover:bg-error/20" }`}>
-      {isPending ? <span className="loading loading-spinner loading-xs" /> : <img src={trashIcon} alt="Delete" className="size-4" />}
-    </button>
-  )
-}
-
-type RefreshButtonProps = {
-  isPending: boolean
-  disabled: boolean
-  onClick: () => void
-}
-
-const RefreshButton = ({ isPending, disabled, onClick }: RefreshButtonProps) => (
-  <button
-    type="button"
-    disabled={isPending || disabled}
-    onClick={onClick}
-    title="Refresh Current/Renewal premiums from AMS360"
-    className="btn btn-ghost btn-sm btn-square hover:bg-secondary">
-    {isPending ? <span className="loading loading-spinner loading-xs" /> : <img src={refreshIcon} alt="Refresh" className="size-4" />}
-  </button>
-)
 
 type DownloadButtonProps = {
   isPending: boolean
@@ -218,7 +141,7 @@ const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => (
     disabled={isPending}
     onClick={onClick}
     className="btn btn-neutral btn-sm hover:bg-secondary">
-    {isPending ? "Downloading…" : "Download"}
+      {isPending ? "Downloading…" : "Download"}
   </button>
 )
 
@@ -240,13 +163,13 @@ const ChatTip = ({ visible }: { visible: boolean }) => {
 
   return (
     <p className="text-sm text-base-content/60">
-      Ask Claude to run the renewal premium tool for a customer — e.g. "Build the renewal
-      premium summary for Acme Corp." — or search for customers with upcoming renewals.
+      Ask Claude to build a pre-renewal risk profile for a customer — e.g. "Build the
+      pre-renewal risk profile for Acme Corp." — or search for customers with upcoming renewals.
     </p>
   )
 }
 
-const ChatMsgs = ({ messages }: { messages: AppTypes.RenewalPremiumSummaryChatMessage[] }) => (
+const ChatMsgs = ({ messages }: { messages: AppTypes.PreRenewalRiskProfileChatMessage[] }) => (
   <>
     {messages.map((message, i) => (
       <div key={i} className={`chat ${ message.role === "user" ? "chat-end" : "chat-start" }`}>
@@ -296,7 +219,7 @@ const ChatInput = ({ draft, setDraft, isPending, send }: ChatInputProps) => (
     }}
     rows={2}
     disabled={isPending}
-    placeholder="Ask Claude to build a renewal premium overview…"
+    placeholder="Ask Claude to build a pre-renewal risk profile…"
     className="textarea textarea-bordered flex-1" />
 )
 
