@@ -1,12 +1,14 @@
 import { useRef, useState } from "react"
 import claudeIcon from "@assets/claude.png"
+import trashIcon from "@assets/icons/trash/trash.svg"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import LinkifiedText from "@components/team/utils/LinkifiedText"
 import Ordering from "@components/team/utils/Ordering"
 import Pagination, { PAGE_SIZE } from "@components/team/utils/Pagination"
+import FadeOut from "@utils/animations/FadeOut"
 import { useHandleChatScrolling } from "@utils/hooks"
-import { useDownloadPreRenewalRiskProfileFile, useHandleChatPanel, useHandleCsrGroupList } from "./hooks"
-import { AVAILABLE_MCP_TOOLS, SUMMARY_ORDER_OPTIONS, sortSummaries } from "./utils"
+import { useDownloadPreRenewalRiskProfileFile, useDeletePreRenewalRiskProfileFile, useHandleChatPanel, useHandleCsrGroupList, useHandleConfirmButton } from "./hooks"
+import { AVAILABLE_MCP_TOOLS, SUMMARY_ORDER_OPTIONS, sortSummaries, formatTimestamp } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
@@ -60,26 +62,38 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
 }
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRenewalRiskProfileCsrGroup[], scrollSignal: number }) => {
-  const { rowRefs, highlightedFilename, order, setOrder } = useHandleCsrGroupList(groups, scrollSignal)
-
-  if(groups.length === 0) {
-    return (
-      <p className="py-8 text-center text-base-content/70">No pre-renewal risk profiles generated yet.</p>
-    )
-  }
+  const { rowRefs, highlightedFilename, order, setOrder, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
 
   return (
-    <div className="flex flex-col gap-4">
-      <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
-      {groups.map((group) => (
-        <CsrSection
-          key={group.csr_code ?? "__unassigned__"}
-          group={group}
-          order={order}
-          rowRefs={rowRefs.current}
-          highlightedFilename={highlightedFilename} />
-      ))}
-    </div>
+    <>
+      {groups.length === 0 ? (
+        <p className="py-8 text-center text-base-content/70">No pre-renewal risk profiles generated yet.</p>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
+          {groups.map((group) => (
+            <CsrSection
+              key={group.csr_code ?? "__unassigned__"}
+              group={group}
+              order={order}
+              rowRefs={rowRefs.current}
+              highlightedFilename={highlightedFilename}
+              onDeleted={notifyDeleted} />
+          ))}
+        </div>
+      )}
+      <DeletedMessage message={deletedMessage} />
+    </>
+  )
+}
+
+const DeletedMessage = ({ message }: { message: string | null }) => {
+  if(!message) return null
+
+  return (
+    <FadeOut duration={4} className="fixed bottom-4 left-4 z-50 text-sm text-primary italic">
+      <span>{message}</span>
+    </FadeOut>
   )
 }
 
@@ -88,9 +102,10 @@ type CsrSectionProps = {
   order: string
   rowRefs: Map<string, HTMLLIElement>
   highlightedFilename: string | null
+  onDeleted: (clientName: string) => void
 }
 
-const CsrSection = ({ group, order, rowRefs, highlightedFilename }: CsrSectionProps) => {
+const CsrSection = ({ group, order, rowRefs, highlightedFilename, onDeleted }: CsrSectionProps) => {
   const sorted = sortSummaries(group.summaries, order)
   const [page, setPage] = useState(0)
   const currentPage = Math.min(page, Math.max(Math.ceil(sorted.length / PAGE_SIZE) - 1, 0))
@@ -109,7 +124,8 @@ const CsrSection = ({ group, order, rowRefs, highlightedFilename }: CsrSectionPr
               key={summary.filename}
               summary={summary}
               rowRefs={rowRefs}
-              highlighted={summary.filename === highlightedFilename} />
+              highlighted={summary.filename === highlightedFilename}
+              onDeleted={onDeleted} />
           ))}
         </ul>
         <Pagination page={currentPage} totalItems={sorted.length} onPageChange={setPage} scrollTargetRef={sectionRef} />
@@ -122,10 +138,12 @@ type SummaryRowProps = {
   summary: AppTypes.PreRenewalRiskProfileManifestEntry
   rowRefs: Map<string, HTMLLIElement>
   highlighted: boolean
+  onDeleted: (clientName: string) => void
 }
 
-const SummaryRow = ({ summary, rowRefs, highlighted }: SummaryRowProps) => {
-  const { mutate: downloadFile, isPending } = useDownloadPreRenewalRiskProfileFile()
+const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProps) => {
+  const { mutate: downloadFile, isPending: isDownloading } = useDownloadPreRenewalRiskProfileFile()
+  const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeletePreRenewalRiskProfileFile()
 
   return (
     <li
@@ -138,11 +156,46 @@ const SummaryRow = ({ summary, rowRefs, highlighted }: SummaryRowProps) => {
         <span className="font-semibold">{summary.client_name}</span>
         <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
         <span className="text-sm text-base-content/60">{summary.polnos}</span>
+        {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
       </div>
-      <DownloadButton
-        isPending={isPending}
-        onClick={() => downloadFile(summary.filename)} />
+      <div className="flex flex-col items-end gap-2">
+        <div className="flex items-center gap-2">
+          <DeleteButton
+            isPending={isDeleting}
+            onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onDeleted(summary.client_name) })} />
+          <DownloadButton
+            isPending={isDownloading}
+            onClick={() => downloadFile(summary.filename)} />
+        </div>
+        <div className="text-right text-xs text-base-content/50 italic">
+          Created {formatTimestamp(summary.generated_at)}
+        </div>
+      </div>
     </li>
+  )
+}
+
+type DeleteButtonProps = {
+  isPending: boolean
+  onConfirm: () => void
+}
+
+const DeleteButton = ({ isPending, onConfirm }: DeleteButtonProps) => {
+  const { armed, handleClick } = useHandleConfirmButton(onConfirm)
+
+  const btnContent = isPending ?
+    <span className="loading loading-spinner loading-xs" /> :
+    <img src={trashIcon} alt="Delete" className="size-4" />
+
+  return (
+    <button
+      type="button"
+      disabled={isPending}
+      onClick={handleClick}
+      title={armed ? "Click again to permanently delete" : "Delete this report"}
+      className={`btn btn-sm btn-square ${ armed ? "btn-error" : "btn-ghost hover:bg-error/20" }`}>
+        {btnContent}
+    </button>
   )
 }
 

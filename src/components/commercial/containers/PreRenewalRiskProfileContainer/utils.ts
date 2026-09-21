@@ -25,3 +25,8 @@ export const sortSummaries = (summaries: AppTypes.PreRenewalRiskProfileManifestE
     default: return sorted.sort((a, b) => a.client_name.localeCompare(b.client_name))
   }
 }
+
+export const formatTimestamp = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+}

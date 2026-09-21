@@ -147,6 +147,19 @@ export const downloadPreRenewalRiskProfileFile = async (filename: string): Promi
 }
 
 /**
+ * Delete a generated CL Pre-Renewal Risk Profile docx
+ *
+ * DELETE /risk-profile/files/Acme_Corp_....docx
+ */
+export const deletePreRenewalRiskProfileFile = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/risk-profile/files/${ encodeURIComponent(filename) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404) throw new Error(`Failed to delete pre-renewal risk profile file: HTTP ${ res.status }`)
+}
+
+/**
  * Send one turn of the CL Pre-Renewal Risk Profile chat (scoped to customer_lookup, upcoming_renewals,
  * risk_profile, and employee_lookup), resuming the same agent session when sessionId is given
  *

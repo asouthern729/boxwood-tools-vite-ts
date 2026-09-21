@@ -21,6 +21,38 @@ export const useDownloadPreRenewalRiskProfileFile = () => useMutation({
   mutationFn: AppActions.downloadPreRenewalRiskProfileFile,
 })
 
+export const useDeletePreRenewalRiskProfileFile = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: AppActions.deletePreRenewalRiskProfileFile,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: MANIFEST_QUERY_KEY }),
+  })
+}
+
+const CONFIRM_TIMEOUT_MS = 3000
+
+export const useHandleConfirmButton = (onConfirm: () => void) => {
+  const [armed, setArmed] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  useEffect(() => () => clearTimeout(timeoutRef.current), [])
+
+  const handleClick = () => {
+    if(armed) {
+      clearTimeout(timeoutRef.current)
+      setArmed(false)
+      onConfirm()
+      return
+    }
+
+    setArmed(true)
+    timeoutRef.current = setTimeout(() => setArmed(false), CONFIRM_TIMEOUT_MS)
+  }
+
+  return { armed, handleClick }
+}
+
 export const usePreRenewalRiskProfileChat = () => {
   const queryClient = useQueryClient()
   const [messages, setMessages] = useState<AppTypes.PreRenewalRiskProfileChatMessage[]>([])
@@ -68,12 +100,24 @@ export const useHandleChatPanel = (onSend: (message: string) => void) => {
   return { messagesRef, send, draft, setDraft }
 }
 
+const DELETED_MESSAGE_TIMEOUT_MS = 4000
+
 export const useHandleCsrGroupList = (groups: AppTypes.PreRenewalRiskProfileCsrGroup[], scrollSignal: number) => {
   const rowRefs = useRef(new Map<string, HTMLLIElement>())
   const lastHandledSignal = useRef(0)
   const [highlightedFilename, setHighlightedFilename] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [order, setOrder] = usePersistedState(ORDER_STORAGE_KEY, SUMMARY_ORDER_OPTIONS[0].value)
+  const [deletedMessage, setDeletedMessage] = useState<string | null>(null)
+  const deletedMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  const notifyDeleted = (clientName: string) => {
+    clearTimeout(deletedMessageTimeoutRef.current)
+    setDeletedMessage(`Deleted ${ clientName }...`)
+    deletedMessageTimeoutRef.current = setTimeout(() => setDeletedMessage(null), DELETED_MESSAGE_TIMEOUT_MS)
+  }
+
+  useEffect(() => () => clearTimeout(deletedMessageTimeoutRef.current), [])
 
   useEffect(() => {
     if(scrollSignal === 0 || scrollSignal === lastHandledSignal.current) return
@@ -92,5 +136,5 @@ export const useHandleCsrGroupList = (groups: AppTypes.PreRenewalRiskProfileCsrG
 
   useEffect(() => () => clearTimeout(highlightTimeoutRef.current), [])
 
-  return { rowRefs, highlightedFilename, order, setOrder }
+  return { rowRefs, highlightedFilename, order, setOrder, deletedMessage, notifyDeleted }
 }

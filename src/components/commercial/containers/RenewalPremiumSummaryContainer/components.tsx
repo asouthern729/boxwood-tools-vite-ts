@@ -115,7 +115,7 @@ const DeletedMessage = ({ message }: { message: string | null }) => {
   if(!message) return null
 
   return (
-    <FadeOut duration={4} className="fixed bottom-4 left-4 z-50 text-sm text-base-content/70 italic">
+    <FadeOut duration={4} className="fixed bottom-4 left-4 z-50 text-sm text-primary italic">
       <span>{message}</span>
     </FadeOut>
   )
