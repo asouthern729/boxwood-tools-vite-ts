@@ -1,18 +1,19 @@
-import { useRef, useState } from "react"
 import claudeIcon from "@assets/claude.png"
 import refreshIcon from "@assets/icons/refersh/refresh.svg"
 import trashIcon from "@assets/icons/trash/trash.svg"
-import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
-import Ordering from "@components/team/utils/Ordering"
-import Pagination, { PAGE_SIZE } from "@components/team/utils/Pagination"
-import FadeOut from "@utils/animations/FadeOut"
-import LinkifiedText from "@components/team/utils/LinkifiedText"
 import { useHandleChatScrolling } from "@utils/hooks"
-import { useDownloadRenewalPremiumSummaryFile, useRefreshRenewalPremiumSummaryFile, useDeleteRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleConfirmButton } from "./hooks"
-import { AVAILABLE_MCP_TOOLS, SUMMARY_ORDER_OPTIONS, sortSummaries, formatTimestamp, filterPastRenewals } from "./utils"
+import { useDownloadRenewalPremiumSummaryFile, useRefreshRenewalPremiumSummaryFile, useDeleteRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
+import { AVAILABLE_MCP_TOOLS, SUMMARY_ORDER_OPTIONS, formatTimestamp, filterPastRenewals } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
+
+// Components
+import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
+import LinkifiedText from "@components/team/utils/LinkifiedText"
+import Ordering from "@components/team/utils/Ordering"
+import Pagination from "@components/team/utils/Pagination"
+import FadeOut from "@utils/animations/FadeOut"
 
 type ChatPanelProps = {
   messages: AppTypes.RenewalPremiumSummaryChatMessage[]
@@ -39,9 +40,9 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
           ref={messagesRef}
           className="flex max-h-72 flex-col gap-1 overflow-y-auto"
           style={{ scrollbarWidth: "thin" }}>
-          <ChatTip visible={messages.length === 0} />
-          <ChatMsgs messages={messages} />
-          <ClaudeLoading visible={isPending} />
+            <ChatTip visible={messages.length === 0} />
+            <ChatMsgs messages={messages} />
+            <ClaudeLoading visible={isPending} />
         </div>
 
         <div className="flex gap-2">
@@ -130,11 +131,7 @@ type CsrSectionProps = {
 }
 
 const CsrSection = ({ group, order, rowRefs, highlightedFilename, onDeleted }: CsrSectionProps) => {
-  const sorted = sortSummaries(group.summaries, order)
-  const [page, setPage] = useState(0)
-  const currentPage = Math.min(page, Math.max(Math.ceil(sorted.length / PAGE_SIZE) - 1, 0))
-  const pageSummaries = sorted.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE)
-  const sectionRef = useRef<HTMLDivElement>(null)
+  const { pageSummaries, currentPage, totalItems, setPage, sectionRef } = useHandleCsrSection(group.summaries, order)
 
   return (
     <div ref={sectionRef} className="card border border-base-300 bg-base-100 shadow-sm">
@@ -152,7 +149,7 @@ const CsrSection = ({ group, order, rowRefs, highlightedFilename, onDeleted }: C
               onDeleted={onDeleted} />
           ))}
         </ul>
-        <Pagination page={currentPage} totalItems={sorted.length} onPageChange={setPage} scrollTargetRef={sectionRef} />
+        <Pagination page={currentPage} totalItems={totalItems} onPageChange={setPage} scrollTargetRef={sectionRef} />
       </div>
     </div>
   )
@@ -199,16 +196,22 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
             onClick={() => downloadFile(summary.filename)} />
         </div>
         <div className="text-right text-xs text-base-content/50 italic">
-          {summary.last_refreshed_at ? (
-            <div title="Last refreshed since this report was generated">
-              Updated {formatTimestamp(summary.last_refreshed_at)}
-            </div>
-          ) : (
-            <div>Created {formatTimestamp(summary.generated_at)}</div>
-          )}
+          <CreatedAt summary={summary} />
         </div>
       </div>
     </li>
+  )
+}
+
+const CreatedAt = ({ summary }: { summary: AppTypes.RenewalPremiumSummaryManifestEntry }) => {
+  if(summary.last_refreshed_at) return (
+    <div title="Last refreshed since this report was generated">
+      Updated {formatTimestamp(summary.last_refreshed_at)}
+    </div>
+  )
+
+  return (
+    <div>Created {formatTimestamp(summary.generated_at)}</div>
   )
 }
 

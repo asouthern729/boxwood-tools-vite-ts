@@ -1,17 +1,18 @@
-import { useRef, useState } from "react"
 import claudeIcon from "@assets/claude.png"
 import trashIcon from "@assets/icons/trash/trash.svg"
-import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
-import LinkifiedText from "@components/team/utils/LinkifiedText"
-import Ordering from "@components/team/utils/Ordering"
-import Pagination, { PAGE_SIZE } from "@components/team/utils/Pagination"
-import FadeOut from "@utils/animations/FadeOut"
 import { useHandleChatScrolling } from "@utils/hooks"
-import { useDownloadPreRenewalRiskProfileFile, useDeletePreRenewalRiskProfileFile, useHandleChatPanel, useHandleCsrGroupList, useHandleConfirmButton } from "./hooks"
-import { AVAILABLE_MCP_TOOLS, SUMMARY_ORDER_OPTIONS, sortSummaries, formatTimestamp } from "./utils"
+import { useDownloadPreRenewalRiskProfileFile, useDeletePreRenewalRiskProfileFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
+import { AVAILABLE_MCP_TOOLS, SUMMARY_ORDER_OPTIONS, formatTimestamp } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
+
+// Components
+import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
+import LinkifiedText from "@components/team/utils/LinkifiedText"
+import Ordering from "@components/team/utils/Ordering"
+import Pagination from "@components/team/utils/Pagination"
+import FadeOut from "@utils/animations/FadeOut"
 
 type ChatPanelProps = {
   messages: AppTypes.PreRenewalRiskProfileChatMessage[]
@@ -106,11 +107,7 @@ type CsrSectionProps = {
 }
 
 const CsrSection = ({ group, order, rowRefs, highlightedFilename, onDeleted }: CsrSectionProps) => {
-  const sorted = sortSummaries(group.summaries, order)
-  const [page, setPage] = useState(0)
-  const currentPage = Math.min(page, Math.max(Math.ceil(sorted.length / PAGE_SIZE) - 1, 0))
-  const pageSummaries = sorted.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE)
-  const sectionRef = useRef<HTMLDivElement>(null)
+  const { pageSummaries, currentPage, totalItems, setPage, sectionRef } = useHandleCsrSection(group.summaries, order)
 
   return (
     <div ref={sectionRef} className="card border border-base-300 bg-base-100 shadow-sm">
@@ -128,7 +125,11 @@ const CsrSection = ({ group, order, rowRefs, highlightedFilename, onDeleted }: C
               onDeleted={onDeleted} />
           ))}
         </ul>
-        <Pagination page={currentPage} totalItems={sorted.length} onPageChange={setPage} scrollTargetRef={sectionRef} />
+        <Pagination 
+          page={currentPage} 
+          totalItems={totalItems} 
+          onPageChange={setPage} 
+          scrollTargetRef={sectionRef} />
       </div>
     </div>
   )

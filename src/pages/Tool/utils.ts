@@ -1,12 +1,13 @@
+// Types
+import * as AppTypes from '@context/App/types'
+
+// Components
 import DownloadChangeReportContainer from '@components/personal/containers/DownloadChangeReportContainer'
 import RenewalPremiumSummaryContainer from '@components/commercial/containers/RenewalPremiumSummaryContainer'
 import PreRenewalRiskProfileContainer from '@components/commercial/containers/PreRenewalRiskProfileContainer'
 import PremiumChangeToolContainer from '@components/personal/containers/PremiumChangeToolContainer'
 import RenewalSummaryContainer from '@components/commercial/containers/RenewalSummaryContainer'
 import PersonalRenewalSummaryContainer from '@components/personal/containers/RenewalSummaryContainer'
-
-// Types
-import * as AppTypes from '@context/App/types'
 
 export const toolNames: Record<string, AppTypes.AllTools> = {
   "pre-renewal-risk-profile": "Pre-Renewal Risk Profile",

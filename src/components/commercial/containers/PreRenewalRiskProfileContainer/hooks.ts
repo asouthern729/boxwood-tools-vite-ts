@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { PAGE_SIZE } from "@components/team/utils/Pagination"
 import { usePersistedState } from "@utils/hooks"
 import * as AppActions from '@context/App/AppActions'
-import { SUMMARY_ORDER_OPTIONS } from './utils'
+import { SUMMARY_ORDER_OPTIONS, sortSummaries } from './utils'
 
 const ORDER_STORAGE_KEY = "boxwood_pre_renewal_risk_profile_order"
 
@@ -137,4 +138,14 @@ export const useHandleCsrGroupList = (groups: AppTypes.PreRenewalRiskProfileCsrG
   useEffect(() => () => clearTimeout(highlightTimeoutRef.current), [])
 
   return { rowRefs, highlightedFilename, order, setOrder, deletedMessage, notifyDeleted }
+}
+
+export const useHandleCsrSection = (summaries: AppTypes.PreRenewalRiskProfileManifestEntry[], order: string) => {
+  const sorted = sortSummaries(summaries, order)
+  const [page, setPage] = useState(0)
+  const currentPage = Math.min(page, Math.max(Math.ceil(sorted.length / PAGE_SIZE) - 1, 0))
+  const pageSummaries = sorted.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE)
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  return { pageSummaries, currentPage, totalItems: sorted.length, setPage, sectionRef }
 }

@@ -1,8 +1,10 @@
+import { usePreRenewalRiskProfileChat, usePreRenewalRiskProfileManifest } from './hooks'
+
+// Components
 import FadeIn from '@utils/animations/FadeIn'
 import LoadingMsg from '@components/team/utils/LoadingMsg'
 import ErrorMsg from '@components/team/utils/ErrorMsg'
 import * as Components from './components'
-import { usePreRenewalRiskProfileChat, usePreRenewalRiskProfileManifest } from './hooks'
 
 function PreRenewalRiskProfileContainer() {
   const { data: manifest, isLoading, isError } = usePreRenewalRiskProfileManifest()

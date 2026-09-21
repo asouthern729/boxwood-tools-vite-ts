@@ -1,14 +1,12 @@
-import { useRef, useState } from "react"
-import Ordering from "@components/team/utils/Ordering"
-import Pagination, { PAGE_SIZE } from "@components/team/utils/Pagination"
-import { usePersistedState } from "@utils/hooks"
-import { useDownloadReportFile } from "./hooks"
-import { formatFileSize, formatReportDate, formatSyncedUntil, handleLastSyncBanner, REPORT_ORDER_OPTIONS, sortReports } from "./utils"
-
-const ORDER_STORAGE_KEY = "boxwood_download_change_report_order"
+import { useDownloadReportFile, useHandleReportList } from "./hooks"
+import { formatFileSize, formatReportDate, formatSyncedUntil, handleLastSyncBanner, REPORT_ORDER_OPTIONS } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
+
+// Components
+import Ordering from "@components/team/utils/Ordering"
+import Pagination from "@components/team/utils/Pagination"
 
 export const LastSyncBanner = ({ lastSync }: { lastSync: AppTypes.DownloadReportLastSync | null }) => {
   const { summaryText, syncedUntil } = handleLastSyncBanner(lastSync)
@@ -23,21 +21,18 @@ export const LastSyncBanner = ({ lastSync }: { lastSync: AppTypes.DownloadReport
 }
 
 export const ReportList = ({ reports }: { reports: AppTypes.DownloadReportManifestEntry[] }) => {
-  const [order, setOrder] = usePersistedState(ORDER_STORAGE_KEY, REPORT_ORDER_OPTIONS[0].value)
-  const [page, setPage] = useState(0)
-  const listRef = useRef<HTMLUListElement>(null)
+  const { order, setOrder, pageReports, currentPage, totalItems, setPage, listRef } = useHandleReportList(reports)
 
   if(reports.length === 0) {
     return <p className="py-8 text-center text-base-content/70">No reports available yet.</p>
   }
 
-  const sorted = sortReports(reports, order)
-  const currentPage = Math.min(page, Math.max(Math.ceil(sorted.length / PAGE_SIZE) - 1, 0))
-  const pageReports = sorted.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE)
-
   return (
     <>
-      <Ordering value={order} onChange={setOrder} options={REPORT_ORDER_OPTIONS} />
+      <Ordering 
+        value={order} 
+        onChange={setOrder} 
+        options={REPORT_ORDER_OPTIONS} />
       <ul ref={listRef} className="divide-y divide-base-300">
         {pageReports.map((report) => (
           <ReportRow
@@ -45,7 +40,11 @@ export const ReportList = ({ reports }: { reports: AppTypes.DownloadReportManife
             report={report} />
         ))}
       </ul>
-      <Pagination page={currentPage} totalItems={sorted.length} onPageChange={setPage} scrollTargetRef={listRef} />
+      <Pagination 
+        page={currentPage} 
+        totalItems={totalItems} 
+        onPageChange={setPage} 
+        scrollTargetRef={listRef} />
     </>
   )
 }
