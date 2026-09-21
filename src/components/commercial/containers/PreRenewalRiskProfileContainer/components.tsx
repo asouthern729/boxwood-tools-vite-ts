@@ -1,8 +1,12 @@
+import { useRef, useState } from "react"
 import claudeIcon from "@assets/claude.png"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
+import LinkifiedText from "@components/team/utils/LinkifiedText"
+import Ordering from "@components/team/utils/Ordering"
+import Pagination, { PAGE_SIZE } from "@components/team/utils/Pagination"
 import { useHandleChatScrolling } from "@utils/hooks"
 import { useDownloadPreRenewalRiskProfileFile, useHandleChatPanel, useHandleCsrGroupList } from "./hooks"
-import { AVAILABLE_MCP_TOOLS } from "./utils"
+import { AVAILABLE_MCP_TOOLS, SUMMARY_ORDER_OPTIONS, sortSummaries } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
@@ -56,7 +60,7 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
 }
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRenewalRiskProfileCsrGroup[], scrollSignal: number }) => {
-  const { rowRefs, highlightedFilename } = useHandleCsrGroupList(groups, scrollSignal)
+  const { rowRefs, highlightedFilename, order, setOrder } = useHandleCsrGroupList(groups, scrollSignal)
 
   if(groups.length === 0) {
     return (
@@ -66,10 +70,12 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
 
   return (
     <div className="flex flex-col gap-4">
+      <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
       {groups.map((group) => (
         <CsrSection
           key={group.csr_code ?? "__unassigned__"}
           group={group}
+          order={order}
           rowRefs={rowRefs.current}
           highlightedFilename={highlightedFilename} />
       ))}
@@ -79,28 +85,38 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
 
 type CsrSectionProps = {
   group: AppTypes.PreRenewalRiskProfileCsrGroup
+  order: string
   rowRefs: Map<string, HTMLLIElement>
   highlightedFilename: string | null
 }
 
-const CsrSection = ({ group, rowRefs, highlightedFilename }: CsrSectionProps) => (
-  <div className="card border border-base-300 bg-base-100 shadow-sm">
-    <div className="card-body gap-1 p-0 py-2">
-      <h3 className="px-4 pt-1 text-sm font-semibold text-primary">
-        {group.csr_name ?? "Unassigned"}
-      </h3>
-      <ul className="divide-y divide-base-300">
-        {[...group.summaries].sort((a, b) => a.client_name.localeCompare(b.client_name)).map((summary) => (
-          <SummaryRow
-            key={summary.filename}
-            summary={summary}
-            rowRefs={rowRefs}
-            highlighted={summary.filename === highlightedFilename} />
-        ))}
-      </ul>
+const CsrSection = ({ group, order, rowRefs, highlightedFilename }: CsrSectionProps) => {
+  const sorted = sortSummaries(group.summaries, order)
+  const [page, setPage] = useState(0)
+  const currentPage = Math.min(page, Math.max(Math.ceil(sorted.length / PAGE_SIZE) - 1, 0))
+  const pageSummaries = sorted.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE)
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  return (
+    <div ref={sectionRef} className="card border border-base-300 bg-base-100 shadow-sm">
+      <div className="card-body gap-1 p-0 py-2">
+        <h3 className="px-4 pt-1 text-sm font-semibold text-primary">
+          {group.csr_name ?? "Unassigned"}
+        </h3>
+        <ul className="divide-y divide-base-300">
+          {pageSummaries.map((summary) => (
+            <SummaryRow
+              key={summary.filename}
+              summary={summary}
+              rowRefs={rowRefs}
+              highlighted={summary.filename === highlightedFilename} />
+          ))}
+        </ul>
+        <Pagination page={currentPage} totalItems={sorted.length} onPageChange={setPage} scrollTargetRef={sectionRef} />
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 type SummaryRowProps = {
   summary: AppTypes.PreRenewalRiskProfileManifestEntry
@@ -135,15 +151,19 @@ type DownloadButtonProps = {
   onClick: () => void
 }
 
-const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => (
-  <button
-    type="button"
-    disabled={isPending}
-    onClick={onClick}
-    className="btn btn-neutral btn-sm hover:bg-secondary">
-      {isPending ? "Downloading…" : "Download"}
-  </button>
-)
+const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
+  const btnContent = isPending ? "Downloading…" : "Download"
+
+  return (
+    <button
+      type="button"
+      disabled={isPending}
+      onClick={onClick}
+      className="btn btn-neutral btn-sm hover:bg-secondary">
+        {btnContent}
+    </button>
+  )
+}
 
 const AvailableTools = () => (
   <div className="flex flex-wrap items-center gap-1.5">
@@ -180,7 +200,7 @@ const ChatMsgs = ({ messages }: { messages: AppTypes.PreRenewalRiskProfileChatMe
           className={`chat-bubble whitespace-pre-wrap text-sm ${ message.role === "user" ?
             "bg-base-300 text-base-content" :
             "bg-accent/20 text-base-content" }`}>
-          {message.text}
+          <LinkifiedText text={message.text} />
         </div>
       </div>
     ))}
@@ -229,12 +249,16 @@ type SendButtonProps = {
   onClick: () => void
 }
 
-const SendButton = ({ draft, isPending, onClick }: SendButtonProps) => (
-  <button
-    type="button"
-    disabled={isPending || !draft.trim()}
-    onClick={onClick}
-    className="btn btn-neutral self-end text-accent hover:bg-accent hover:text-accent-content">
-    {isPending ? "Sending…" : "Send"}
-  </button>
-)
+const SendButton = ({ draft, isPending, onClick }: SendButtonProps) => {
+  const btnContent = isPending ? "Sending…" : "Send"
+
+  return (
+    <button
+      type="button"
+      disabled={isPending || !draft.trim()}
+      onClick={onClick}
+      className="btn btn-neutral self-end text-accent hover:bg-accent hover:text-accent-content">
+        {btnContent}
+    </button>
+  )
+}

@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { usePersistedState } from "@utils/hooks"
 import * as AppActions from '@context/App/AppActions'
+import { SUMMARY_ORDER_OPTIONS } from './utils'
+
+const ORDER_STORAGE_KEY = "boxwood_pre_renewal_risk_profile_order"
 
 // Types
 import type * as AppTypes from "@context/App/types"
@@ -69,6 +73,7 @@ export const useHandleCsrGroupList = (groups: AppTypes.PreRenewalRiskProfileCsrG
   const lastHandledSignal = useRef(0)
   const [highlightedFilename, setHighlightedFilename] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [order, setOrder] = usePersistedState(ORDER_STORAGE_KEY, SUMMARY_ORDER_OPTIONS[0].value)
 
   useEffect(() => {
     if(scrollSignal === 0 || scrollSignal === lastHandledSignal.current) return
@@ -87,5 +92,5 @@ export const useHandleCsrGroupList = (groups: AppTypes.PreRenewalRiskProfileCsrG
 
   useEffect(() => () => clearTimeout(highlightTimeoutRef.current), [])
 
-  return { rowRefs, highlightedFilename }
+  return { rowRefs, highlightedFilename, order, setOrder }
 }

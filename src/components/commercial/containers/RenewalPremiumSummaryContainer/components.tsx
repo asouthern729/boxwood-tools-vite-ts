@@ -1,17 +1,17 @@
+import { useRef, useState } from "react"
 import claudeIcon from "@assets/claude.png"
 import refreshIcon from "@assets/icons/refersh/refresh.svg"
 import trashIcon from "@assets/icons/trash/trash.svg"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
+import Ordering from "@components/team/utils/Ordering"
+import Pagination, { PAGE_SIZE } from "@components/team/utils/Pagination"
+import FadeOut from "@utils/animations/FadeOut"
+import LinkifiedText from "@components/team/utils/LinkifiedText"
 import { useHandleChatScrolling } from "@utils/hooks"
-import {
-  useDownloadRenewalPremiumSummaryFile,
-  useRefreshRenewalPremiumSummaryFile,
-  useDeleteRenewalPremiumSummaryFile,
-  useHandleChatPanel,
-  useHandleCsrGroupList,
-  useHandleConfirmButton,
-} from "./hooks"
-import { AVAILABLE_MCP_TOOLS } from "./utils"
+import { useDownloadRenewalPremiumSummaryFile, useRefreshRenewalPremiumSummaryFile, useDeleteRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleConfirmButton } from "./hooks"
+import { AVAILABLE_MCP_TOOLS, SUMMARY_ORDER_OPTIONS, sortSummaries, formatTimestamp, filterPastRenewals } from "./utils"
+
+// Types
 import type * as AppTypes from "@context/App/types"
 
 type ChatPanelProps = {
@@ -63,59 +63,109 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
 }
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.RenewalPremiumSummaryCsrGroup[], scrollSignal: number }) => {
-  const { rowRefs, highlightedFilename } = useHandleCsrGroupList(groups, scrollSignal)
+  const { rowRefs, highlightedFilename, order, setOrder, showPastRenewals, setShowPastRenewals, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
 
   if(groups.length === 0) {
     return (
-      <p className="py-8 text-center text-base-content/70">No renewal premium summaries generated yet.</p>
+      <>
+        <p className="py-8 text-center text-base-content/70">No renewal premium summaries generated yet.</p>
+        <DeletedMessage message={deletedMessage} />
+      </>
     )
   }
 
+  const visibleGroups = groups
+    .map((group) => ({ ...group, summaries: filterPastRenewals(group.summaries, showPastRenewals) }))
+    .filter((group) => group.summaries.length > 0)
+
   return (
-    <div className="flex flex-col gap-4">
-      {groups.map((group) => (
-        <CsrSection
-          key={group.csr_code ?? "__unassigned__"}
-          group={group}
-          rowRefs={rowRefs.current}
-          highlightedFilename={highlightedFilename} />
-      ))}
-    </div>
+    <>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
+          <label className="label cursor-pointer gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showPastRenewals}
+              onChange={(e) => setShowPastRenewals(e.target.checked)}
+              className="checkbox checkbox-sm" />
+            Show past renewals
+          </label>
+        </div>
+        {visibleGroups.length === 0 ? (
+          <p className="py-8 text-center text-base-content/70">No upcoming renewals — all generated summaries are past their renewal date.</p>
+        ) : (
+          visibleGroups.map((group) => (
+            <CsrSection
+              key={group.csr_code ?? "__unassigned__"}
+              group={group}
+              order={order}
+              rowRefs={rowRefs.current}
+              highlightedFilename={highlightedFilename}
+              onDeleted={notifyDeleted} />
+          ))
+        )}
+      </div>
+      <DeletedMessage message={deletedMessage} />
+    </>
+  )
+}
+
+const DeletedMessage = ({ message }: { message: string | null }) => {
+  if(!message) return null
+
+  return (
+    <FadeOut duration={4} className="fixed bottom-4 left-4 z-50 text-sm text-base-content/70 italic">
+      <span>{message}</span>
+    </FadeOut>
   )
 }
 
 type CsrSectionProps = {
   group: AppTypes.RenewalPremiumSummaryCsrGroup
+  order: string
   rowRefs: Map<string, HTMLLIElement>
   highlightedFilename: string | null
+  onDeleted: (clientName: string) => void
 }
 
-const CsrSection = ({ group, rowRefs, highlightedFilename }: CsrSectionProps) => (
-  <div className="card border border-base-300 bg-base-100 shadow-sm">
-    <div className="card-body gap-1 p-0 py-2">
-      <h3 className="px-4 pt-1 text-sm font-semibold text-primary">
-        {group.csr_name ?? "Unassigned"}
-      </h3>
-      <ul className="divide-y divide-base-300">
-        {[...group.summaries].sort((a, b) => a.client_name.localeCompare(b.client_name)).map((summary) => (
-          <SummaryRow
-            key={summary.filename}
-            summary={summary}
-            rowRefs={rowRefs}
-            highlighted={summary.filename === highlightedFilename} />
-        ))}
-      </ul>
+const CsrSection = ({ group, order, rowRefs, highlightedFilename, onDeleted }: CsrSectionProps) => {
+  const sorted = sortSummaries(group.summaries, order)
+  const [page, setPage] = useState(0)
+  const currentPage = Math.min(page, Math.max(Math.ceil(sorted.length / PAGE_SIZE) - 1, 0))
+  const pageSummaries = sorted.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE)
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  return (
+    <div ref={sectionRef} className="card border border-base-300 bg-base-100 shadow-sm">
+      <div className="card-body gap-1 p-0 py-2">
+        <h3 className="px-4 pt-1 text-sm font-semibold text-primary">
+          {group.csr_name ?? "Unassigned"}
+        </h3>
+        <ul className="divide-y divide-base-300">
+          {pageSummaries.map((summary) => (
+            <SummaryRow
+              key={summary.filename}
+              summary={summary}
+              rowRefs={rowRefs}
+              highlighted={summary.filename === highlightedFilename}
+              onDeleted={onDeleted} />
+          ))}
+        </ul>
+        <Pagination page={currentPage} totalItems={sorted.length} onPageChange={setPage} scrollTargetRef={sectionRef} />
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 type SummaryRowProps = {
   summary: AppTypes.RenewalPremiumSummaryManifestEntry
   rowRefs: Map<string, HTMLLIElement>
   highlighted: boolean
+  onDeleted: (clientName: string) => void
 }
 
-const SummaryRow = ({ summary, rowRefs, highlighted }: SummaryRowProps) => {
+const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProps) => {
   const { mutate: downloadFile, isPending: isDownloading } = useDownloadRenewalPremiumSummaryFile()
   const { mutate: refreshFile, isPending: isRefreshing, data: refreshResult, error: refreshError } = useRefreshRenewalPremiumSummaryFile()
   const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeleteRenewalPremiumSummaryFile()
@@ -134,18 +184,29 @@ const SummaryRow = ({ summary, rowRefs, highlighted }: SummaryRowProps) => {
         <RefreshFeedback result={refreshResult} error={refreshError} />
         {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
       </div>
-      <div className="flex items-center gap-2">
-        <DeleteButton
-          isPending={isDeleting}
-          disabled={isRefreshing}
-          onConfirm={() => deleteFile(summary.filename)} />
-        <RefreshButton
-          isPending={isRefreshing}
-          disabled={isDeleting}
-          onClick={() => refreshFile(summary.filename)} />
-        <DownloadButton
-          isPending={isDownloading}
-          onClick={() => downloadFile(summary.filename)} />
+      <div className="flex flex-col items-end gap-2">
+        <div className="flex items-center gap-2">
+          <DeleteButton
+            isPending={isDeleting}
+            disabled={isRefreshing}
+            onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onDeleted(summary.client_name) })} />
+          <RefreshButton
+            isPending={isRefreshing}
+            disabled={isDeleting}
+            onClick={() => refreshFile(summary.filename)} />
+          <DownloadButton
+            isPending={isDownloading}
+            onClick={() => downloadFile(summary.filename)} />
+        </div>
+        <div className="text-right text-xs text-base-content/50 italic">
+          {summary.last_refreshed_at ? (
+            <div title="Last refreshed since this report was generated">
+              Updated {formatTimestamp(summary.last_refreshed_at)}
+            </div>
+          ) : (
+            <div>Created {formatTimestamp(summary.generated_at)}</div>
+          )}
+        </div>
       </div>
     </li>
   )
@@ -160,11 +221,13 @@ const RefreshFeedback = ({ result, error }: RefreshFeedbackProps) => {
   if(error) return <span className="text-sm text-error">{error.message}</span>
   if(!result) return null
 
+  const feedbackText = result.changes.length === 0 ?
+    "Refreshed — already up to date" :
+    `Refreshed — ${ result.changes.length } value${ result.changes.length === 1 ? "" : "s" } updated`
+
   return (
     <span className="text-sm text-success">
-      {result.changes.length === 0 ?
-        "Refreshed — already up to date" :
-        `Refreshed — ${ result.changes.length } value${ result.changes.length === 1 ? "" : "s" } updated`}
+      {feedbackText}
     </span>
   )
 }
@@ -178,6 +241,10 @@ type DeleteButtonProps = {
 const DeleteButton = ({ isPending, disabled, onConfirm }: DeleteButtonProps) => {
   const { armed, handleClick } = useHandleConfirmButton(onConfirm)
 
+  const btnContent = isPending ? 
+    <span className="loading loading-spinner loading-xs" /> : 
+    <img src={trashIcon} alt="Delete" className="size-4" />
+
   return (
     <button
       type="button"
@@ -185,7 +252,7 @@ const DeleteButton = ({ isPending, disabled, onConfirm }: DeleteButtonProps) => 
       onClick={handleClick}
       title={armed ? "Click again to permanently delete" : "Delete this report"}
       className={`btn btn-sm btn-square ${ armed ? "btn-error" : "btn-ghost hover:bg-error/20" }`}>
-      {isPending ? <span className="loading loading-spinner loading-xs" /> : <img src={trashIcon} alt="Delete" className="size-4" />}
+        {btnContent}
     </button>
   )
 }
@@ -196,31 +263,43 @@ type RefreshButtonProps = {
   onClick: () => void
 }
 
-const RefreshButton = ({ isPending, disabled, onClick }: RefreshButtonProps) => (
-  <button
-    type="button"
-    disabled={isPending || disabled}
-    onClick={onClick}
-    title="Refresh Current/Renewal premiums from AMS360"
-    className="btn btn-ghost btn-sm btn-square hover:bg-secondary">
-    {isPending ? <span className="loading loading-spinner loading-xs" /> : <img src={refreshIcon} alt="Refresh" className="size-4" />}
-  </button>
-)
+const RefreshButton = ({ isPending, disabled, onClick }: RefreshButtonProps) => {
+  const btnContent = isPending ? 
+    <span className="loading loading-spinner loading-xs" /> : 
+    <img src={refreshIcon} alt="Refresh" className="size-4" />
+
+  return (
+    <button
+      type="button"
+      disabled={isPending || disabled}
+      onClick={onClick}
+      title="Refresh Current/Renewal premiums from AMS360"
+      className="btn btn-ghost btn-sm btn-square hover:bg-secondary">
+        {btnContent}
+    </button>
+  )
+}
 
 type DownloadButtonProps = {
   isPending: boolean
   onClick: () => void
 }
 
-const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => (
-  <button
-    type="button"
-    disabled={isPending}
-    onClick={onClick}
-    className="btn btn-neutral btn-sm hover:bg-secondary">
-    {isPending ? "Downloading…" : "Download"}
-  </button>
-)
+const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
+  const btnContent = isPending ? 
+    "Downloading…" : 
+    "Download"
+  
+  return (
+    <button
+      type="button"
+      disabled={isPending}
+      onClick={onClick}
+      className="btn btn-neutral btn-sm hover:bg-secondary">
+        {btnContent}
+    </button>
+  )
+}
 
 const AvailableTools = () => (
   <div className="flex flex-wrap items-center gap-1.5">
@@ -228,8 +307,11 @@ const AvailableTools = () => (
       MCP Tools Available
     </span>
     {AVAILABLE_MCP_TOOLS.map((tool) => (
-      <span key={tool.name} title={tool.description} className="badge badge-outline badge-accent badge-sm cursor-default">
-        {tool.name}
+      <span 
+        key={tool.name} 
+        title={tool.description} 
+        className="badge badge-outline badge-accent badge-sm cursor-default">
+          {tool.name}
       </span>
     ))}
   </div>
@@ -257,7 +339,7 @@ const ChatMsgs = ({ messages }: { messages: AppTypes.RenewalPremiumSummaryChatMe
           className={`chat-bubble whitespace-pre-wrap text-sm ${ message.role === "user" ?
             "bg-base-300 text-base-content" :
             "bg-accent/20 text-base-content" }`}>
-          {message.text}
+          <LinkifiedText text={message.text} />
         </div>
       </div>
     ))}
@@ -306,12 +388,18 @@ type SendButtonProps = {
   onClick: () => void
 }
 
-const SendButton = ({ draft, isPending, onClick }: SendButtonProps) => (
-  <button
-    type="button"
-    disabled={isPending || !draft.trim()}
-    onClick={onClick}
-    className="btn btn-neutral self-end text-accent hover:bg-accent hover:text-accent-content">
-    {isPending ? "Sending…" : "Send"}
-  </button>
-)
+const SendButton = ({ draft, isPending, onClick }: SendButtonProps) => {
+  const btnContent = isPending ? 
+    "Sending…" : 
+    "Send"
+
+  return (
+    <button
+      type="button"
+      disabled={isPending || !draft.trim()}
+      onClick={onClick}
+      className="btn btn-neutral self-end text-accent hover:bg-accent hover:text-accent-content">
+        {btnContent}
+    </button>
+  )
+}

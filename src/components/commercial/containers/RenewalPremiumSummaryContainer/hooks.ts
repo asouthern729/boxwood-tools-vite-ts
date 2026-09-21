@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { usePersistedState } from "@utils/hooks"
 import * as AppActions from '@context/App/AppActions'
+import { SUMMARY_ORDER_OPTIONS } from './utils'
+
+const ORDER_STORAGE_KEY = "boxwood_renewal_premium_summary_order"
 
 // Types
 import type * as AppTypes from "@context/App/types"
@@ -17,9 +21,14 @@ export const useDownloadRenewalPremiumSummaryFile = () => useMutation({
   mutationFn: AppActions.downloadRenewalPremiumSummaryFile,
 })
 
-export const useRefreshRenewalPremiumSummaryFile = () => useMutation({
-  mutationFn: AppActions.refreshRenewalPremiumSummaryFile,
-})
+export const useRefreshRenewalPremiumSummaryFile = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: AppActions.refreshRenewalPremiumSummaryFile,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: MANIFEST_QUERY_KEY }),
+  })
+}
 
 export const useDeleteRenewalPremiumSummaryFile = () => {
   const queryClient = useQueryClient()
@@ -100,11 +109,25 @@ export const useHandleChatPanel = (onSend: (message: string) => void) => {
   return { messagesRef, send, draft, setDraft }
 }
 
+const DELETED_MESSAGE_TIMEOUT_MS = 4000
+
 export const useHandleCsrGroupList = (groups: AppTypes.RenewalPremiumSummaryCsrGroup[], scrollSignal: number) => {
   const rowRefs = useRef(new Map<string, HTMLLIElement>())
   const lastHandledSignal = useRef(0)
   const [highlightedFilename, setHighlightedFilename] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [order, setOrder] = usePersistedState(ORDER_STORAGE_KEY, SUMMARY_ORDER_OPTIONS[0].value)
+  const [showPastRenewals, setShowPastRenewals] = useState(false)
+  const [deletedMessage, setDeletedMessage] = useState<string | null>(null)
+  const deletedMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  const notifyDeleted = (clientName: string) => {
+    clearTimeout(deletedMessageTimeoutRef.current)
+    setDeletedMessage(`Deleted ${ clientName }...`)
+    deletedMessageTimeoutRef.current = setTimeout(() => setDeletedMessage(null), DELETED_MESSAGE_TIMEOUT_MS)
+  }
+
+  useEffect(() => () => clearTimeout(deletedMessageTimeoutRef.current), [])
 
   useEffect(() => {
     if(scrollSignal === 0 || scrollSignal === lastHandledSignal.current) return
@@ -123,5 +146,5 @@ export const useHandleCsrGroupList = (groups: AppTypes.RenewalPremiumSummaryCsrG
 
   useEffect(() => () => clearTimeout(highlightTimeoutRef.current), [])
 
-  return { rowRefs, highlightedFilename }
+  return { rowRefs, highlightedFilename, order, setOrder, showPastRenewals, setShowPastRenewals, deletedMessage, notifyDeleted }
 }

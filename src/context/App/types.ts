@@ -36,6 +36,7 @@ export type DownloadReportManifest = {
 export type RenewalPremiumSummaryManifestEntry = {
   filename: string
   generated_at: string
+  last_refreshed_at?: string
   csr_code: string | null
   csr_name: string | null
   client_name: string
