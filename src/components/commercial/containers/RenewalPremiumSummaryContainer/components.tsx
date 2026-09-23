@@ -3,12 +3,14 @@ import refreshIcon from "@assets/icons/refersh/refresh.svg"
 import trashIcon from "@assets/icons/trash/trash.svg"
 import { useHandleChatScrolling } from "@utils/hooks"
 import { useDownloadRenewalPremiumSummaryFile, useRefreshRenewalPremiumSummaryFile, useDeleteRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
-import { AVAILABLE_MCP_TOOLS, SUMMARY_ORDER_OPTIONS, formatTimestamp, filterPastRenewals } from "./utils"
+import { AVAILABLE_MCP_TOOLS, formatTimestamp } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
 
 // Components
+import { useCommercialCtx } from "@components/commercial/context/hooks"
+import { SUMMARY_ORDER_OPTIONS, filterPastRenewals } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import LinkifiedText from "@components/team/utils/LinkifiedText"
 import Ordering from "@components/team/utils/Ordering"
@@ -64,7 +66,8 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
 }
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.RenewalPremiumSummaryCsrGroup[], scrollSignal: number }) => {
-  const { rowRefs, highlightedFilename, order, setOrder, showPastRenewals, setShowPastRenewals, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
+  const { rowRefs, highlightedFilename, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
+  const { showPastRenewals, setShowPastRenewals, order, setOrder } = useCommercialCtx()
 
   if(groups.length === 0) {
     return (

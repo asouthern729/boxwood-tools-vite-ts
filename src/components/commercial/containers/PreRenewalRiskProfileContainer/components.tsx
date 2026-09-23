@@ -2,12 +2,14 @@ import claudeIcon from "@assets/claude.png"
 import trashIcon from "@assets/icons/trash/trash.svg"
 import { useHandleChatScrolling } from "@utils/hooks"
 import { useDownloadPreRenewalRiskProfileFile, useDeletePreRenewalRiskProfileFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
-import { AVAILABLE_MCP_TOOLS, SUMMARY_ORDER_OPTIONS, formatTimestamp } from "./utils"
+import { AVAILABLE_MCP_TOOLS, formatTimestamp } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
 
 // Components
+import { useCommercialCtx } from "@components/commercial/context/hooks"
+import { SUMMARY_ORDER_OPTIONS, filterPastRenewals } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import LinkifiedText from "@components/team/utils/LinkifiedText"
 import Ordering from "@components/team/utils/Ordering"
@@ -63,16 +65,40 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
 }
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRenewalRiskProfileCsrGroup[], scrollSignal: number }) => {
-  const { rowRefs, highlightedFilename, order, setOrder, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
+  const { rowRefs, highlightedFilename, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
+  const { showPastRenewals, setShowPastRenewals, order, setOrder } = useCommercialCtx()
+
+  if(groups.length === 0) {
+    return (
+      <>
+        <p className="py-8 text-center text-base-content/70">No pre-renewal risk profiles generated yet.</p>
+        <DeletedMessage message={deletedMessage} />
+      </>
+    )
+  }
+
+  const visibleGroups = groups
+    .map((group) => ({ ...group, summaries: filterPastRenewals(group.summaries, showPastRenewals) }))
+    .filter((group) => group.summaries.length > 0)
 
   return (
     <>
-      {groups.length === 0 ? (
-        <p className="py-8 text-center text-base-content/70">No pre-renewal risk profiles generated yet.</p>
-      ) : (
-        <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
-          {groups.map((group) => (
+          <label className="label cursor-pointer gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showPastRenewals}
+              onChange={(e) => setShowPastRenewals(e.target.checked)}
+              className="checkbox checkbox-sm" />
+            Show past renewals
+          </label>
+        </div>
+        {visibleGroups.length === 0 ? (
+          <p className="py-8 text-center text-base-content/70">No upcoming renewals — all generated profiles are past their renewal date.</p>
+        ) : (
+          visibleGroups.map((group) => (
             <CsrSection
               key={group.csr_code ?? "__unassigned__"}
               group={group}
@@ -80,9 +106,9 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
               rowRefs={rowRefs.current}
               highlightedFilename={highlightedFilename}
               onDeleted={notifyDeleted} />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
       <DeletedMessage message={deletedMessage} />
     </>
   )

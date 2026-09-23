@@ -1,11 +1,8 @@
 import { useState, useRef, useEffect } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { PAGE_SIZE } from "@components/team/utils/Pagination"
-import { usePersistedState } from "@utils/hooks"
 import * as AppActions from '@context/App/AppActions'
-import { SUMMARY_ORDER_OPTIONS, sortSummaries } from './utils'
-
-const ORDER_STORAGE_KEY = "boxwood_pre_renewal_risk_profile_order"
+import { sortSummaries } from '@components/commercial/context/utils'
 
 // Types
 import type * as AppTypes from "@context/App/types"
@@ -108,7 +105,6 @@ export const useHandleCsrGroupList = (groups: AppTypes.PreRenewalRiskProfileCsrG
   const lastHandledSignal = useRef(0)
   const [highlightedFilename, setHighlightedFilename] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const [order, setOrder] = usePersistedState(ORDER_STORAGE_KEY, SUMMARY_ORDER_OPTIONS[0].value)
   const [deletedMessage, setDeletedMessage] = useState<string | null>(null)
   const deletedMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -137,7 +133,7 @@ export const useHandleCsrGroupList = (groups: AppTypes.PreRenewalRiskProfileCsrG
 
   useEffect(() => () => clearTimeout(highlightTimeoutRef.current), [])
 
-  return { rowRefs, highlightedFilename, order, setOrder, deletedMessage, notifyDeleted }
+  return { rowRefs, highlightedFilename, deletedMessage, notifyDeleted }
 }
 
 export const useHandleCsrSection = (summaries: AppTypes.PreRenewalRiskProfileManifestEntry[], order: string) => {
