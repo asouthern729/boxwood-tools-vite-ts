@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { PAGE_SIZE } from "@components/team/utils/Pagination"
+import { usePreviewModal } from "@components/team/utils/PreviewModal/hooks"
 import * as AppActions from '@context/App/AppActions'
 import { sortSummaries } from '@components/commercial/context/utils'
 
@@ -27,6 +28,9 @@ export const useDeletePreRenewalRiskProfileFile = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: MANIFEST_QUERY_KEY }),
   })
 }
+
+export const usePreviewPreRenewalRiskProfileFile = (filename: string) =>
+  usePreviewModal(useCallback(() => AppActions.getPreRenewalRiskProfileFileBlob(filename), [filename]))
 
 const CONFIRM_TIMEOUT_MS = 3000
 

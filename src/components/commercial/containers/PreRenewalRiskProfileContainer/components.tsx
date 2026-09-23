@@ -1,7 +1,7 @@
 import claudeIcon from "@assets/claude.png"
 import trashIcon from "@assets/icons/trash/trash.svg"
 import { useHandleChatScrolling } from "@utils/hooks"
-import { useDownloadPreRenewalRiskProfileFile, useDeletePreRenewalRiskProfileFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
+import { useDownloadPreRenewalRiskProfileFile, useDeletePreRenewalRiskProfileFile, usePreviewPreRenewalRiskProfileFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
 import { AVAILABLE_MCP_TOOLS, formatTimestamp } from "./utils"
 
 // Types
@@ -11,6 +11,7 @@ import type * as AppTypes from "@context/App/types"
 import { useCommercialCtx } from "@components/commercial/context/hooks"
 import { SUMMARY_ORDER_OPTIONS, filterPastRenewals } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
+import DocxPreviewModal from "@components/team/utils/DocxPreviewModal"
 import LinkifiedText from "@components/team/utils/LinkifiedText"
 import Ordering from "@components/team/utils/Ordering"
 import Pagination from "@components/team/utils/Pagination"
@@ -171,6 +172,7 @@ type SummaryRowProps = {
 const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProps) => {
   const { mutate: downloadFile, isPending: isDownloading } = useDownloadPreRenewalRiskProfileFile()
   const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeletePreRenewalRiskProfileFile()
+  const preview = usePreviewPreRenewalRiskProfileFile(summary.filename)
 
   return (
     <li
@@ -190,6 +192,9 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
           <DeleteButton
             isPending={isDeleting}
             onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onDeleted(summary.client_name) })} />
+          <button type="button" onClick={preview.show} className="btn btn-ghost btn-sm hover:bg-secondary">
+            Preview
+          </button>
           <DownloadButton
             isPending={isDownloading}
             onClick={() => downloadFile(summary.filename)} />
@@ -198,6 +203,11 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
           Created {formatTimestamp(summary.generated_at)}
         </div>
       </div>
+      <DocxPreviewModal
+        title={summary.client_name}
+        open={preview.open}
+        onClose={preview.hide}
+        fetchBlob={preview.fetchBlob} />
     </li>
   )
 }

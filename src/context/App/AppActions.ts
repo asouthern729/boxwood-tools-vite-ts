@@ -57,16 +57,23 @@ export const getRenewalPremiumSummaryManifest = async (): Promise<AppTypes.Renew
 }
 
 /**
- * Return a generated CL Renewal Premium Summary xlsx
+ * Fetch a generated CL Renewal Premium Summary xlsx as a blob, for download or preview
  *
  * GET /renewal-premium-summaries/files/Acme_Corp_....xlsx
  */
-export const downloadRenewalPremiumSummaryFile = async (filename: string): Promise<void> => {
+export const getRenewalPremiumSummaryFileBlob = async (filename: string): Promise<Blob> => {
   const res = await authorizedFetch(`${ API_BASE }/renewal-premium-summaries/files/${ encodeURIComponent(filename) }`)
 
-  if(!res.ok) throw new Error(`Failed to download renewal premium summary file: HTTP ${ res.status }`)
+  if(!res.ok) throw new Error(`Failed to load renewal premium summary file: HTTP ${ res.status }`)
 
-  triggerBlobDownload(await res.blob(), filename)
+  return await res.blob()
+}
+
+/**
+ * Download a generated CL Renewal Premium Summary xlsx
+ */
+export const downloadRenewalPremiumSummaryFile = async (filename: string): Promise<void> => {
+  triggerBlobDownload(await getRenewalPremiumSummaryFileBlob(filename), filename)
 }
 
 /**
@@ -134,16 +141,23 @@ export const getPreRenewalRiskProfileManifest = async (): Promise<AppTypes.PreRe
 }
 
 /**
- * Return a generated CL Pre-Renewal Risk Profile docx
+ * Fetch a generated CL Pre-Renewal Risk Profile docx as a blob, for download or preview
  *
  * GET /risk-profile/files/Acme_Corp_....docx
  */
-export const downloadPreRenewalRiskProfileFile = async (filename: string): Promise<void> => {
+export const getPreRenewalRiskProfileFileBlob = async (filename: string): Promise<Blob> => {
   const res = await authorizedFetch(`${ API_BASE }/risk-profile/files/${ encodeURIComponent(filename) }`)
 
-  if(!res.ok) throw new Error(`Failed to download pre-renewal risk profile file: HTTP ${ res.status }`)
+  if(!res.ok) throw new Error(`Failed to load pre-renewal risk profile file: HTTP ${ res.status }`)
 
-  triggerBlobDownload(await res.blob(), filename)
+  return await res.blob()
+}
+
+/**
+ * Download a generated CL Pre-Renewal Risk Profile docx
+ */
+export const downloadPreRenewalRiskProfileFile = async (filename: string): Promise<void> => {
+  triggerBlobDownload(await getPreRenewalRiskProfileFileBlob(filename), filename)
 }
 
 /**
@@ -191,16 +205,23 @@ export const getRenewalSummaryManifest = async (): Promise<AppTypes.RenewalSumma
 }
 
 /**
- * Return a generated CL Renewal Summary docx
+ * Fetch a generated CL Renewal Summary docx as a blob, for download or preview
  *
  * GET /cl-renewal-summary/files/Acme_Corp_....docx
  */
-export const downloadRenewalSummaryFile = async (filename: string): Promise<void> => {
+export const getRenewalSummaryFileBlob = async (filename: string): Promise<Blob> => {
   const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/files/${ encodeURIComponent(filename) }`)
 
-  if(!res.ok) throw new Error(`Failed to download renewal summary file: HTTP ${ res.status }`)
+  if(!res.ok) throw new Error(`Failed to load renewal summary file: HTTP ${ res.status }`)
 
-  triggerBlobDownload(await res.blob(), filename)
+  return await res.blob()
+}
+
+/**
+ * Download a generated CL Renewal Summary docx
+ */
+export const downloadRenewalSummaryFile = async (filename: string): Promise<void> => {
+  triggerBlobDownload(await getRenewalSummaryFileBlob(filename), filename)
 }
 
 /**

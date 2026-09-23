@@ -2,11 +2,12 @@ import claudeIcon from "@assets/claude.png"
 import refreshIcon from "@assets/icons/refersh/refresh.svg"
 import trashIcon from "@assets/icons/trash/trash.svg"
 import { useHandleChatScrolling } from "@utils/hooks"
-import { useDownloadRenewalPremiumSummaryFile, useRefreshRenewalPremiumSummaryFile, useDeleteRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
-import { AVAILABLE_MCP_TOOLS, formatTimestamp } from "./utils"
+import { useDownloadRenewalPremiumSummaryFile, useRefreshRenewalPremiumSummaryFile, useDeleteRenewalPremiumSummaryFile, usePreviewRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
+import { AVAILABLE_MCP_TOOLS, formatTimestamp, extractKeyPremiumRows, formatCurrency, formatPercentChange } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
+import type { WorkBook } from "xlsx"
 
 // Components
 import { useCommercialCtx } from "@components/commercial/context/hooks"
@@ -15,6 +16,7 @@ import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import LinkifiedText from "@components/team/utils/LinkifiedText"
 import Ordering from "@components/team/utils/Ordering"
 import Pagination from "@components/team/utils/Pagination"
+import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
 import FadeOut from "@utils/animations/FadeOut"
 
 type ChatPanelProps = {
@@ -169,6 +171,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
   const { mutate: downloadFile, isPending: isDownloading } = useDownloadRenewalPremiumSummaryFile()
   const { mutate: refreshFile, isPending: isRefreshing, data: refreshResult, error: refreshError } = useRefreshRenewalPremiumSummaryFile()
   const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeleteRenewalPremiumSummaryFile()
+  const preview = usePreviewRenewalPremiumSummaryFile(summary.filename)
 
   return (
     <li
@@ -194,6 +197,9 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
             isPending={isRefreshing}
             disabled={isDeleting}
             onClick={() => refreshFile(summary.filename)} />
+          <button type="button" onClick={preview.show} className="btn btn-ghost btn-sm hover:bg-secondary">
+            Preview
+          </button>
           <DownloadButton
             isPending={isDownloading}
             onClick={() => downloadFile(summary.filename)} />
@@ -202,7 +208,59 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
           <CreatedAt summary={summary} />
         </div>
       </div>
+      <XlsxPreviewModal
+        title={summary.client_name}
+        open={preview.open}
+        onClose={preview.hide}
+        fetchBlob={preview.fetchBlob}
+        reloadKey={preview.reloadKey}
+        footerActions={
+          <div className="flex items-center gap-2">
+            <RefreshFeedback result={refreshResult} error={refreshError} />
+            <RefreshButton
+              isPending={isRefreshing}
+              disabled={isDeleting}
+              onClick={() => refreshFile(summary.filename, { onSuccess: () => preview.reload() })} />
+          </div>
+        }>
+        {(workbook) => <PremiumSummaryTable workbook={workbook} />}
+      </XlsxPreviewModal>
     </li>
+  )
+}
+
+const PremiumSummaryTable = ({ workbook }: { workbook: WorkBook }) => {
+  const rows = extractKeyPremiumRows(workbook)
+
+  if(rows.length === 0) return (
+    <p className="py-8 text-center text-base-content/70">Couldn't find a premium table in this workbook.</p>
+  )
+
+  return (
+    <table className="table-zebra table table-sm">
+      <thead>
+        <tr className="text-secondary">
+          <th>Coverage</th>
+          <th>Policy #</th>
+          <th>Carrier</th>
+          <th>Current</th>
+          <th>Renewal</th>
+          <th>% Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={row.coverage}>
+            <td>{row.coverage}</td>
+            <td>{row.policyNumbers}</td>
+            <td>{row.carrier}</td>
+            <td>{row.current !== null ? formatCurrency(row.current) : "—"}</td>
+            <td>{row.renewal !== null ? formatCurrency(row.renewal) : "—"}</td>
+            <td>{row.percentChange !== null ? formatPercentChange(row.percentChange) : "—"}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
 
