@@ -120,3 +120,36 @@ export type PreRenewalRiskProfileChatTurn = {
   session_id: string
   tool_calls: { name: string; input: unknown }[]
 }
+
+export type RenewalSummaryManifestEntry = {
+  filename: string
+  generated_at: string
+  csr_code: string | null
+  csr_name: string | null
+  client_name: string
+  polnos: string
+  renewal_date: string
+  renewal_date_label: string
+  sizeBytes: number
+}
+
+export type RenewalSummaryCsrGroup = {
+  csr_code: string | null
+  csr_name: string | null
+  summaries: RenewalSummaryManifestEntry[]
+}
+
+export type RenewalSummaryManifest = {
+  groups: RenewalSummaryCsrGroup[]
+}
+
+export type RenewalSummaryChatMessage = {
+  role: "user" | "assistant"
+  text: string
+}
+
+export type RenewalSummaryChatTurn = {
+  reply: string
+  session_id: string
+  tool_calls: { name: string; input: unknown }[]
+}

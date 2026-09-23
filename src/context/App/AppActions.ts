@@ -176,3 +176,60 @@ export const postPreRenewalRiskProfileChat = async (message: string, sessionId: 
 
   return await res.json()
 }
+
+/**
+ * List generated CL Renewal Summary docx files, grouped by CSR
+ *
+ * GET /cl-renewal-summary/manifest
+ */
+export const getRenewalSummaryManifest = async (): Promise<AppTypes.RenewalSummaryManifest> => {
+  const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/manifest`)
+
+  if(!res.ok) throw new Error(`Failed to load renewal summary manifest: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * Return a generated CL Renewal Summary docx
+ *
+ * GET /cl-renewal-summary/files/Acme_Corp_....docx
+ */
+export const downloadRenewalSummaryFile = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/files/${ encodeURIComponent(filename) }`)
+
+  if(!res.ok) throw new Error(`Failed to download renewal summary file: HTTP ${ res.status }`)
+
+  triggerBlobDownload(await res.blob(), filename)
+}
+
+/**
+ * Delete a generated CL Renewal Summary docx
+ *
+ * DELETE /cl-renewal-summary/files/Acme_Corp_....docx
+ */
+export const deleteRenewalSummaryFile = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/files/${ encodeURIComponent(filename) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404) throw new Error(`Failed to delete renewal summary file: HTTP ${ res.status }`)
+}
+
+/**
+ * Send one turn of the CL Renewal Summary chat (scoped to customer_lookup, upcoming_renewals,
+ * cl_renewal_summary, and employee_lookup), resuming the same agent session when sessionId is given
+ *
+ * POST /cl-renewal-summary/chat
+ */
+export const postRenewalSummaryChat = async (message: string, sessionId: string | undefined): Promise<AppTypes.RenewalSummaryChatTurn> => {
+  const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, session_id: sessionId })
+  })
+
+  if(!res.ok) throw new Error(`Failed to send chat message: HTTP ${ res.status }`)
+
+  return await res.json()
+}
