@@ -67,7 +67,8 @@ export const authorizedFetch = async (url: string, init?: RequestInit): Promise<
 }
 
 const ORIGIN = window.location.origin
-const REDIRECT_URI = `${ ORIGIN }${ import.meta.env.VITE_APP_BASE }/login`
+const APP_BASE = import.meta.env.VITE_APP_BASE.replace(/\/$/, "")
+const REDIRECT_URI = `${ ORIGIN }${ APP_BASE }/login`
 
 const TOKEN_KEY = "boxwood_tools_token"
 const CLIENT_KEY = "boxwood_tools_client_id"
@@ -112,7 +113,11 @@ const getStoredToken = (): string | null => {
  * Never resolves — the browser navigates away before any caller could act on a return value.
  */
 const startLogin = async (): Promise<never> => {
-  sessionStorage.setItem(RETURN_TO_KEY, `${ window.location.pathname }${ window.location.search }`)
+  // Router's basename re-prepends APP_BASE on navigate, so strip it here to avoid /tools/tools/…
+  const path = window.location.pathname.startsWith(APP_BASE)
+    ? window.location.pathname.slice(APP_BASE.length) || "/"
+    : window.location.pathname
+  sessionStorage.setItem(RETURN_TO_KEY, `${ path }${ window.location.search }`)
 
   const client = await fetch(`${ ORIGIN }/register`, {
     method: "POST",
