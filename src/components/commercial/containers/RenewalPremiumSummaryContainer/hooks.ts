@@ -29,6 +29,30 @@ export const useRefreshRenewalPremiumSummaryFile = () => {
   })
 }
 
+export const useRefreshCsrSummaries = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (filenames: string[]) => {
+      let updated = 0
+      let failed = 0
+
+      // Sequential: each refresh rewrites the server-side manifest
+      for(const filename of filenames) {
+        try {
+          const result = await AppActions.refreshRenewalPremiumSummaryFile(filename)
+          if(result.changes.length > 0) updated++
+        } catch {
+          failed++
+        }
+      }
+
+      return { updated, failed }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: MANIFEST_QUERY_KEY }),
+  })
+}
+
 export const useDeleteRenewalPremiumSummaryFile = () => {
   const queryClient = useQueryClient()
 

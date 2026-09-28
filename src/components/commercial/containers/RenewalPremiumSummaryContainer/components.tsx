@@ -2,7 +2,7 @@ import claudeIcon from "@assets/claude.png"
 import refreshIcon from "@assets/icons/refersh/refresh.svg"
 import trashIcon from "@assets/icons/trash/trash.svg"
 import { useHandleChatScrolling } from "@utils/hooks"
-import { useDownloadRenewalPremiumSummaryFile, useRefreshRenewalPremiumSummaryFile, useDeleteRenewalPremiumSummaryFile, usePreviewRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
+import { useDownloadRenewalPremiumSummaryFile, useRefreshRenewalPremiumSummaryFile, useRefreshCsrSummaries, useDeleteRenewalPremiumSummaryFile, usePreviewRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
 import { AVAILABLE_MCP_TOOLS, formatTimestamp, extractKeyPremiumRows, formatCurrency, formatPercentChange } from "./utils"
 
 // Types
@@ -11,7 +11,7 @@ import type { WorkBook } from "xlsx"
 
 // Components
 import { useCommercialCtx } from "@components/commercial/context/hooks"
-import { SUMMARY_ORDER_OPTIONS, filterPastRenewals } from "@components/commercial/context/utils"
+import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, isPastRenewal } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import LinkifiedText from "@components/team/utils/LinkifiedText"
 import Ordering from "@components/team/utils/Ordering"
@@ -141,9 +141,12 @@ const CsrSection = ({ group, order, rowRefs, highlightedFilename, onDeleted }: C
   return (
     <div ref={sectionRef} className="card border border-base-300 bg-base-100 shadow-sm">
       <div className="card-body gap-1 p-0 py-2">
-        <h3 className="px-4 pt-1 text-sm font-semibold text-primary">
-          {group.csr_name ?? "Unassigned"}
-        </h3>
+        <div className="flex items-center justify-between gap-2 px-4 pt-1">
+          <h3 className="text-sm font-semibold text-primary">
+            {group.csr_name ?? "Unassigned"}
+          </h3>
+          <CsrRefreshButton group={group} />
+        </div>
         <ul className="divide-y divide-base-300">
           {pageSummaries.map((summary) => (
             <SummaryRow
@@ -160,6 +163,49 @@ const CsrSection = ({ group, order, rowRefs, highlightedFilename, onDeleted }: C
   )
 }
 
+const CsrRefreshButton = ({ group }: { group: AppTypes.RenewalPremiumSummaryCsrGroup }) => {
+  const { mutate: refreshAll, isPending, data: result } = useRefreshCsrSummaries()
+
+  const upcomingFilenames = group.summaries
+    .filter((summary) => !isPastRenewal(summary.renewal_date))
+    .map((summary) => summary.filename)
+
+  if(!group.csr_name || upcomingFilenames.length === 0) return null
+
+  const firstName = group.csr_name.split(" ")[0]
+
+  const btnContent = isPending ?
+    <span className="loading loading-spinner loading-xs" /> :
+    <img src={refreshIcon} alt="" className="size-4" />
+
+  return (
+    <div className="flex items-center gap-2">
+      <CsrRefreshFeedback result={isPending ? undefined : result} />
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() => refreshAll(upcomingFilenames)}
+        title={`Refresh Current/Renewal premiums from AMS360 for all of ${ firstName }'s customers`}
+        className="btn btn-ghost btn-sm hover:bg-secondary">
+          Refresh {firstName}'s Customers
+          {btnContent}
+      </button>
+    </div>
+  )
+}
+
+const CsrRefreshFeedback = ({ result }: { result: { updated: number, failed: number } | undefined }) => {
+  if(!result) return null
+
+  const failedText = result.failed > 0 ? ` (${ result.failed } failed)` : ""
+
+  return (
+    <FadeOut duration={4} className="text-sm text-primary italic">
+      <span>Refreshed {result.updated} customer{result.updated === 1 ? "" : "s"}{failedText}</span>
+    </FadeOut>
+  )
+}
+
 type SummaryRowProps = {
   summary: AppTypes.RenewalPremiumSummaryManifestEntry
   rowRefs: Map<string, HTMLLIElement>
@@ -172,6 +218,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
   const { mutate: refreshFile, isPending: isRefreshing, data: refreshResult, error: refreshError } = useRefreshRenewalPremiumSummaryFile()
   const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeleteRenewalPremiumSummaryFile()
   const preview = usePreviewRenewalPremiumSummaryFile(summary.filename)
+  const pastRenewal = isPastRenewal(summary.renewal_date)
 
   return (
     <li
@@ -193,10 +240,12 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
             isPending={isDeleting}
             disabled={isRefreshing}
             onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onDeleted(summary.client_name) })} />
-          <RefreshButton
-            isPending={isRefreshing}
-            disabled={isDeleting}
-            onClick={() => refreshFile(summary.filename)} />
+          {!pastRenewal && (
+            <RefreshButton
+              isPending={isRefreshing}
+              disabled={isDeleting}
+              onClick={() => refreshFile(summary.filename)} />
+          )}
           <button type="button" onClick={preview.show} className="btn btn-ghost btn-sm hover:bg-secondary">
             Preview
           </button>
@@ -214,7 +263,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
         onClose={preview.hide}
         fetchBlob={preview.fetchBlob}
         reloadKey={preview.reloadKey}
-        footerActions={
+        footerActions={!pastRenewal && (
           <div className="flex items-center gap-2">
             <RefreshFeedback result={refreshResult} error={refreshError} />
             <RefreshButton
@@ -222,7 +271,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
               disabled={isDeleting}
               onClick={() => refreshFile(summary.filename, { onSuccess: () => preview.reload() })} />
           </div>
-        }>
+        )}>
         {(workbook) => <PremiumSummaryTable workbook={workbook} />}
       </XlsxPreviewModal>
     </li>
