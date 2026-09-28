@@ -1,5 +1,5 @@
 import { useDownloadReportFile, useHandleReportList } from "./hooks"
-import { formatFileSize, formatReportDate, formatSyncedUntil, handleLastSyncBanner, REPORT_ORDER_OPTIONS } from "./utils"
+import { formatFileSize, formatReportDate, REPORT_ORDER_OPTIONS } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
@@ -7,18 +7,6 @@ import type * as AppTypes from "@context/App/types"
 // Components
 import Ordering from "@components/team/utils/Ordering"
 import Pagination from "@components/team/utils/Pagination"
-
-export const LastSyncBanner = ({ lastSync }: { lastSync: AppTypes.DownloadReportLastSync | null }) => {
-  const { summaryText, syncedUntil } = handleLastSyncBanner(lastSync)
-
-  if(!syncedUntil) return null
-
-  return (
-    <p className="px-4 py-2 text-sm text-base-content/60">
-      Last sync ({ formatSyncedUntil(syncedUntil) }): {summaryText}
-    </p>
-  )
-}
 
 export const ReportList = ({ reports }: { reports: AppTypes.DownloadReportManifestEntry[] }) => {
   const { order, setOrder, pageReports, currentPage, totalItems, setPage, listRef } = useHandleReportList(reports)

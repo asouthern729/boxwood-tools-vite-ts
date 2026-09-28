@@ -1,30 +1,16 @@
-import { Link, useLocation } from "react-router"
+import { Link } from "react-router"
 import xlsxIcon from "@assets/icons/xlsx/xlsx.svg"
 import docxIcon from "@assets/icons/docx/docx.svg"
-import { teamNavDescriptions } from "./utils"
+import { useHandleNavBtns } from "./hooks"
 
 // Types
 import type * as AppTypes from '@context/App/types'
 
 // Components
 import FadeIn from "@utils/animations/FadeIn"
-import SlideInLeft from "@utils/animations/SlideInLeft"
-import SlideInRight from "@utils/animations/SlideInRight"
 
 export const TeamNavBtns = () => {
-  const { pathname } = useLocation()
-
-  const team = pathname.startsWith("/commercial") ?
-    "commercial" :
-    "personal"
-
-  const descriptions = team === "commercial" ?
-    teamNavDescriptions[0] :
-    teamNavDescriptions[1]
-
-  const Animation = team === "commercial" ?
-    SlideInLeft :
-    SlideInRight
+  const { descriptions, Animation } = useHandleNavBtns()
 
   return (
     <FadeIn>
@@ -54,7 +40,7 @@ type TeamNavBtnProps = {
 const TeamNavBtn = ({ to, title, description, output }: TeamNavBtnProps) => (
   <Link
     to={to}
-    className="card border border-base-300 bg-base-100 shadow-sm transition hover:border-primary hover:shadow-md hover:bg-primary/10">
+    className="card border border-base-300 bg-base-100 shadow-sm transition hover:border-primary hover:shadow-md hover:bg-primary/10 hover:backdrop-blur-sm">
     <div className="card-body gap-1">
       <div className="flex items-center justify-between gap-2">
         <h2 className="card-title text-base">{title}</h2>

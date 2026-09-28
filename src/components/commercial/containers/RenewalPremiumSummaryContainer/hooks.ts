@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { PAGE_SIZE } from "@components/team/utils/Pagination"
 import { usePreviewModal } from "@components/team/utils/PreviewModal/hooks"
 import * as AppActions from '@context/App/AppActions'
 import { sortSummaries } from '@components/commercial/context/utils'
+import { PAGE_SIZE } from "@components/team/utils/Pagination/utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"

@@ -1,8 +1,8 @@
 import { useRef, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { PAGE_SIZE } from "@components/team/utils/Pagination"
 import { usePersistedState } from "@utils/hooks"
 import { REPORT_ORDER_OPTIONS, sortReports } from './utils'
+import { PAGE_SIZE } from "@components/team/utils/Pagination/utils"
 
 // Actions
 import { downloadReportFile, getDownloadReportManifest } from "@context/App/AppActions"

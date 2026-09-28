@@ -7,7 +7,7 @@ import Nav from '../Nav'
 function Layout() {
 
   return (
-    <div className="flex flex-col w-full min-h-screen lg:h-full">
+    <div className="relative flex flex-col w-full min-h-screen lg:h-full">
       <Components.Header />
       <Nav />
       <main className="flex flex-col lg:flex-1">
@@ -15,6 +15,7 @@ function Layout() {
           <Outlet />
         </div>
       </main>
+      <Components.DataFreshnessNotice />
       <Components.Footer />
     </div>
   )

@@ -4,7 +4,8 @@ import { NAV_LINKS } from "../utils"
 export const NavButtons = () => (
   <div className="join">
     {NAV_LINKS.map(({ to, label }) => (
-      <NavBtn 
+      <NavBtn
+        key={to} 
         to={to} 
         label={label} />
     ))}

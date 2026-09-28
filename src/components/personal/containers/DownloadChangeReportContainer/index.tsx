@@ -14,10 +14,7 @@ function DownloadChangeReportContainer() {
 
   return (
     <FadeIn>
-      <>
-        <Components.LastSyncBanner lastSync={reports?.lastSync ?? null} />
-        <Components.ReportList reports={reports?.reports ?? []} />
-      </>
+      <Components.ReportList reports={reports?.reports ?? []} />
     </FadeIn>
   )
 }

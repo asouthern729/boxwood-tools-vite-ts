@@ -7,11 +7,6 @@ export const formatReportDate = (dateStr: string) => {
   return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })
 }
 
-export const formatSyncedUntil = (dateStr: string) => {
-  const date = new Date(dateStr)
-  return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
-}
-
 export const formatFileSize = (bytes: number) => {
   if(bytes < 1024) return `${ bytes } B`
 
@@ -19,18 +14,6 @@ export const formatFileSize = (bytes: number) => {
   if(kb < 1024) return `${ kb.toFixed(1) } KB`
 
   return `${ (kb / 1024).toFixed(1) } MB`
-}
-
-export const handleLastSyncBanner = (lastSync: AppTypes.DownloadReportLastSync | null) => {
-  if(!lastSync) return {}
-
-  const { syncedUntil, tablesTouched, rowsEntered } = lastSync!
-
-  const summaryText = rowsEntered === 0 ?
-    "no new rows" :
-    `${ rowsEntered } row${ rowsEntered === 1 ? "" : "s" } from ${ tablesTouched.join(", ") }`
-
-  return { summaryText, syncedUntil }
 }
 
 export const REPORT_ORDER_OPTIONS: OrderingOption[] = [

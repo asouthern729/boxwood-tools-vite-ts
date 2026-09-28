@@ -2,6 +2,7 @@ import { NavLink } from "react-router"
 import magpie from "@assets/magpie.png"
 import boxwoodLogo from "@assets/boxwood-logo.png"
 import { NAV_LINKS } from "../utils"
+import { FOOTER_EXT_LINKS, handleDataFreshNotice } from "./utils"
 
 export const Header = () => (
   <header className="mx-auto my-12 flex items-center gap-5">
@@ -13,25 +14,27 @@ export const Header = () => (
   </header>
 )
 
+export const DataFreshnessNotice = () => {
+  const label = handleDataFreshNotice()
+
+  return (
+    <div className="bottom-0 right-0 z-10 px-4 py-1.5 text-end text-xs text-neutral dark:text-neutral-content/50 2xl:sticky">
+      AMS360 data synced at 7AM {label}
+    </div>
+  )
+}
+
 export const Footer = () => (
   <footer>
     <div className="mt-12 border-t border-base-300 pt-5 font-mono text-[0.72rem] tracking-[0.02em] text-base-content/60">
       <nav aria-label="Site pages" className="mb-[0.6rem] flex flex-wrap gap-x-[1.1rem] gap-y-[0.35rem]">
         <FooterNavLinks />
-        <a
-          href="https://mcp.boxwoodins.com/mcp-tools/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-base-content/60 no-underline hover:underline">
-          MCP Tools
-        </a>
-        <a
-          href="https://mcp.boxwoodins.com/ams360-sync/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-base-content/60 no-underline hover:underline">
-          AMS360 Sync
-        </a>
+        {FOOTER_EXT_LINKS.map(({ href, label }) => (
+          <FooterExtLink
+            key={href} 
+            href={href} 
+            label={label} />
+        ))}
       </nav>
       Boxwood Tools
     </div>
@@ -56,6 +59,22 @@ export const Footer = () => (
       </a>
     </div>
   </footer>
+)
+
+type FooterExtLinkProps = {
+  href: string
+  label: string
+}
+
+const FooterExtLink = ({ href, label }: FooterExtLinkProps) => (
+  <a
+    key={href}
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-base-content/60 no-underline hover:underline">
+      {label}
+  </a>
 )
 
 const FooterNavLinks = () => (
