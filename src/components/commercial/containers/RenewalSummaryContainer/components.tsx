@@ -12,7 +12,7 @@ import { useCommercialCtx } from "@components/commercial/context/hooks"
 import { SUMMARY_ORDER_OPTIONS, filterPastRenewals } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import DocxPreviewModal from "@components/team/utils/DocxPreviewModal"
-import LinkifiedText from "@components/team/utils/LinkifiedText"
+import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
 import Pagination from "@components/team/utils/Pagination"
 import FadeOut from "@utils/animations/FadeOut"
@@ -290,7 +290,7 @@ const ChatMsgs = ({ messages }: { messages: AppTypes.RenewalSummaryChatMessage[]
           className={`chat-bubble whitespace-pre-wrap text-sm ${ message.role === "user" ?
             "bg-base-300 text-base-content" :
             "bg-accent/20 text-base-content" }`}>
-          <LinkifiedText text={message.text} />
+          <ChatMessageText text={message.text} />
         </div>
       </div>
     ))}

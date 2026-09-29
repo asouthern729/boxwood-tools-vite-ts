@@ -13,7 +13,7 @@ import type { WorkBook } from "xlsx"
 import { useCommercialCtx } from "@components/commercial/context/hooks"
 import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, isPastRenewal } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
-import LinkifiedText from "@components/team/utils/LinkifiedText"
+import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
 import Pagination from "@components/team/utils/Pagination"
 import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
@@ -452,7 +452,7 @@ const ChatMsgs = ({ messages }: { messages: AppTypes.RenewalPremiumSummaryChatMe
           className={`chat-bubble whitespace-pre-wrap text-sm ${ message.role === "user" ?
             "bg-base-300 text-base-content" :
             "bg-accent/20 text-base-content" }`}>
-          <LinkifiedText text={message.text} />
+          <ChatMessageText text={message.text} />
         </div>
       </div>
     ))}
