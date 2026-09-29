@@ -153,3 +153,8 @@ export type RenewalSummaryChatTurn = {
   session_id: string
   tool_calls: { name: string; input: unknown }[]
 }
+export type PersonalRenewalSummaryManifestEntry = RenewalSummaryManifestEntry
+export type PersonalRenewalSummaryCsrGroup = RenewalSummaryCsrGroup
+export type PersonalRenewalSummaryManifest = RenewalSummaryManifest
+export type PersonalRenewalSummaryChatMessage = RenewalSummaryChatMessage
+export type PersonalRenewalSummaryChatTurn = RenewalSummaryChatTurn

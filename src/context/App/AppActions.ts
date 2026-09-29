@@ -254,3 +254,67 @@ export const postRenewalSummaryChat = async (message: string, sessionId: string 
 
   return await res.json()
 }
+
+/**
+ * List generated PL Renewal Summary docx files, grouped by CSR
+ *
+ * GET /pl-renewal-summary/manifest
+ */
+export const getPersonalRenewalSummaryManifest = async (): Promise<AppTypes.PersonalRenewalSummaryManifest> => {
+  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-summary/manifest`)
+
+  if(!res.ok) throw new Error(`Failed to load renewal summary manifest: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * Fetch a generated PL Renewal Summary docx as a blob, for download or preview
+ *
+ * GET /pl-renewal-summary/files/Jane_Doe_H01_....docx
+ */
+export const getPersonalRenewalSummaryFileBlob = async (filename: string): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-summary/files/${ encodeURIComponent(filename) }`)
+
+  if(!res.ok) throw new Error(`Failed to load renewal summary file: HTTP ${ res.status }`)
+
+  return await res.blob()
+}
+
+/**
+ * Download a generated PL Renewal Summary docx
+ */
+export const downloadPersonalRenewalSummaryFile = async (filename: string): Promise<void> => {
+  triggerBlobDownload(await getPersonalRenewalSummaryFileBlob(filename), filename)
+}
+
+/**
+ * Delete a generated PL Renewal Summary docx
+ *
+ * DELETE /pl-renewal-summary/files/Jane_Doe_H01_....docx
+ */
+export const deletePersonalRenewalSummaryFile = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-summary/files/${ encodeURIComponent(filename) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404) throw new Error(`Failed to delete renewal summary file: HTTP ${ res.status }`)
+}
+
+/**
+ * Send one turn of the PL Renewal Summary chat (scoped to customer_lookup, upcoming_renewals,
+ * pl_renewal_summary, and employee_lookup), resuming the same agent session when sessionId is given
+ *
+ * POST /pl-renewal-summary/chat
+ */
+export const postPersonalRenewalSummaryChat = async (message: string, sessionId: string | undefined): Promise<AppTypes.PersonalRenewalSummaryChatTurn> => {
+  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-summary/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, session_id: sessionId })
+  })
+
+  if(!res.ok) throw new Error(`Failed to send chat message: HTTP ${ res.status }`)
+
+  return await res.json()
+}
