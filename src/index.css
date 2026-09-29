@@ -124,19 +124,29 @@
     isolation: isolate;
   }
 
-  body::before {
+  /* dot size tapers top to bottom via the SVG column mask, which a repeating gradient can't do */
+  body::before,
+  body::after {
     content: '';
     position: fixed;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    opacity: 0.18;
-    background-image:
-      radial-gradient(var(--color-primary) 6%, transparent 7%),
-      radial-gradient(var(--color-secondary) 6%, transparent 7%);
-    background-size: 20px 20px;
-    background-position: 0 0, 10px 10px;
-    mask-image: linear-gradient(to bottom, black, transparent);
+    opacity: 0.3;
+    mask-image: linear-gradient(to bottom, black, transparent), url('./assets/dots/dots-column.svg');
+    mask-repeat: no-repeat, repeat-x;
+    mask-size: 100% 100%, auto;
+    mask-composite: intersect;
+  }
+
+  body::before {
+    background: var(--color-primary);
+    mask-position: 0 0, 0 0;
+  }
+
+  body::after {
+    background: var(--color-secondary);
+    mask-position: 0 0, 10px 10px;
   }
 
   #root {

@@ -8,8 +8,8 @@ export const Header = () => (
   <header className="mx-auto my-12 flex items-center gap-5">
     <img src={boxwoodLogo} alt="Boxwood Insurance Group" className="block h-26 w-auto shrink-0" />
     <div className="text-end">
-      <h1>Boxwood Insurance Group</h1>
-      <span className="text-neutral-content/70 inline-block -translate-y-4 text-lg font-semibold">Employee Tools</span>
+      <h1 className="text-shadow-md">Boxwood Insurance Group</h1>
+      <span className="text-secondary inline-block -translate-y-4 text-lg font-semibold">Employee Tools</span>
     </div>
   </header>
 )
