@@ -13,6 +13,7 @@ export type AllTools = CommercialTools|PersonalTools
 export type ToolOutputs =
   | "xlsx"
   | "docx"
+  | "pdf"
 
 export type DownloadReportManifestEntry = {
   date: string
