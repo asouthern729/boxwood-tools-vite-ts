@@ -318,3 +318,67 @@ export const postPersonalRenewalSummaryChat = async (message: string, sessionId:
 
   return await res.json()
 }
+
+/**
+ * List generated PL Renewal Premium Change xlsx files, grouped by CSR
+ *
+ * GET /pl-renewal-premium-change/manifest
+ */
+export const getPersonalPremiumChangeManifest = async (): Promise<AppTypes.PersonalPremiumChangeManifest> => {
+  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-premium-change/manifest`)
+
+  if(!res.ok) throw new Error(`Failed to load premium change manifest: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * Fetch a generated PL Renewal Premium Change xlsx as a blob, for download or preview
+ *
+ * GET /pl-renewal-premium-change/files/Jane_Doe_2026-10-18_Renewal_Change.xlsx
+ */
+export const getPersonalPremiumChangeFileBlob = async (filename: string): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-premium-change/files/${ encodeURIComponent(filename) }`)
+
+  if(!res.ok) throw new Error(`Failed to load premium change file: HTTP ${ res.status }`)
+
+  return await res.blob()
+}
+
+/**
+ * Download a generated PL Renewal Premium Change xlsx
+ */
+export const downloadPersonalPremiumChangeFile = async (filename: string): Promise<void> => {
+  triggerBlobDownload(await getPersonalPremiumChangeFileBlob(filename), filename)
+}
+
+/**
+ * Delete a generated PL Renewal Premium Change xlsx
+ *
+ * DELETE /pl-renewal-premium-change/files/Jane_Doe_2026-10-18_Renewal_Change.xlsx
+ */
+export const deletePersonalPremiumChangeFile = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-premium-change/files/${ encodeURIComponent(filename) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404) throw new Error(`Failed to delete premium change file: HTTP ${ res.status }`)
+}
+
+/**
+ * Send one turn of the PL Renewal Premium Change chat (scoped to customer_lookup, upcoming_renewals,
+ * employee_lookup, and pl_renewal_premium_change), resuming the same agent session when sessionId is given
+ *
+ * POST /pl-renewal-premium-change/chat
+ */
+export const postPersonalPremiumChangeChat = async (message: string, sessionId: string | undefined): Promise<AppTypes.PersonalPremiumChangeChatTurn> => {
+  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-premium-change/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, session_id: sessionId })
+  })
+
+  if(!res.ok) throw new Error(`Failed to send chat message: HTTP ${ res.status }`)
+
+  return await res.json()
+}

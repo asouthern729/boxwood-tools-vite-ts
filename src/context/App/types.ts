@@ -158,3 +158,26 @@ export type PersonalRenewalSummaryCsrGroup = RenewalSummaryCsrGroup
 export type PersonalRenewalSummaryManifest = RenewalSummaryManifest
 export type PersonalRenewalSummaryChatMessage = RenewalSummaryChatMessage
 export type PersonalRenewalSummaryChatTurn = RenewalSummaryChatTurn
+
+export type PersonalPremiumChangeManifestEntry = RenewalSummaryManifestEntry & {
+  carriers: string
+  current_total: number
+  renewal_total: number
+  change_amount: number
+  change_percent: number | null
+  term: "annual" | "six_month"
+  note: string
+}
+
+export type PersonalPremiumChangeCsrGroup = {
+  csr_code: string | null
+  csr_name: string | null
+  summaries: PersonalPremiumChangeManifestEntry[]
+}
+
+export type PersonalPremiumChangeManifest = {
+  groups: PersonalPremiumChangeCsrGroup[]
+}
+
+export type PersonalPremiumChangeChatMessage = RenewalSummaryChatMessage
+export type PersonalPremiumChangeChatTurn = RenewalSummaryChatTurn
