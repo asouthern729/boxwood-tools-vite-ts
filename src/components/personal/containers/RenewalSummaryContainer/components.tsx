@@ -1,7 +1,7 @@
 import claudeIcon from "@assets/claude.png"
 import trashIcon from "@assets/icons/trash/trash.svg"
 import { useHandleChatScrolling } from "@utils/hooks"
-import { useDownloadPersonalRenewalSummaryFile, useDeletePersonalRenewalSummaryFile, usePreviewPersonalRenewalSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
+import { useDownloadPersonalRenewalSummaryFile, useDownloadPersonalRenewalSummaryPdf, useDeletePersonalRenewalSummaryFile, usePreviewPersonalRenewalSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
 import { AVAILABLE_MCP_TOOLS, formatTimestamp } from "./utils"
 
 // Types
@@ -161,6 +161,7 @@ type SummaryRowProps = {
 
 const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProps) => {
   const { mutate: downloadFile, isPending: isDownloading } = useDownloadPersonalRenewalSummaryFile()
+  const { mutate: downloadPdf, isPending: isDownloadingPdf, error: pdfError } = useDownloadPersonalRenewalSummaryPdf()
   const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeletePersonalRenewalSummaryFile(() => onDeleted(summary.client_name))
   const preview = usePreviewPersonalRenewalSummaryFile(summary.filename)
 
@@ -176,6 +177,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
         <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
         <span className="text-sm text-base-content/60">{summary.polnos}</span>
         {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
+        {pdfError && <span className="text-sm text-error">{pdfError.message}</span>}
       </div>
       <div className="flex flex-col items-end gap-2">
         <div className="flex items-center gap-2">
@@ -188,6 +190,9 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
           <DownloadButton
             isPending={isDownloading}
             onClick={() => downloadFile(summary.filename)} />
+          <PdfDownloadButton
+            isPending={isDownloadingPdf}
+            onClick={() => downloadPdf(summary.filename)} />
         </div>
         <div className="text-right text-xs text-base-content/50 italic">
           Created {formatTimestamp(summary.generated_at)}
@@ -232,13 +237,29 @@ type DownloadButtonProps = {
 }
 
 const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
-  const btnContent = isPending ? "Downloading…" : "Download"
+  const btnContent = isPending ? "Downloading…" : "Word"
 
   return (
     <button
       type="button"
       disabled={isPending}
       onClick={onClick}
+      title="Download as Word (.docx)"
+      className="btn btn-neutral btn-sm hover:bg-secondary">
+        {btnContent}
+    </button>
+  )
+}
+
+const PdfDownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
+  const btnContent = isPending ? "Downloading…" : "PDF"
+
+  return (
+    <button
+      type="button"
+      disabled={isPending}
+      onClick={onClick}
+      title="Download as PDF"
       className="btn btn-neutral btn-sm hover:bg-secondary">
         {btnContent}
     </button>

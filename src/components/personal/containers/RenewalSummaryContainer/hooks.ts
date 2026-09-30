@@ -20,6 +20,10 @@ export const useDownloadPersonalRenewalSummaryFile = () => useMutation({
   mutationFn: AppActions.downloadPersonalRenewalSummaryFile,
 })
 
+export const useDownloadPersonalRenewalSummaryPdf = () => useMutation({
+  mutationFn: AppActions.downloadPersonalRenewalSummaryPdf,
+})
+
 // onDeleted lives on the hook, not mutate(), because mutate() callbacks are dropped once the deleted row unmounts
 export const useDeletePersonalRenewalSummaryFile = (onDeleted: () => void) => {
   const queryClient = useQueryClient()

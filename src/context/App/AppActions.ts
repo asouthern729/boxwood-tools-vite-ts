@@ -289,6 +289,22 @@ export const downloadPersonalRenewalSummaryFile = async (filename: string): Prom
 }
 
 /**
+ * Download a generated PL Renewal Summary as a PDF, converted server-side from the docx
+ *
+ * GET /pl-renewal-summary/files/Jane_Doe_H01_....docx/pdf
+ */
+export const downloadPersonalRenewalSummaryPdf = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-summary/files/${ encodeURIComponent(filename) }/pdf`)
+
+  if(!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error_description ?? `Failed to download renewal summary PDF: HTTP ${ res.status }`)
+  }
+
+  triggerBlobDownload(await res.blob(), filename.replace(/\.docx$/i, ".pdf"))
+}
+
+/**
  * Delete a generated PL Renewal Summary docx
  *
  * DELETE /pl-renewal-summary/files/Jane_Doe_H01_....docx
