@@ -15,7 +15,7 @@ import DocxPreviewModal from "@components/team/utils/DocxPreviewModal"
 import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
 import Pagination from "@components/team/utils/Pagination"
-import FadeOut from "@utils/animations/FadeOut"
+import FooterMessage from "@components/team/utils/FooterMessage"
 
 type ChatPanelProps = {
   messages: AppTypes.PreRenewalRiskProfileChatMessage[]
@@ -73,7 +73,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
     return (
       <>
         <p className="py-8 text-center text-base-content/70">No pre-renewal risk profiles generated yet.</p>
-        <DeletedMessage message={deletedMessage} />
+        <FooterMessage message={deletedMessage} />
       </>
     )
   }
@@ -110,18 +110,8 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
           ))
         )}
       </div>
-      <DeletedMessage message={deletedMessage} />
+      <FooterMessage message={deletedMessage} />
     </>
-  )
-}
-
-const DeletedMessage = ({ message }: { message: string | null }) => {
-  if(!message) return null
-
-  return (
-    <FadeOut duration={4} className="fixed bottom-4 left-4 z-50 text-sm text-primary italic">
-      <span>{message}</span>
-    </FadeOut>
   )
 }
 

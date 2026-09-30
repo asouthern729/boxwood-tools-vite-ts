@@ -16,6 +16,7 @@ import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
 import Pagination from "@components/team/utils/Pagination"
+import FooterMessage from "@components/team/utils/FooterMessage"
 import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
 import FadeOut from "@utils/animations/FadeOut"
 
@@ -75,7 +76,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
     return (
       <>
         <p className="py-8 text-center text-base-content/70">No renewal premium summaries generated yet.</p>
-        <DeletedMessage message={deletedMessage} />
+        <FooterMessage message={deletedMessage} />
       </>
     )
   }
@@ -112,18 +113,8 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
           ))
         )}
       </div>
-      <DeletedMessage message={deletedMessage} />
+      <FooterMessage message={deletedMessage} />
     </>
-  )
-}
-
-const DeletedMessage = ({ message }: { message: string | null }) => {
-  if(!message) return null
-
-  return (
-    <FadeOut duration={4} className="fixed bottom-4 left-4 z-50 text-sm text-primary italic">
-      <span>{message}</span>
-    </FadeOut>
   )
 }
 
