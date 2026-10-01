@@ -1,8 +1,9 @@
 import claudeIcon from "@assets/claude.png"
 import trashIcon from "@assets/icons/trash/trash.svg"
+import pdfIcon from "@assets/icons/pdf/pdf.svg"
 import { useHandleChatScrolling } from "@utils/hooks"
-import { useDownloadRenewalSummaryFile, useDeleteRenewalSummaryFile, usePreviewRenewalSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
-import { AVAILABLE_MCP_TOOLS, formatTimestamp } from "./utils"
+import { useDownloadRenewalSummaryFile, useDownloadRenewalSummaryPdf, useDeleteRenewalSummaryFile, usePreviewRenewalSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton, useRenewalSummaryQuotes, useUploadRenewalSummaryQuotes, useHandleQuoteRemoval } from "./hooks"
+import { AVAILABLE_MCP_TOOLS, QUOTE_HELP_TEXT, formatTimestamp, formatQuoteLine } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
@@ -16,6 +17,7 @@ import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
+import PdfDropZone from "@components/team/utils/PdfDropZone"
 
 type ChatPanelProps = {
   messages: AppTypes.RenewalSummaryChatMessage[]
@@ -169,8 +171,11 @@ type SummaryRowProps = {
 
 const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProps) => {
   const { mutate: downloadFile, isPending: isDownloading } = useDownloadRenewalSummaryFile()
+  const { mutate: downloadPdf, isPending: isDownloadingPdf, error: pdfError } = useDownloadRenewalSummaryPdf()
   const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeleteRenewalSummaryFile()
   const preview = usePreviewRenewalSummaryFile(summary.filename)
+  const quotes = useRenewalSummaryQuotes(summary.filename)
+  const { upload, uploading, errors: uploadErrors, clearErrors } = useUploadRenewalSummaryQuotes(summary.filename)
 
   return (
     <li
@@ -178,34 +183,147 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
         if(el) rowRefs.set(summary.filename, el)
         else rowRefs.delete(summary.filename)
       }}
-      className={`flex items-center gap-3 px-4 py-3 transition-colors duration-1000 ${ highlighted ? "bg-base-200" : "" }`}>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <span className="font-semibold">{summary.client_name}</span>
-        <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
-        <span className="text-sm text-base-content/60">{summary.polnos}</span>
-        {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
-      </div>
-      <div className="flex flex-col items-end gap-2">
-        <div className="flex items-center gap-2">
-          <DeleteButton
-            isPending={isDeleting}
-            onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onDeleted(summary.client_name) })} />
-          <button type="button" onClick={preview.show} className="btn btn-ghost btn-sm hover:bg-secondary">
-            Preview
-          </button>
-          <DownloadButton
-            isPending={isDownloading}
-            onClick={() => downloadFile(summary.filename)} />
+      className={`transition-colors duration-1000 ${ highlighted ? "bg-base-200" : "" }`}>
+      <PdfDropZone variant="area" onFiles={upload} className="flex flex-col gap-2 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="font-semibold">{summary.client_name}</span>
+            <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
+            <span className="text-sm text-base-content/60">{summary.polnos}</span>
+            {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
+            {pdfError && <span className="text-sm text-error">{pdfError.message}</span>}
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-2">
+              <DeleteButton
+                isPending={isDeleting}
+                onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onDeleted(summary.client_name) })} />
+              <PdfDropZone
+                variant="button"
+                onFiles={upload}
+                title={`Upload a carrier quote PDF, or drop it on this row. ${ QUOTE_HELP_TEXT }`}
+                className="btn btn-ghost btn-sm hover:bg-secondary">
+                  Upload Quote
+              </PdfDropZone>
+              <button type="button" onClick={preview.show} className="btn btn-ghost btn-sm hover:bg-secondary">
+                Preview
+              </button>
+              <DownloadButton
+                isPending={isDownloading}
+                onClick={() => downloadFile(summary.filename)} />
+              <PdfDownloadButton
+                isPending={isDownloadingPdf}
+                onClick={() => downloadPdf(summary.filename)} />
+            </div>
+            <div className="text-right text-xs text-base-content/50 italic">
+              Created {formatTimestamp(summary.generated_at)}
+            </div>
+          </div>
         </div>
-        <div className="text-right text-xs text-base-content/50 italic">
-          Created {formatTimestamp(summary.generated_at)}
-        </div>
-      </div>
+        <QuoteList
+          filename={summary.filename}
+          quotes={quotes}
+          uploading={uploading}
+          errors={uploadErrors}
+          onDismissErrors={clearErrors} />
+      </PdfDropZone>
       <DocxPreviewModal
         title={summary.client_name}
         open={preview.open}
         onClose={preview.hide}
         fetchBlob={preview.fetchBlob} />
+    </li>
+  )
+}
+
+type QuoteListProps = {
+  filename: string
+  quotes: AppTypes.RenewalSummaryQuote[]
+  uploading: { key: number, name: string }[]
+  errors: string[]
+  onDismissErrors: () => void
+}
+
+const QuoteList = ({ filename, quotes, uploading, errors, onDismissErrors }: QuoteListProps) => {
+  if(quotes.length === 0 && uploading.length === 0 && errors.length === 0) return null
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      {errors.length > 0 && (
+        <div className="flex items-start gap-2 text-sm text-error">
+          <div className="flex flex-1 flex-col">
+            {errors.map((error, i) => <span key={i}>{error}</span>)}
+          </div>
+          <button type="button" onClick={onDismissErrors} title="Dismiss" className="btn btn-ghost btn-xs">×</button>
+        </div>
+      )}
+      <ul className="flex flex-col gap-1.5">
+        {quotes.map((quote) => (
+          <QuoteChip key={quote.id} filename={filename} quote={quote} />
+        ))}
+        {uploading.map((upload) => (
+          <li key={upload.key} className="flex items-center gap-2 rounded-box bg-base-200 px-3 py-1.5 text-sm">
+            <img src={pdfIcon} alt="" className="size-4" />
+            <span className="truncate font-medium">{upload.name}</span>
+            <span className="loading loading-spinner loading-xs" />
+            <span className="text-base-content/60 italic">Uploading…</span>
+          </li>
+        ))}
+      </ul>
+      {quotes.some((quote) => quote.status === "done") && (
+        <p className="text-xs text-base-content/50 italic">{QUOTE_HELP_TEXT}</p>
+      )}
+    </div>
+  )
+}
+
+const QuoteChip = ({ filename, quote }: { filename: string, quote: AppTypes.RenewalSummaryQuote }) => {
+  const { confirming, askConfirm, cancel, remove, isPending, error } = useHandleQuoteRemoval(filename, quote.id)
+
+  const statusContent = {
+    processing: (
+      <span className="flex items-center gap-1.5 text-base-content/60 italic">
+        <span className="loading loading-spinner loading-xs" />
+        Reading quote…
+      </span>
+    ),
+    done: <span className="badge badge-success badge-sm">Done</span>,
+    error: <span className="text-error">{quote.error ?? "Couldn't read this quote."}</span>,
+  }[quote.status]
+
+  const removeBtnContent = isPending ?
+    <span className="loading loading-spinner loading-xs" /> :
+    "Remove"
+
+  const actionContent = confirming ? (
+    <span className="flex items-center gap-2">
+      <span className="text-base-content/70">Remove this quote? The document will be rebuilt without it.</span>
+      <button type="button" disabled={isPending} onClick={remove} className="btn btn-error btn-xs">
+        {removeBtnContent}
+      </button>
+      <button type="button" disabled={isPending} onClick={cancel} className="btn btn-ghost btn-xs">Cancel</button>
+    </span>
+  ) : (
+    <button type="button" onClick={askConfirm} title="Remove this quote" className="btn btn-ghost btn-xs hover:bg-error/20">×</button>
+  )
+
+  return (
+    <li className="flex flex-col gap-1 rounded-box bg-base-200 px-3 py-1.5 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <img src={pdfIcon} alt="" className="size-4" />
+        <span className="truncate font-medium">{quote.filename}</span>
+        {statusContent}
+        <span className="ml-auto">{actionContent}</span>
+      </div>
+      {quote.status === "done" && quote.lines.length > 0 && (
+        <ul className="flex flex-col pl-6 text-base-content/70">
+          {quote.lines.map((line, i) => <li key={i}>{formatQuoteLine(line)}</li>)}
+        </ul>
+      )}
+      {quote.status === "done" && quote.lines.length === 0 && (
+        <span className="pl-6 text-base-content/60 italic">No lines found in this quote.</span>
+      )}
+      {error && <span className="pl-6 text-error">{error.message}</span>}
     </li>
   )
 }
@@ -240,13 +358,29 @@ type DownloadButtonProps = {
 }
 
 const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
-  const btnContent = isPending ? "Downloading…" : "Download"
+  const btnContent = isPending ? "Downloading…" : "Word"
 
   return (
     <button
       type="button"
       disabled={isPending}
       onClick={onClick}
+      title="Download as Word (.docx)"
+      className="btn btn-neutral btn-sm hover:bg-secondary">
+        {btnContent}
+    </button>
+  )
+}
+
+const PdfDownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
+  const btnContent = isPending ? "Downloading…" : "PDF"
+
+  return (
+    <button
+      type="button"
+      disabled={isPending}
+      onClick={onClick}
+      title="Download as PDF"
       className="btn btn-neutral btn-sm hover:bg-secondary">
         {btnContent}
     </button>

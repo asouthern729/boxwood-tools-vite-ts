@@ -154,6 +154,21 @@ export type RenewalSummaryChatTurn = {
   session_id: string
   tool_calls: { name: string; input: unknown }[]
 }
+
+export type RenewalSummaryQuoteLine = {
+  title: string
+  carrier: string | null
+  annual_premium: number | null
+}
+
+export type RenewalSummaryQuote = {
+  id: string
+  filename: string
+  uploaded_at: string
+  status: "processing" | "done" | "error"
+  error?: string
+  lines: RenewalSummaryQuoteLine[]
+}
 export type PersonalRenewalSummaryManifestEntry = RenewalSummaryManifestEntry
 export type PersonalRenewalSummaryCsrGroup = RenewalSummaryCsrGroup
 export type PersonalRenewalSummaryManifest = RenewalSummaryManifest

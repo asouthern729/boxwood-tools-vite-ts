@@ -225,6 +225,22 @@ export const downloadRenewalSummaryFile = async (filename: string): Promise<void
 }
 
 /**
+ * Download a generated CL Renewal Summary as a PDF, converted server-side from the docx
+ *
+ * GET /cl-renewal-summary/files/Acme_Corp_....docx/pdf
+ */
+export const downloadRenewalSummaryPdf = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/files/${ encodeURIComponent(filename) }/pdf`)
+
+  if(!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error_description ?? `Failed to download renewal summary PDF: HTTP ${ res.status }`)
+  }
+
+  triggerBlobDownload(await res.blob(), filename.replace(/\.docx$/i, ".pdf"))
+}
+
+/**
  * Delete a generated CL Renewal Summary docx
  *
  * DELETE /cl-renewal-summary/files/Acme_Corp_....docx
@@ -235,6 +251,57 @@ export const deleteRenewalSummaryFile = async (filename: string): Promise<void> 
   })
 
   if(!res.ok && res.status !== 404) throw new Error(`Failed to delete renewal summary file: HTTP ${ res.status }`)
+}
+
+/**
+ * List quote PDFs attached to a CL Renewal Summary, oldest first
+ *
+ * GET /cl-renewal-summary/files/Acme_Corp_....docx/quotes
+ */
+export const getRenewalSummaryQuotes = async (filename: string): Promise<AppTypes.RenewalSummaryQuote[]> => {
+  const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/files/${ encodeURIComponent(filename) }/quotes`)
+
+  if(!res.ok) throw new Error(`Failed to load quotes: HTTP ${ res.status }`)
+
+  const body: { quotes: AppTypes.RenewalSummaryQuote[] } = await res.json()
+  return body.quotes
+}
+
+/**
+ * Upload a carrier quote PDF (raw bytes, not multipart); the server reads it in the background
+ *
+ * POST /cl-renewal-summary/files/Acme_Corp_....docx/quotes?name=quote.pdf
+ */
+export const uploadRenewalSummaryQuote = async (filename: string, file: File): Promise<AppTypes.RenewalSummaryQuote> => {
+  const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/files/${ encodeURIComponent(filename) }/quotes?name=${ encodeURIComponent(file.name) }`, {
+    method: "POST",
+    headers: { "Content-Type": "application/pdf" },
+    body: file,
+  })
+
+  if(res.status === 413) throw new Error("File is too large (24 MB max).")
+  if(!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error_description ?? `Failed to upload quote: HTTP ${ res.status }`)
+  }
+
+  return await res.json()
+}
+
+/**
+ * Remove a quote; the server rebuilds the docx without it before responding
+ *
+ * DELETE /cl-renewal-summary/files/Acme_Corp_....docx/quotes/:quoteId
+ */
+export const deleteRenewalSummaryQuote = async (filename: string, quoteId: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/files/${ encodeURIComponent(filename) }/quotes/${ encodeURIComponent(quoteId) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error_description ?? `Failed to remove quote: HTTP ${ res.status }`)
+  }
 }
 
 /**

@@ -20,6 +20,10 @@ export const useDownloadRenewalSummaryFile = () => useMutation({
   mutationFn: AppActions.downloadRenewalSummaryFile,
 })
 
+export const useDownloadRenewalSummaryPdf = () => useMutation({
+  mutationFn: AppActions.downloadRenewalSummaryPdf,
+})
+
 export const useDeleteRenewalSummaryFile = () => {
   const queryClient = useQueryClient()
 
@@ -31,6 +35,74 @@ export const useDeleteRenewalSummaryFile = () => {
 
 export const usePreviewRenewalSummaryFile = (filename: string) =>
   usePreviewModal(useCallback(() => AppActions.getRenewalSummaryFileBlob(filename), [filename]))
+
+const QUOTE_POLL_MS = 4000
+
+const quotesQueryKey = (filename: string) => ["renewal-summary-quotes", filename]
+
+export const useRenewalSummaryQuotes = (filename: string) => {
+  const queryClient = useQueryClient()
+  const processingIds = useRef(new Set<string>())
+
+  const { data: quotes = [] } = useQuery({
+    queryKey: quotesQueryKey(filename),
+    queryFn: () => AppActions.getRenewalSummaryQuotes(filename),
+    refetchInterval: (query) => query.state.data?.some((quote) => quote.status === "processing") ? QUOTE_POLL_MS : false,
+  })
+
+  useEffect(() => {
+    const rebuilt = quotes.some((quote) => quote.status === "done" && processingIds.current.has(quote.id))
+    processingIds.current = new Set(quotes.filter((quote) => quote.status === "processing").map((quote) => quote.id))
+    if(rebuilt) queryClient.invalidateQueries({ queryKey: MANIFEST_QUERY_KEY })
+  }, [quotes, queryClient])
+
+  return quotes
+}
+
+export const useUploadRenewalSummaryQuotes = (filename: string) => {
+  const queryClient = useQueryClient()
+  const [uploading, setUploading] = useState<{ key: number, name: string }[]>([])
+  const [errors, setErrors] = useState<string[]>([])
+  const nextKey = useRef(0)
+
+  const upload = (files: File[], rejected: string[]) => {
+    setErrors(rejected)
+
+    files.forEach((file) => {
+      const key = nextKey.current++
+      setUploading((prev) => [...prev, { key, name: file.name }])
+
+      AppActions.uploadRenewalSummaryQuote(filename, file)
+        .then((quote) => queryClient.setQueryData<AppTypes.RenewalSummaryQuote[]>(quotesQueryKey(filename), (prev = []) => [...prev, quote]))
+        .catch((err: Error) => setErrors((prev) => [...prev, `${ file.name }: ${ err.message }`]))
+        .finally(() => setUploading((prev) => prev.filter((u) => u.key !== key)))
+    })
+  }
+
+  return { upload, uploading, errors, clearErrors: () => setErrors([]) }
+}
+
+export const useHandleQuoteRemoval = (filename: string, quoteId: string) => {
+  const queryClient = useQueryClient()
+  const [confirming, setConfirming] = useState(false)
+
+  const { mutate, isPending, error } = useMutation({
+    mutationFn: () => AppActions.deleteRenewalSummaryQuote(filename, quoteId),
+    onSuccess: () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: quotesQueryKey(filename) }),
+      queryClient.invalidateQueries({ queryKey: MANIFEST_QUERY_KEY }),
+    ]),
+  })
+
+  return {
+    confirming,
+    askConfirm: () => setConfirming(true),
+    cancel: () => setConfirming(false),
+    remove: () => mutate(),
+    isPending,
+    error,
+  }
+}
 
 const CONFIRM_TIMEOUT_MS = 3000
 

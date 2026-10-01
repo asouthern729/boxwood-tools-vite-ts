@@ -18,7 +18,7 @@ export const teamNavDescriptions: [Map<AppTypes.CommercialTools, TeamNavDescript
     ["Renewal Summary", {
       description: "Generates a branded pre-renewal review document for a commercial policy, ready to send or walk through with the client.",
       to: "/commercial/renewal-summary",
-      outputs: ["docx"],
+      outputs: ["docx", "pdf"],
     }],
   ]),
   new Map([
