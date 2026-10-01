@@ -2,7 +2,7 @@ import { NavLink } from "react-router"
 import magpie from "@assets/magpie.png"
 import boxwoodLogo from "@assets/boxwood-logo.png"
 import { NAV_LINKS } from "../utils"
-import { FOOTER_EXT_LINKS, handleDataFreshNotice } from "./utils"
+import { FOOTER_EXT_LINKS } from "./utils"
 import { FOOTER_MESSAGE_SLOT_ID } from "@components/team/utils/FooterMessage/utils"
 
 export const Header = () => (
@@ -15,18 +15,9 @@ export const Header = () => (
   </header>
 )
 
-export const DataFreshnessNotice = () => {
-  const label = handleDataFreshNotice()
-
-  return (
-    <div className="bottom-0 z-10 flex items-center justify-between gap-4 px-4 py-1.5 2xl:sticky">
-      <div id={FOOTER_MESSAGE_SLOT_ID} />
-      <span className="text-end text-xs text-neutral dark:text-neutral-content/50">
-        AMS360 data synced at 7AM {label}
-      </span>
-    </div>
-  )
-}
+export const FooterMessageSlot = () => (
+  <div id={FOOTER_MESSAGE_SLOT_ID} className="bottom-0 z-10 px-4 py-1.5 2xl:sticky" />
+)
 
 export const Footer = () => (
   <footer>

@@ -15,7 +15,7 @@ function Layout() {
           <Outlet />
         </div>
       </main>
-      <Components.DataFreshnessNotice />
+      <Components.FooterMessageSlot />
       <Components.Footer />
     </div>
   )
