@@ -7,6 +7,7 @@ function Tool() {
   return (
     <div className="w-full">
       <Components.ToolName />
+      <Components.ToolSchedule />
       <Components.ToolNavLinks />
       <ToolContainer>
         <Components.ToolContent />
