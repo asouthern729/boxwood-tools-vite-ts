@@ -25,7 +25,7 @@ export const ToolSchedule = () => {
         <ClockIcon />
         Last run {formatScheduleRun(lastRun)}
       </span>
-      <span className="badge badge-outline badge-primary badge-sm gap-1.5">
+      <span className="badge badge-primary dark:badge-outline badge-sm gap-1.5">
         <ClockIcon />
         Next run {formatScheduleRun(nextRun)}
       </span>
