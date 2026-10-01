@@ -9,7 +9,7 @@ import type * as AppTypes from "@context/App/types"
 
 // Components
 import { useCommercialCtx } from "@components/commercial/context/hooks"
-import { SUMMARY_ORDER_OPTIONS, filterPastRenewals } from "@components/commercial/context/utils"
+import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterCurrentMonth } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import DocxPreviewModal from "@components/team/utils/DocxPreviewModal"
 import ChatMessageText from "@components/team/utils/ChatMessageText"
@@ -67,7 +67,7 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRenewalRiskProfileCsrGroup[], scrollSignal: number }) => {
   const { rowRefs, highlightedFilename, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
-  const { showPastRenewals, setShowPastRenewals, order, setOrder } = useCommercialCtx()
+  const { showPastRenewals, setShowPastRenewals, currentMonthOnly, setCurrentMonthOnly, order, setOrder } = useCommercialCtx()
 
   if(groups.length === 0) {
     return (
@@ -79,7 +79,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
   }
 
   const visibleGroups = groups
-    .map((group) => ({ ...group, summaries: filterPastRenewals(group.summaries, showPastRenewals) }))
+    .map((group) => ({ ...group, summaries: filterCurrentMonth(filterPastRenewals(group.summaries, showPastRenewals), currentMonthOnly) }))
     .filter((group) => group.summaries.length > 0)
 
   return (
@@ -95,9 +95,17 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
               className="checkbox checkbox-sm" />
             Show past renewals
           </label>
+          <label className="label cursor-pointer gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={currentMonthOnly}
+              onChange={(e) => setCurrentMonthOnly(e.target.checked)}
+              className="checkbox checkbox-sm" />
+            Current month only
+          </label>
         </div>
         {visibleGroups.length === 0 ? (
-          <p className="py-8 text-center text-base-content/70">No upcoming renewals — all generated profiles are past their renewal date.</p>
+          <p className="py-8 text-center text-base-content/70">{currentMonthOnly ? "No renewals this month." : "No upcoming renewals — all generated profiles are past their renewal date."}</p>
         ) : (
           visibleGroups.map((group) => (
             <CsrSection

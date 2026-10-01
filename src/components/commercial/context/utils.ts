@@ -27,3 +27,8 @@ export const isPastRenewal = (renewalDate: string) => renewalDate < todayISODate
 
 export const filterPastRenewals = <T extends { renewal_date: string }>(summaries: T[], showPastRenewals: boolean): T[] =>
   showPastRenewals ? summaries : summaries.filter((summary) => !isPastRenewal(summary.renewal_date))
+
+const currentISOMonth = () => todayISODate().slice(0, 7)
+
+export const filterCurrentMonth = <T extends { renewal_date: string }>(summaries: T[], currentMonthOnly: boolean): T[] =>
+  currentMonthOnly ? summaries.filter((summary) => summary.renewal_date.startsWith(currentISOMonth())) : summaries
