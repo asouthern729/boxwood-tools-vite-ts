@@ -45,15 +45,17 @@ type ToolSchedule = {
 }
 
 const WEEKDAYS_8AM: ToolSchedule = { label: "Weekdays at 8:00 AM CT", hour: 8, minute: 0, runsOn: (dow) => dow >= 1 && dow <= 5 }
-const MONTHLY_1ST_8AM: ToolSchedule = { label: "1st of each month at 8:00 AM CT", hour: 8, minute: 0, runsOn: (_dow, dom) => dom === 1 }
+const WEEKDAYS_830AM: ToolSchedule = { label: "Weekdays at 8:30 AM CT", hour: 8, minute: 30, runsOn: (dow) => dow >= 1 && dow <= 5 }
+const WEEKDAYS_9AM: ToolSchedule = { label: "Weekdays at 9:00 AM CT", hour: 9, minute: 0, runsOn: (dow) => dow >= 1 && dow <= 5 }
+const MONTHLY_1ST_830AM: ToolSchedule = { label: "1st of each month at 8:30 AM CT", hour: 8, minute: 30, runsOn: (_dow, dom) => dom === 1 }
 
 export const toolSchedules: Record<string, ToolSchedule> = {
-  "/commercial/renewal-premium-summary": MONTHLY_1ST_8AM,
-  "/commercial/pre-renewal-risk-profile": MONTHLY_1ST_8AM,
-  "/commercial/renewal-summary": WEEKDAYS_8AM,
+  "/commercial/renewal-premium-summary": MONTHLY_1ST_830AM,
+  "/commercial/pre-renewal-risk-profile": MONTHLY_1ST_830AM,
+  "/commercial/renewal-summary": WEEKDAYS_9AM,
   "/personal/download-change-report": WEEKDAYS_8AM,
-  "/personal/premium-change-tool": WEEKDAYS_8AM,
-  "/personal/renewal-summary": WEEKDAYS_8AM,
+  "/personal/premium-change-tool": WEEKDAYS_830AM,
+  "/personal/renewal-summary": WEEKDAYS_9AM,
 }
 
 const chicagoParts = (date: Date) => {
