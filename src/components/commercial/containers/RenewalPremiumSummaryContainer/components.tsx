@@ -330,7 +330,10 @@ type RefreshFeedbackProps = {
 }
 
 const RefreshFeedback = ({ result, error }: RefreshFeedbackProps) => {
-  if(error) return <span className="text-sm text-error">{error.message}</span>
+  if(error) return (
+    <span className="text-sm text-error">{error.message}</span>
+  )
+  
   if(!result) return null
 
   const feedbackText = result.changes.length === 0 ?

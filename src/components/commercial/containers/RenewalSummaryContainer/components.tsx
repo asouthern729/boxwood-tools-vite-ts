@@ -280,17 +280,54 @@ const QuoteList = ({ filename, quotes, uploading, errors, onDismissErrors }: Quo
 const QuoteChip = ({ filename, quote }: { filename: string, quote: AppTypes.RenewalSummaryQuote }) => {
   const { confirming, askConfirm, cancel, remove, isPending, error } = useHandleQuoteRemoval(filename, quote.id)
 
-  const statusContent = {
-    processing: (
-      <span className="flex items-center gap-1.5 text-base-content/60 italic">
-        <span className="loading loading-spinner loading-xs" />
-        Reading quote…
-      </span>
-    ),
-    done: <span className="badge badge-success badge-sm">Done</span>,
-    error: <span className="text-error">{quote.error ?? "Couldn't read this quote."}</span>,
-  }[quote.status]
+  return (
+    <li className="flex flex-col gap-1 rounded-box bg-base-200 px-3 py-1.5 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <img src={pdfIcon} alt="" className="size-4" />
+        <span className="truncate font-medium">{quote.filename}</span>
+        <QuoteChipStatusMsg
+          status={quote.status}
+          error={quote.error} />
+        <QuoteChipActionContent 
+          confirming={confirming} 
+          isPending={isPending} 
+          cancel={cancel} 
+          remove={remove} 
+          askConfirm={askConfirm} />
+      </div>
+      <Quotes 
+        visible={quote.status === "done" && quote.lines.length > 0}
+        lines={quote.lines} />
+      <NoLinesMsg visible={quote.status === "done" && quote.lines.length === 0} />
+      {error && <span className="pl-6 text-error">{error.message}</span>}
+    </li>
+  )
+}
 
+const QuoteChipStatusMsg = ({ status, error }: { status: "processing" | "done" | "error", error?: string }) => {
+  switch(status) {
+    case "error":
+      return <span className="text-error">{error ?? "Couldn't read this quote."}</span>
+    case "done":
+      return <span className="badge badge-success badge-sm">Done</span>
+    default:
+      return (
+        <span className="flex items-center gap-1.5 text-base-content/60 italic">
+          <span className="loading loading-spinner loading-xs" />Reading quote…
+        </span>
+      )
+  }
+}
+
+type QuoteChipActionContentProps = {
+  confirming: boolean
+  isPending: boolean
+  remove: () => void
+  cancel: () => void
+  askConfirm: () => void
+}
+
+const QuoteChipActionContent = ({ confirming, isPending, remove, cancel, askConfirm }: QuoteChipActionContentProps) => {
   const removeBtnContent = isPending ?
     <span className="loading loading-spinner loading-xs" /> :
     "Remove"
@@ -308,23 +345,25 @@ const QuoteChip = ({ filename, quote }: { filename: string, quote: AppTypes.Rene
   )
 
   return (
-    <li className="flex flex-col gap-1 rounded-box bg-base-200 px-3 py-1.5 text-sm">
-      <div className="flex flex-wrap items-center gap-2">
-        <img src={pdfIcon} alt="" className="size-4" />
-        <span className="truncate font-medium">{quote.filename}</span>
-        {statusContent}
-        <span className="ml-auto">{actionContent}</span>
-      </div>
-      {quote.status === "done" && quote.lines.length > 0 && (
-        <ul className="flex flex-col pl-6 text-base-content/70">
-          {quote.lines.map((line, i) => <li key={i}>{formatQuoteLine(line)}</li>)}
-        </ul>
-      )}
-      {quote.status === "done" && quote.lines.length === 0 && (
-        <span className="pl-6 text-base-content/60 italic">No lines found in this quote.</span>
-      )}
-      {error && <span className="pl-6 text-error">{error.message}</span>}
-    </li>
+    <span className="ml-auto">{actionContent}</span>
+  )
+}
+
+const Quotes = ({ visible, lines }: { visible: boolean, lines: AppTypes.RenewalSummaryQuoteLine[] }) => {
+  if(!visible) return null
+
+  return (
+    <ul className="flex flex-col pl-6 text-base-content/70">
+      {lines.map((line, i) => <li key={i}>{formatQuoteLine(line)}</li>)}
+    </ul>
+  )
+}
+
+const NoLinesMsg = ({ visible }: { visible: boolean }) => {
+  if(!visible) return null
+
+  return ( 
+    <span className="pl-6 text-base-content/60 italic">No lines found in this quote.</span>
   )
 }
 
@@ -358,7 +397,9 @@ type DownloadButtonProps = {
 }
 
 const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
-  const btnContent = isPending ? "Downloading…" : "Word"
+  const btnContent = isPending ? 
+    "Downloading…" : 
+    "Word"
 
   return (
     <button
@@ -373,7 +414,9 @@ const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
 }
 
 const PdfDownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
-  const btnContent = isPending ? "Downloading…" : "PDF"
+  const btnContent = isPending ?
+    "Downloading…" : 
+    "PDF"
 
   return (
     <button
@@ -393,11 +436,17 @@ const AvailableTools = () => (
       MCP Tools Available
     </span>
     {AVAILABLE_MCP_TOOLS.map((tool) => (
-      <span key={tool.name} title={tool.description} className="badge badge-outline badge-accent badge-sm cursor-default">
-        {tool.name}
-      </span>
+      <AvailableTool 
+        key={tool.name} 
+        tool={tool} />
     ))}
   </div>
+)
+
+const AvailableTool = ({ tool }: { tool: { name: string, description: string } }) => (
+  <span title={tool.description} className="badge badge-outline badge-accent badge-sm cursor-default">
+    {tool.name}
+  </span>
 )
 
 const ChatTip = ({ visible }: { visible: boolean }) => {
