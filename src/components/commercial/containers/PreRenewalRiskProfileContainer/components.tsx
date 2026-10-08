@@ -14,7 +14,7 @@ import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import DocxPreviewModal from "@components/team/utils/DocxPreviewModal"
 import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
-import CreatedTodayFilter from "@components/team/utils/CreatedTodayFilter"
+import TodayFilter from "@components/team/utils/TodayFilter"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
@@ -155,7 +155,8 @@ const ListControls = ({ order, setOrder, showPastRenewals, setShowPastRenewals, 
         value={order} 
         onChange={setOrder} 
         options={SUMMARY_ORDER_OPTIONS} />
-      <CreatedTodayFilter
+      <TodayFilter
+        label="Created Today"
         count={createdTodayCount}
         active={showCreatedToday}
         disabled={searching}

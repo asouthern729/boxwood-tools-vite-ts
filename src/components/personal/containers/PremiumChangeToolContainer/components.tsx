@@ -15,7 +15,7 @@ import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterCurrentMonth, isToday,
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
-import CreatedTodayFilter from "@components/team/utils/CreatedTodayFilter"
+import TodayFilter from "@components/team/utils/TodayFilter"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
@@ -108,7 +108,8 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Person
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-4">
           <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
-          <CreatedTodayFilter
+          <TodayFilter
+            label="Created Today"
             count={createdToday.length}
             active={showCreatedToday}
             disabled={searching}

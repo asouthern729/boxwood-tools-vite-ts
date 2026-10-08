@@ -10,12 +10,12 @@ import type * as AppTypes from "@context/App/types"
 
 // Components
 import { useCommercialCtx } from "@components/commercial/context/hooks"
-import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterCurrentMonth, isToday, collectCreatedToday, collectSearchMatches } from "@components/commercial/context/utils"
+import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterCurrentMonth, isToday, collectCreatedToday, collectUpdatedToday, isUpdatedToday, collectSearchMatches } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import DocxPreviewModal from "@components/team/utils/DocxPreviewModal"
 import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
-import CreatedTodayFilter from "@components/team/utils/CreatedTodayFilter"
+import TodayFilter from "@components/team/utils/TodayFilter"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
@@ -72,7 +72,7 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.RenewalSummaryCsrGroup[], scrollSignal: number }) => {
   const { rowRefs, highlightedFilename, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
-  const { showPastRenewals, setShowPastRenewals, currentMonthOnly, setCurrentMonthOnly, createdTodayOnly, setCreatedTodayOnly, searchQuery, setSearchQuery, order, setOrder } = useCommercialCtx()
+  const { showPastRenewals, setShowPastRenewals, currentMonthOnly, setCurrentMonthOnly, createdTodayOnly, setCreatedTodayOnly, updatedTodayOnly, setUpdatedTodayOnly, searchQuery, setSearchQuery, order, setOrder } = useCommercialCtx()
 
   if(groups.length === 0) {
     return (
@@ -84,17 +84,31 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
   }
 
   const createdToday = collectCreatedToday(groups)
+  const updatedToday = collectUpdatedToday(groups)
   const searchResults = collectSearchMatches(groups, searchQuery)
   const searching = searchQuery.trim() !== ""
   const showCreatedToday = !searching && createdTodayOnly && createdToday.length > 0
-  const filtersLocked = searching || showCreatedToday
-  const sectionTitle = searching ? "Search Results" : showCreatedToday ? "Created Today" : undefined
+  const showUpdatedToday = !searching && !showCreatedToday && updatedTodayOnly && updatedToday.length > 0
+  const filtersLocked = searching || showCreatedToday || showUpdatedToday
+  const sectionTitle = searching ? "Search Results" : showCreatedToday ? "Created Today" : showUpdatedToday ? "Updated Today" : undefined
 
-  // Search and Created Today ignore the other filters so they never land on a filtered-out list
+  const toggleCreatedToday = (active: boolean) => {
+    setCreatedTodayOnly(active)
+    if(active) setUpdatedTodayOnly(false)
+  }
+
+  const toggleUpdatedToday = (active: boolean) => {
+    setUpdatedTodayOnly(active)
+    if(active) setCreatedTodayOnly(false)
+  }
+
+  // Search and the Today lists ignore the other filters so they never land on a filtered-out list
   const visibleGroups = searching ?
     (searchResults.length > 0 ? [{ csr_code: "__search_results__", csr_name: null, summaries: searchResults }] : []) :
     showCreatedToday ?
     [{ csr_code: "__created_today__", csr_name: null, summaries: createdToday }] :
+    showUpdatedToday ?
+    [{ csr_code: "__updated_today__", csr_name: null, summaries: updatedToday }] :
     groups
       .map((group) => ({ ...group, summaries: filterCurrentMonth(filterPastRenewals(group.summaries, showPastRenewals), currentMonthOnly) }))
       .filter((group) => group.summaries.length > 0)
@@ -108,12 +122,19 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-4">
           <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
-          <CreatedTodayFilter
+          <TodayFilter
+            label="Created Today"
             count={createdToday.length}
             active={showCreatedToday}
             disabled={searching}
-            onChange={setCreatedTodayOnly} />
-          <CustomerSearch value={searchQuery} onChange={setSearchQuery} />
+            onChange={toggleCreatedToday} />
+          <TodayFilter
+            label="Updated Today"
+            count={updatedToday.length}
+            active={showUpdatedToday}
+            disabled={searching}
+            btnStyle="btn-info"
+            onChange={toggleUpdatedToday} />
           <div className="ml-auto flex flex-wrap items-center gap-4">
             <label className="label cursor-pointer gap-2 text-sm">
               <input
@@ -134,6 +155,9 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
               Current month only
             </label>
           </div>
+        </div>
+        <div className="flex justify-center">
+          <CustomerSearch value={searchQuery} onChange={setSearchQuery} />
         </div>
         {visibleGroups.length === 0 ? (
           <p className="py-8 text-center text-base-content/70">{emptyMsg}</p>
@@ -247,7 +271,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
                 onClick={() => downloadPdf(summary.filename)} />
             </div>
             <div className="text-center text-xs text-base-content/50 italic sm:text-right">
-              <CreatedAt generatedAt={summary.generated_at} />
+              <CreatedAt summary={summary} />
             </div>
           </div>
         </div>
@@ -267,15 +291,27 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
   )
 }
 
-const CreatedAt = ({ generatedAt }: { generatedAt: string }) => {
-  if(isToday(generatedAt)) return (
-    <span title={formatTimestamp(generatedAt)} className="badge badge-success dark:badge-outline badge-sm rounded-sm not-italic">
+const CreatedAt = ({ summary }: { summary: AppTypes.RenewalSummaryManifestEntry }) => {
+  if(isUpdatedToday(summary)) return (
+    <span title={formatTimestamp(summary.last_refreshed_at)} className="badge badge-info dark:badge-outline badge-sm rounded-sm not-italic">
+      Updated Today
+    </span>
+  )
+
+  if(isToday(summary.generated_at)) return (
+    <span title={formatTimestamp(summary.generated_at)} className="badge badge-success dark:badge-outline badge-sm rounded-sm not-italic">
       Created Today
     </span>
   )
 
+  if(summary.last_refreshed_at) return (
+    <div title="Last rebuilt since this summary was generated">
+      Updated {formatTimestamp(summary.last_refreshed_at)}
+    </div>
+  )
+
   return (
-    <div>Created {formatTimestamp(generatedAt)}</div>
+    <div>Created {formatTimestamp(summary.generated_at)}</div>
   )
 }
 

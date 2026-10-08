@@ -7,6 +7,8 @@ export type CommercialCtxValue = {
   setCurrentMonthOnly: (value: boolean) => void
   createdTodayOnly: boolean
   setCreatedTodayOnly: (value: boolean) => void
+  updatedTodayOnly: boolean
+  setUpdatedTodayOnly: (value: boolean) => void
   searchQuery: string
   setSearchQuery: (value: string) => void
   order: string

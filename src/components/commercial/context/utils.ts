@@ -39,6 +39,12 @@ export const isToday = (dateStr: string) =>
 export const collectCreatedToday = <T extends { generated_at: string }>(groups: { summaries: T[] }[]): T[] =>
   groups.flatMap((group) => group.summaries).filter((summary) => isToday(summary.generated_at))
 
+export const isUpdatedToday = <T extends { last_refreshed_at?: string }>(summary: T): summary is T & { last_refreshed_at: string } =>
+  summary.last_refreshed_at !== undefined && isToday(summary.last_refreshed_at)
+
+export const collectUpdatedToday = <T extends { last_refreshed_at?: string }>(groups: { summaries: T[] }[]): T[] =>
+  groups.flatMap((group) => group.summaries).filter(isUpdatedToday)
+
 export const collectSearchMatches = <T extends { client_name: string }>(groups: { summaries: T[] }[], query: string): T[] => {
   const needle = query.trim().toLowerCase()
   if(!needle) return []
