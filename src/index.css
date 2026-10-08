@@ -30,7 +30,7 @@
 
   --color-info: oklch(55.9% 0.105 229); /* cyan, same as primary */
   --color-info-content: oklch(100% 0 0);
-  --color-success: oklch(55.9% 0.105 229); /* cyan — matches source's cyan "success" badge */
+  --color-success: oklch(52.7% 0.154 150.069); /* #15803d = tailwind green-700 */
   --color-success-content: oklch(100% 0 0);
   --color-warning: oklch(82% 0.16 38.8); /* clay hue, brightened — not from source */
   --color-warning-content: oklch(14.5% 0 0);
@@ -72,7 +72,7 @@
 
   --color-info: oklch(73.7% 0.125 229);
   --color-info-content: oklch(14.5% 0 0);
-  --color-success: oklch(73.7% 0.125 229);
+  --color-success: oklch(79.2% 0.209 151.711); /* #4ade80 = tailwind green-400 */
   --color-success-content: oklch(14.5% 0 0);
   --color-warning: oklch(82% 0.16 38.8);
   --color-warning-content: oklch(14.5% 0 0);

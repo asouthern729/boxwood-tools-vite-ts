@@ -32,3 +32,15 @@ const currentISOMonth = () => todayISODate().slice(0, 7)
 
 export const filterCurrentMonth = <T extends { renewal_date: string }>(summaries: T[], currentMonthOnly: boolean): T[] =>
   currentMonthOnly ? summaries.filter((summary) => summary.renewal_date.startsWith(currentISOMonth())) : summaries
+
+export const isToday = (dateStr: string) =>
+  new Date(dateStr).toDateString() === new Date().toDateString()
+
+export const collectCreatedToday = <T extends { generated_at: string }>(groups: { summaries: T[] }[]): T[] =>
+  groups.flatMap((group) => group.summaries).filter((summary) => isToday(summary.generated_at))
+
+export const collectSearchMatches = <T extends { client_name: string }>(groups: { summaries: T[] }[], query: string): T[] => {
+  const needle = query.trim().toLowerCase()
+  if(!needle) return []
+  return groups.flatMap((group) => group.summaries).filter((summary) => summary.client_name.toLowerCase().includes(needle))
+}

@@ -3,7 +3,7 @@ import refreshIcon from "@assets/icons/refersh/refresh.svg"
 import trashIcon from "@assets/icons/trash/trash.svg"
 import { useHandleChatScrolling } from "@utils/hooks"
 import { useDownloadRenewalPremiumSummaryFile, useRefreshRenewalPremiumSummaryFile, useRefreshCsrSummaries, useDeleteRenewalPremiumSummaryFile, usePreviewRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
-import { AVAILABLE_MCP_TOOLS, formatTimestamp, extractKeyPremiumRows, formatCurrency, formatPercentChange } from "./utils"
+import { AVAILABLE_MCP_TOOLS, formatTimestamp, extractKeyPremiumRows, formatCurrency, formatPercentChange, type PremiumSummaryRow } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
@@ -11,10 +11,12 @@ import type { WorkBook } from "xlsx"
 
 // Components
 import { useCommercialCtx } from "@components/commercial/context/hooks"
-import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterCurrentMonth, isPastRenewal } from "@components/commercial/context/utils"
+import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterCurrentMonth, isPastRenewal, isToday, collectCreatedToday, collectSearchMatches } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
+import CreatedTodayFilter from "@components/team/utils/CreatedTodayFilter"
+import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
 import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
@@ -70,7 +72,7 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.RenewalPremiumSummaryCsrGroup[], scrollSignal: number }) => {
   const { rowRefs, highlightedFilename, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
-  const { showPastRenewals, setShowPastRenewals, currentMonthOnly, setCurrentMonthOnly, order, setOrder } = useCommercialCtx()
+  const { showPastRenewals, setShowPastRenewals, currentMonthOnly, setCurrentMonthOnly, createdTodayOnly, setCreatedTodayOnly, searchQuery, setSearchQuery, order, setOrder } = useCommercialCtx()
 
   if(groups.length === 0) {
     return (
@@ -81,39 +83,68 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
     )
   }
 
-  const visibleGroups = groups
-    .map((group) => ({ ...group, summaries: filterCurrentMonth(filterPastRenewals(group.summaries, showPastRenewals), currentMonthOnly) }))
-    .filter((group) => group.summaries.length > 0)
+  const createdToday = collectCreatedToday(groups)
+  const searchResults = collectSearchMatches(groups, searchQuery)
+  const searching = searchQuery.trim() !== ""
+  const showCreatedToday = !searching && createdTodayOnly && createdToday.length > 0
+  const filtersLocked = searching || showCreatedToday
+  const sectionTitle = searching ? "Search Results" : showCreatedToday ? "Created Today" : undefined
+
+  // Search and Created Today ignore the other filters so they never land on a filtered-out list
+  const visibleGroups = searching ?
+    (searchResults.length > 0 ? [{ csr_code: "__search_results__", csr_name: null, summaries: searchResults }] : []) :
+    showCreatedToday ?
+    [{ csr_code: "__created_today__", csr_name: null, summaries: createdToday }] :
+    groups
+      .map((group) => ({ ...group, summaries: filterCurrentMonth(filterPastRenewals(group.summaries, showPastRenewals), currentMonthOnly) }))
+      .filter((group) => group.summaries.length > 0)
+
+  const emptyMsg = searching ?
+    `No customers match "${ searchQuery.trim() }".` :
+    currentMonthOnly ? "No renewals this month." : "No upcoming renewals — all generated summaries are past their renewal date."
 
   return (
     <>
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-4">
           <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
-          <label className="label cursor-pointer gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={showPastRenewals}
-              onChange={(e) => setShowPastRenewals(e.target.checked)}
-              className="checkbox checkbox-sm" />
-            Show past renewals
-          </label>
-          <label className="label cursor-pointer gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={currentMonthOnly}
-              onChange={(e) => setCurrentMonthOnly(e.target.checked)}
-              className="checkbox checkbox-sm" />
-            Current month only
-          </label>
+          <CreatedTodayFilter
+            count={createdToday.length}
+            active={showCreatedToday}
+            disabled={searching}
+            onChange={setCreatedTodayOnly} />
+          <CustomerSearch 
+            value={searchQuery} 
+            onChange={setSearchQuery} />
+          <div className="ml-auto flex flex-wrap items-center gap-4">
+            <label className="label cursor-pointer gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={showPastRenewals}
+                onChange={(e) => setShowPastRenewals(e.target.checked)}
+                disabled={filtersLocked}
+                className="checkbox checkbox-sm" />
+              Show past renewals
+            </label>
+            <label className="label cursor-pointer gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={currentMonthOnly}
+                onChange={(e) => setCurrentMonthOnly(e.target.checked)}
+                disabled={filtersLocked}
+                className="checkbox checkbox-sm" />
+              Current month only
+            </label>
+          </div>
         </div>
         {visibleGroups.length === 0 ? (
-          <p className="py-8 text-center text-base-content/70">{currentMonthOnly ? "No renewals this month." : "No upcoming renewals — all generated summaries are past their renewal date."}</p>
+          <p className="py-8 text-center text-base-content/70">{emptyMsg}</p>
         ) : (
           visibleGroups.map((group) => (
             <CsrSection
               key={group.csr_code ?? "__unassigned__"}
               group={group}
+              title={sectionTitle}
               order={order}
               rowRefs={rowRefs.current}
               highlightedFilename={highlightedFilename}
@@ -128,13 +159,14 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
 
 type CsrSectionProps = {
   group: AppTypes.RenewalPremiumSummaryCsrGroup
+  title?: string
   order: string
   rowRefs: Map<string, HTMLLIElement>
   highlightedFilename: string | null
   onDeleted: (clientName: string) => void
 }
 
-const CsrSection = ({ group, order, rowRefs, highlightedFilename, onDeleted }: CsrSectionProps) => {
+const CsrSection = ({ group, title, order, rowRefs, highlightedFilename, onDeleted }: CsrSectionProps) => {
   const { pageSummaries, currentPage, totalItems, setPage, sectionRef } = useHandleCsrSection(group.summaries, order)
 
   return (
@@ -142,7 +174,7 @@ const CsrSection = ({ group, order, rowRefs, highlightedFilename, onDeleted }: C
       <div className="card-body gap-1 p-0 py-2">
         <div className="flex items-center justify-between gap-2 px-4 pt-1">
           <h3 className="text-sm font-semibold text-primary">
-            {group.csr_name ?? "Unassigned"}
+            {title ?? group.csr_name ?? "Unassigned"}
           </h3>
           <CsrRefreshButton group={group} />
         </div>
@@ -298,25 +330,37 @@ const PremiumSummaryTable = ({ workbook }: { workbook: WorkBook }) => {
       </thead>
       <tbody>
         {rows.map((row) => (
-          <tr key={row.coverage}>
-            <td>{row.coverage}</td>
-            <td>{row.policyNumbers}</td>
-            <td>{row.carrier}</td>
-            <td>{row.current !== null ? formatCurrency(row.current) : "—"}</td>
-            <td>{row.renewal !== null ? formatCurrency(row.renewal) : "—"}</td>
-            <td>{row.percentChange !== null ? formatPercentChange(row.percentChange) : "—"}</td>
-          </tr>
+          <PremiumSummaryTableRow 
+            key={row.coverage} 
+            row={row} />
         ))}
       </tbody>
     </table>
   )
 }
 
+const PremiumSummaryTableRow = ({ row }: { row: PremiumSummaryRow }) => (
+  <tr key={row.coverage}>
+    <td>{row.coverage}</td>
+    <td>{row.policyNumbers}</td>
+    <td>{row.carrier}</td>
+    <td>{row.current !== null ? formatCurrency(row.current) : "—"}</td>
+    <td>{row.renewal !== null ? formatCurrency(row.renewal) : "—"}</td>
+    <td>{row.percentChange !== null ? formatPercentChange(row.percentChange) : "—"}</td>
+  </tr>
+)
+
 const CreatedAt = ({ summary }: { summary: AppTypes.RenewalPremiumSummaryManifestEntry }) => {
   if(summary.last_refreshed_at) return (
     <div title="Last refreshed since this report was generated">
       Updated {formatTimestamp(summary.last_refreshed_at)}
     </div>
+  )
+
+  if(isToday(summary.generated_at)) return (
+    <span title={formatTimestamp(summary.generated_at)} className="badge badge-success dark:badge-outline badge-sm rounded-sm not-italic">
+      Created Today
+    </span>
   )
 
   return (
