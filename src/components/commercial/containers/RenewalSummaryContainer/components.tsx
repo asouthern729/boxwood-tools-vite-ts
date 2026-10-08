@@ -20,6 +20,7 @@ import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
 import PdfDropZone from "@components/team/utils/PdfDropZone"
+import SendButton from "@components/team/utils/SendButton"
 
 type ChatPanelProps = {
   messages: AppTypes.RenewalSummaryChatMessage[]
@@ -51,7 +52,7 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
             <ClaudeLoading visible={isPending} />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <ChatInput
             draft={draft}
             setDraft={setDraft}
@@ -215,16 +216,16 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
       }}
       className={`transition-colors duration-1000 ${ highlighted ? "bg-base-200" : "" }`}>
       <PdfDropZone variant="area" onFiles={upload} className="flex flex-col gap-2 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex w-full min-w-0 flex-col sm:w-auto sm:flex-1">
             <span className="font-semibold">{summary.client_name}</span>
             <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
             <span className="text-sm text-base-content/60">{summary.polnos}</span>
             {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
             {pdfError && <span className="text-sm text-error">{pdfError.message}</span>}
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center gap-2 sm:items-end">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap">
               <DeleteButton
                 isPending={isDeleting}
                 onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onDeleted(summary.client_name) })} />
@@ -245,7 +246,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
                 isPending={isDownloadingPdf}
                 onClick={() => downloadPdf(summary.filename)} />
             </div>
-            <div className="text-right text-xs text-base-content/50 italic">
+            <div className="text-center text-xs text-base-content/50 italic sm:text-right">
               <CreatedAt generatedAt={summary.generated_at} />
             </div>
           </div>
@@ -473,7 +474,7 @@ const PdfDownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
 }
 
 const AvailableTools = () => (
-  <div className="flex flex-wrap items-center gap-1.5">
+  <div className="flex flex-col items-center gap-1.5 sm:flex-row sm:flex-wrap">
     <span className="font-mono text-[10px] font-bold tracking-widest text-base-content/50 uppercase">
       MCP Tools Available
     </span>
@@ -553,25 +554,5 @@ const ChatInput = ({ draft, setDraft, isPending, send }: ChatInputProps) => (
     rows={2}
     disabled={isPending}
     placeholder="Ask Claude to build a renewal summary…"
-    className="textarea textarea-bordered flex-1" />
+    className="textarea textarea-bordered w-full flex-1" />
 )
-
-type SendButtonProps = {
-  draft: string
-  isPending: boolean
-  onClick: () => void
-}
-
-const SendButton = ({ draft, isPending, onClick }: SendButtonProps) => {
-  const btnContent = isPending ? "Sending…" : "Send"
-
-  return (
-    <button
-      type="button"
-      disabled={isPending || !draft.trim()}
-      onClick={onClick}
-      className="btn btn-neutral self-end text-accent hover:bg-accent hover:text-accent-content">
-        {btnContent}
-    </button>
-  )
-}
