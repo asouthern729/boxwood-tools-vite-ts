@@ -19,6 +19,8 @@ import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
 import SendButton from "@components/team/utils/SendButton"
+import ChatInput from "@components/team/utils/ChatInput"
+import AvailableTools from "@components/team/utils/AvailableTools"
 
 type ChatPanelProps = {
   messages: AppTypes.PreRenewalRiskProfileChatMessage[]
@@ -39,7 +41,7 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
           Claude
         </h2>
 
-        <AvailableTools />
+        <AvailableTools tools={AVAILABLE_MCP_TOOLS} />
 
         <div
           ref={messagesRef}
@@ -55,7 +57,8 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
             draft={draft}
             setDraft={setDraft}
             isPending={isPending}
-            send={send} />
+            send={send}
+            placeholder="Ask Claude to build a pre-renewal risk profile…" />
           <SendButton
             draft={draft}
             isPending={isPending}
@@ -150,33 +153,37 @@ const ListControls = ({ order, setOrder, showPastRenewals, setShowPastRenewals, 
   const filtersLocked = searching || showCreatedToday
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <Ordering 
-        value={order} 
-        onChange={setOrder} 
-        options={SUMMARY_ORDER_OPTIONS} />
-      <TodayFilter
-        label="Created Today"
-        count={createdTodayCount}
-        active={showCreatedToday}
-        disabled={searching}
-        onChange={setCreatedTodayOnly} />
-      <CustomerSearch
-        value={searchQuery}
-        onChange={setSearchQuery} />
-      <div className="ml-auto flex flex-wrap items-center gap-4">
-        <FilterToggle
-          label="Show past renewals"
-          checked={showPastRenewals}
-          onChange={setShowPastRenewals}
-          disabled={filtersLocked} />
-        <FilterToggle
-          label="Current month only"
-          checked={currentMonthOnly}
-          onChange={setCurrentMonthOnly}
-          disabled={filtersLocked} />
+    <>
+      <div className="flex flex-wrap items-center gap-4">
+        <Ordering 
+          value={order} 
+          onChange={setOrder} 
+          options={SUMMARY_ORDER_OPTIONS} />
+        <TodayFilter
+          label="Created Today"
+          count={createdTodayCount}
+          active={showCreatedToday}
+          disabled={searching}
+          onChange={setCreatedTodayOnly} />
+        <div className="ml-auto flex flex-wrap items-center gap-4">
+          <FilterToggle
+            label="Show past renewals"
+            checked={showPastRenewals}
+            onChange={setShowPastRenewals}
+            disabled={filtersLocked} />
+          <FilterToggle
+            label="Current month only"
+            checked={currentMonthOnly}
+            onChange={setCurrentMonthOnly}
+            disabled={filtersLocked} />
+        </div>
       </div>
-    </div>
+      <div className="flex justify-center">
+        <CustomerSearch
+          value={searchQuery}
+          onChange={setSearchQuery} />
+      </div>
+    </>
   )
 }
 
@@ -372,25 +379,6 @@ const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
   )
 }
 
-const AvailableTools = () => (
-  <div className="flex flex-col items-center gap-1.5 sm:flex-row sm:flex-wrap">
-    <span className="font-mono text-[10px] font-bold tracking-widest text-base-content/50 uppercase">
-      MCP Tools Available
-    </span>
-    {AVAILABLE_MCP_TOOLS.map((tool) => (
-      <AvailableTool
-        key={tool.name}
-        tool={tool} />
-    ))}
-  </div>
-)
-
-const AvailableTool = ({ tool }: { tool: { name: string, description: string } }) => (
-  <span title={tool.description} className="badge badge-outline badge-accent badge-sm cursor-default">
-    {tool.name}
-  </span>
-)
-
 const ChatTip = ({ visible }: { visible: boolean }) => {
   if(!visible) return null
 
@@ -449,26 +437,3 @@ const ClaudeLoading = ({ visible }: { visible: boolean }) => {
     </div>
   )
 }
-
-type ChatInputProps = {
-  draft: string
-  setDraft: (value: string) => void
-  isPending: boolean
-  send: () => void
-}
-
-const ChatInput = ({ draft, setDraft, isPending, send }: ChatInputProps) => (
-  <textarea
-    value={draft}
-    onChange={(e) => setDraft(e.target.value)}
-    onKeyDown={(e) => {
-      if(e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault()
-        send()
-      }
-    }}
-    rows={2}
-    disabled={isPending}
-    placeholder="Ask Claude to build a pre-renewal risk profile…"
-    className="textarea textarea-bordered w-full flex-1" />
-)

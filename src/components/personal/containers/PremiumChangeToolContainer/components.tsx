@@ -21,6 +21,8 @@ import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
 import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
 import SendButton from "@components/team/utils/SendButton"
+import ChatInput from "@components/team/utils/ChatInput"
+import AvailableTools from "@components/team/utils/AvailableTools"
 
 type ChatPanelProps = {
   messages: AppTypes.PersonalPremiumChangeChatMessage[]
@@ -41,7 +43,7 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
           Claude
         </h2>
 
-        <AvailableTools />
+        <AvailableTools tools={AVAILABLE_MCP_TOOLS} />
 
         <div
           ref={messagesRef}
@@ -57,7 +59,8 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
             draft={draft}
             setDraft={setDraft}
             isPending={isPending}
-            send={send} />
+            send={send}
+            placeholder="Ask Claude to build a renewal premium change…" />
           <SendButton
             draft={draft}
             isPending={isPending}
@@ -114,7 +117,6 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Person
             active={showCreatedToday}
             disabled={searching}
             onChange={setCreatedTodayOnly} />
-          <CustomerSearch value={searchQuery} onChange={setSearchQuery} />
           <div className="ml-auto flex flex-wrap items-center gap-4">
             <label className="label cursor-pointer gap-2 text-sm">
               <input
@@ -135,6 +137,9 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Person
               Current month only
             </label>
           </div>
+        </div>
+        <div className="flex justify-center">
+          <CustomerSearch value={searchQuery} onChange={setSearchQuery} />
         </div>
         {visibleGroups.length === 0 ? (
           <p className="py-8 text-center text-base-content/70">{emptyMsg}</p>
@@ -354,19 +359,6 @@ const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
   )
 }
 
-const AvailableTools = () => (
-  <div className="flex flex-col items-center gap-1.5 sm:flex-row sm:flex-wrap">
-    <span className="font-mono text-[10px] font-bold tracking-widest text-base-content/50 uppercase">
-      MCP Tools Available
-    </span>
-    {AVAILABLE_MCP_TOOLS.map((tool) => (
-      <span key={tool.name} title={tool.description} className="badge badge-outline badge-accent badge-sm cursor-default">
-        {tool.name}
-      </span>
-    ))}
-  </div>
-)
-
 const ChatTip = ({ visible }: { visible: boolean }) => {
   if(!visible) return null
 
@@ -408,26 +400,3 @@ const ClaudeLoading = ({ visible }: { visible: boolean }) => {
     </div>
   )
 }
-
-type ChatInputProps = {
-  draft: string
-  setDraft: (value: string) => void
-  isPending: boolean
-  send: () => void
-}
-
-const ChatInput = ({ draft, setDraft, isPending, send }: ChatInputProps) => (
-  <textarea
-    value={draft}
-    onChange={(e) => setDraft(e.target.value)}
-    onKeyDown={(e) => {
-      if(e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault()
-        send()
-      }
-    }}
-    rows={2}
-    disabled={isPending}
-    placeholder="Ask Claude to build a renewal premium change…"
-    className="textarea textarea-bordered w-full flex-1" />
-)
