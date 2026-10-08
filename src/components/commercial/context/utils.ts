@@ -42,11 +42,17 @@ export const collectCreatedToday = <T extends { generated_at: string }>(groups: 
 export const isUpdatedToday = <T extends { last_refreshed_at?: string }>(summary: T): summary is T & { last_refreshed_at: string } =>
   summary.last_refreshed_at !== undefined && isToday(summary.last_refreshed_at)
 
+export const updatedTooltip = (summary: { last_refresh_reason?: string }, timestamp: string) =>
+  summary.last_refresh_reason ? `${ summary.last_refresh_reason } — ${ timestamp }` : timestamp
+
 export const collectUpdatedToday = <T extends { last_refreshed_at?: string }>(groups: { summaries: T[] }[]): T[] =>
   groups.flatMap((group) => group.summaries).filter(isUpdatedToday)
 
-export const collectSearchMatches = <T extends { client_name: string }>(groups: { summaries: T[] }[], query: string): T[] => {
+const stripSpaces = (value: string) => value.replace(/\s+/g, "")
+
+export const collectSearchMatches = <T extends { client_name: string, polnos: string }>(groups: { summaries: T[] }[], query: string): T[] => {
   const needle = query.trim().toLowerCase()
   if(!needle) return []
-  return groups.flatMap((group) => group.summaries).filter((summary) => summary.client_name.toLowerCase().includes(needle))
+  return groups.flatMap((group) => group.summaries).filter((summary) =>
+    summary.client_name.toLowerCase().includes(needle) || stripSpaces(summary.polnos.toLowerCase()).includes(stripSpaces(needle)))
 }

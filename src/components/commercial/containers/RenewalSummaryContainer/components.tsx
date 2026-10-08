@@ -10,7 +10,7 @@ import type * as AppTypes from "@context/App/types"
 
 // Components
 import { useCommercialCtx } from "@components/commercial/context/hooks"
-import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterCurrentMonth, isToday, collectCreatedToday, collectUpdatedToday, isUpdatedToday, collectSearchMatches } from "@components/commercial/context/utils"
+import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterCurrentMonth, isToday, collectCreatedToday, collectUpdatedToday, isUpdatedToday, updatedTooltip, collectSearchMatches } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import DocxPreviewModal from "@components/team/utils/DocxPreviewModal"
 import ChatMessageText from "@components/team/utils/ChatMessageText"
@@ -71,14 +71,14 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
 }
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.RenewalSummaryCsrGroup[], scrollSignal: number }) => {
-  const { rowRefs, highlightedFilename, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
+  const { rowRefs, highlightedFilename, footerMessage, notify } = useHandleCsrGroupList(groups, scrollSignal)
   const { showPastRenewals, setShowPastRenewals, currentMonthOnly, setCurrentMonthOnly, createdTodayOnly, setCreatedTodayOnly, updatedTodayOnly, setUpdatedTodayOnly, searchQuery, setSearchQuery, order, setOrder } = useCommercialCtx()
 
   if(groups.length === 0) {
     return (
       <>
         <p className="py-8 text-center text-base-content/70">No renewal summaries generated yet.</p>
-        <FooterMessage message={deletedMessage} />
+        <FooterMessage message={footerMessage?.text ?? null} error={footerMessage?.error} />
       </>
     )
   }
@@ -114,7 +114,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
       .filter((group) => group.summaries.length > 0)
 
   const emptyMsg = searching ?
-    `No customers match "${ searchQuery.trim() }".` :
+    `No customers or policies match "${ searchQuery.trim() }".` :
     currentMonthOnly ? "No renewals this month." : "No upcoming renewals — all generated summaries are past their renewal date."
 
   return (
@@ -170,11 +170,11 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
               order={order}
               rowRefs={rowRefs.current}
               highlightedFilename={highlightedFilename}
-              onDeleted={notifyDeleted} />
+              onNotify={notify} />
           ))
         )}
       </div>
-      <FooterMessage message={deletedMessage} />
+      <FooterMessage message={footerMessage?.text ?? null} error={footerMessage?.error} />
     </>
   )
 }
@@ -185,10 +185,10 @@ type CsrSectionProps = {
   order: string
   rowRefs: Map<string, HTMLLIElement>
   highlightedFilename: string | null
-  onDeleted: (clientName: string) => void
+  onNotify: (message: string, error?: boolean) => void
 }
 
-const CsrSection = ({ group, title, order, rowRefs, highlightedFilename, onDeleted }: CsrSectionProps) => {
+const CsrSection = ({ group, title, order, rowRefs, highlightedFilename, onNotify }: CsrSectionProps) => {
   const { pageSummaries, currentPage, totalItems, setPage, sectionRef } = useHandleCsrSection(group.summaries, order)
 
   return (
@@ -204,7 +204,7 @@ const CsrSection = ({ group, title, order, rowRefs, highlightedFilename, onDelet
               summary={summary}
               rowRefs={rowRefs}
               highlighted={summary.filename === highlightedFilename}
-              onDeleted={onDeleted} />
+              onNotify={onNotify} />
           ))}
         </ul>
         <Pagination
@@ -221,15 +221,15 @@ type SummaryRowProps = {
   summary: AppTypes.RenewalSummaryManifestEntry
   rowRefs: Map<string, HTMLLIElement>
   highlighted: boolean
-  onDeleted: (clientName: string) => void
+  onNotify: (message: string, error?: boolean) => void
 }
 
-const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProps) => {
+const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps) => {
   const { mutate: downloadFile, isPending: isDownloading } = useDownloadRenewalSummaryFile()
   const { mutate: downloadPdf, isPending: isDownloadingPdf, error: pdfError } = useDownloadRenewalSummaryPdf()
   const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeleteRenewalSummaryFile()
   const preview = usePreviewRenewalSummaryFile(summary.filename)
-  const quotes = useRenewalSummaryQuotes(summary.filename)
+  const quotes = useRenewalSummaryQuotes(summary.filename, summary.client_name, onNotify)
   const { upload, uploading, errors: uploadErrors, clearErrors } = useUploadRenewalSummaryQuotes(summary.filename)
 
   return (
@@ -252,7 +252,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
             <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap">
               <DeleteButton
                 isPending={isDeleting}
-                onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onDeleted(summary.client_name) })} />
+                onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onNotify(`Deleted ${ summary.client_name }...`) })} />
               <PdfDropZone
                 variant="button"
                 onFiles={upload}
@@ -293,19 +293,19 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
 
 const CreatedAt = ({ summary }: { summary: AppTypes.RenewalSummaryManifestEntry }) => {
   if(isUpdatedToday(summary)) return (
-    <span title={formatTimestamp(summary.last_refreshed_at)} className="badge badge-info dark:badge-outline badge-sm rounded-sm not-italic">
+    <span title={updatedTooltip(summary, formatTimestamp(summary.last_refreshed_at))} className="badge badge-info dark:badge-outline badge-sm cursor-default rounded-sm not-italic">
       Updated Today
     </span>
   )
 
   if(isToday(summary.generated_at)) return (
-    <span title={formatTimestamp(summary.generated_at)} className="badge badge-success dark:badge-outline badge-sm rounded-sm not-italic">
+    <span title={formatTimestamp(summary.generated_at)} className="badge badge-success dark:badge-outline badge-sm cursor-default rounded-sm not-italic">
       Created Today
     </span>
   )
 
   if(summary.last_refreshed_at) return (
-    <div title="Last rebuilt since this summary was generated">
+    <div title={updatedTooltip(summary, formatTimestamp(summary.last_refreshed_at))}>
       Updated {formatTimestamp(summary.last_refreshed_at)}
     </div>
   )

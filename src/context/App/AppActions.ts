@@ -90,26 +90,6 @@ export const deleteRenewalPremiumSummaryFile = async (filename: string): Promise
 }
 
 /**
- * Refresh Current/Renewal premiums on a generated CL Renewal Premium Summary xlsx from AMS360
- *
- * POST /renewal-premium-summaries/files/Acme_Corp_....xlsx/refresh
- */
-export const refreshRenewalPremiumSummaryFile = async (filename: string): Promise<AppTypes.RenewalPremiumSummaryRefreshResult> => {
-  const res = await authorizedFetch(`${ API_BASE }/renewal-premium-summaries/files/${ encodeURIComponent(filename) }/refresh`, {
-    method: "POST",
-  })
-
-  if(res.status === 409) {
-    const body = await res.json().catch(() => null)
-    throw new Error(body?.error_description ?? "This report was generated before Refresh support existed.")
-  }
-
-  if(!res.ok) throw new Error(`Failed to refresh renewal premium summary file: HTTP ${ res.status }`)
-
-  return await res.json()
-}
-
-/**
  * Send one turn of the CL Renewal Premium Summary chat (scoped to customer_lookup +
  * renewal_premium_summary only), resuming the same agent session when sessionId is given
  *

@@ -38,6 +38,7 @@ export type RenewalPremiumSummaryManifestEntry = {
   filename: string
   generated_at: string
   last_refreshed_at?: string
+  last_refresh_reason?: string
   csr_code: string | null
   csr_name: string | null
   client_name: string
@@ -66,27 +67,6 @@ export type RenewalPremiumSummaryChatTurn = {
   reply: string
   session_id: string
   tool_calls: { name: string; input: unknown }[]
-}
-
-export type RenewalPremiumSummaryRefreshChange = {
-  row: number
-  polnos: string[]
-  field: "current" | "renewal"
-  old_value: number | null
-  new_value: number
-}
-
-export type RenewalPremiumSummaryRefreshSkippedRow = {
-  row: number
-  polnos: string[]
-  reason: string
-}
-
-export type RenewalPremiumSummaryRefreshResult = {
-  filename: string
-  refreshed_at: string
-  changes: RenewalPremiumSummaryRefreshChange[]
-  skipped_rows: RenewalPremiumSummaryRefreshSkippedRow[]
 }
 
 export type PreRenewalRiskProfileManifestEntry = {
@@ -126,6 +106,7 @@ export type RenewalSummaryManifestEntry = {
   filename: string
   generated_at: string
   last_refreshed_at?: string
+  last_refresh_reason?: string
   csr_code: string | null
   csr_name: string | null
   client_name: string

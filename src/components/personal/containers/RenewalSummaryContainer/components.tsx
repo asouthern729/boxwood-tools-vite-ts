@@ -98,7 +98,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Person
       .filter((group) => group.summaries.length > 0)
 
   const emptyMsg = searching ?
-    `No customers match "${ searchQuery.trim() }".` :
+    `No customers or policies match "${ searchQuery.trim() }".` :
     currentMonthOnly ? "No renewals this month." : "No upcoming renewals — all generated summaries are past their renewal date."
 
   return (
@@ -249,7 +249,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
 
 const CreatedAt = ({ generatedAt }: { generatedAt: string }) => {
   if(isToday(generatedAt)) return (
-    <span title={formatTimestamp(generatedAt)} className="badge badge-success dark:badge-outline badge-sm rounded-sm not-italic">
+    <span title={formatTimestamp(generatedAt)} className="badge badge-success dark:badge-outline badge-sm cursor-default rounded-sm not-italic">
       Created Today
     </span>
   )

@@ -40,7 +40,7 @@ const QUOTE_POLL_MS = 4000
 
 const quotesQueryKey = (filename: string) => ["renewal-summary-quotes", filename]
 
-export const useRenewalSummaryQuotes = (filename: string) => {
+export const useRenewalSummaryQuotes = (filename: string, clientName: string, onNotify: (message: string, error?: boolean) => void) => {
   const queryClient = useQueryClient()
   const processingIds = useRef(new Set<string>())
 
@@ -51,10 +51,13 @@ export const useRenewalSummaryQuotes = (filename: string) => {
   })
 
   useEffect(() => {
-    const rebuilt = quotes.some((quote) => quote.status === "done" && processingIds.current.has(quote.id))
+    const settled = quotes.filter((quote) => quote.status !== "processing" && processingIds.current.has(quote.id))
     processingIds.current = new Set(quotes.filter((quote) => quote.status === "processing").map((quote) => quote.id))
-    if(rebuilt) queryClient.invalidateQueries({ queryKey: MANIFEST_QUERY_KEY })
-  }, [quotes, queryClient])
+    settled.forEach((quote) => quote.status === "done" ?
+      onNotify(`Added ${ quote.filename } to ${ clientName }'s summary...`) :
+      onNotify(`Couldn't add ${ quote.filename } to ${ clientName }'s summary...`, true))
+    if(settled.some((quote) => quote.status === "done")) queryClient.invalidateQueries({ queryKey: MANIFEST_QUERY_KEY })
+  }, [quotes, queryClient, clientName, onNotify])
 
   return quotes
 }
@@ -174,23 +177,23 @@ export const useHandleChatPanel = (onSend: (message: string) => void) => {
   return { messagesRef, send, draft, setDraft }
 }
 
-const DELETED_MESSAGE_TIMEOUT_MS = 4000
+const FOOTER_MESSAGE_TIMEOUT_MS = 4000
 
 export const useHandleCsrGroupList = (groups: AppTypes.RenewalSummaryCsrGroup[], scrollSignal: number) => {
   const rowRefs = useRef(new Map<string, HTMLLIElement>())
   const lastHandledSignal = useRef(0)
   const [highlightedFilename, setHighlightedFilename] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const [deletedMessage, setDeletedMessage] = useState<string | null>(null)
-  const deletedMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [footerMessage, setFooterMessage] = useState<{ text: string, error: boolean } | null>(null)
+  const footerMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  const notifyDeleted = (clientName: string) => {
-    clearTimeout(deletedMessageTimeoutRef.current)
-    setDeletedMessage(`Deleted ${ clientName }...`)
-    deletedMessageTimeoutRef.current = setTimeout(() => setDeletedMessage(null), DELETED_MESSAGE_TIMEOUT_MS)
-  }
+  const notify = useCallback((text: string, error = false) => {
+    clearTimeout(footerMessageTimeoutRef.current)
+    setFooterMessage({ text, error })
+    footerMessageTimeoutRef.current = setTimeout(() => setFooterMessage(null), FOOTER_MESSAGE_TIMEOUT_MS)
+  }, [])
 
-  useEffect(() => () => clearTimeout(deletedMessageTimeoutRef.current), [])
+  useEffect(() => () => clearTimeout(footerMessageTimeoutRef.current), [])
 
   useEffect(() => {
     if(scrollSignal === 0 || scrollSignal === lastHandledSignal.current) return
@@ -209,7 +212,7 @@ export const useHandleCsrGroupList = (groups: AppTypes.RenewalSummaryCsrGroup[],
 
   useEffect(() => () => clearTimeout(highlightTimeoutRef.current), [])
 
-  return { rowRefs, highlightedFilename, deletedMessage, notifyDeleted }
+  return { rowRefs, highlightedFilename, footerMessage, notify }
 }
 
 export const useHandleCsrSection = (summaries: AppTypes.RenewalSummaryManifestEntry[], order: string) => {

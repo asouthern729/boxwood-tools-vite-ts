@@ -1,8 +1,7 @@
 import claudeIcon from "@assets/claude.png"
-import refreshIcon from "@assets/icons/refersh/refresh.svg"
 import trashIcon from "@assets/icons/trash/trash.svg"
 import { useHandleChatScrolling } from "@utils/hooks"
-import { useDownloadRenewalPremiumSummaryFile, useRefreshRenewalPremiumSummaryFile, useRefreshCsrSummaries, useDeleteRenewalPremiumSummaryFile, usePreviewRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
+import { useDownloadRenewalPremiumSummaryFile, useDeleteRenewalPremiumSummaryFile, usePreviewRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
 import { AVAILABLE_MCP_TOOLS, formatTimestamp, extractKeyPremiumRows, formatCurrency, formatPercentChange, type PremiumSummaryRow } from "./utils"
 
 // Types
@@ -11,7 +10,7 @@ import type { WorkBook } from "xlsx"
 
 // Components
 import { useCommercialCtx } from "@components/commercial/context/hooks"
-import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterCurrentMonth, isPastRenewal, isToday, collectCreatedToday, collectUpdatedToday, isUpdatedToday, collectSearchMatches } from "@components/commercial/context/utils"
+import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterCurrentMonth, isToday, collectCreatedToday, collectUpdatedToday, isUpdatedToday, updatedTooltip, collectSearchMatches } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
@@ -21,7 +20,6 @@ import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
 import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
 import SendButton from "@components/team/utils/SendButton"
-import FadeOut from "@utils/animations/FadeOut"
 
 type ChatPanelProps = {
   messages: AppTypes.RenewalPremiumSummaryChatMessage[]
@@ -115,7 +113,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
       .filter((group) => group.summaries.length > 0)
 
   const emptyMsg = searching ?
-    `No customers match "${ searchQuery.trim() }".` :
+    `No customers or policies match "${ searchQuery.trim() }".` :
     currentMonthOnly ? "No renewals this month." : "No upcoming renewals — all generated summaries are past their renewal date."
 
   return (
@@ -195,12 +193,9 @@ const CsrSection = ({ group, title, order, rowRefs, highlightedFilename, onDelet
   return (
     <div ref={sectionRef} className="card border border-base-300 bg-base-100 shadow-sm">
       <div className="card-body gap-1 p-0 py-2">
-        <div className="flex items-center justify-between gap-2 px-4 pt-1">
-          <h3 className="text-sm font-semibold text-primary">
-            {title ?? group.csr_name ?? "Unassigned"}
-          </h3>
-          <CsrRefreshButton group={group} />
-        </div>
+        <h3 className="px-4 pt-1 text-sm font-semibold text-primary">
+          {title ?? group.csr_name ?? "Unassigned"}
+        </h3>
         <ul className="divide-y divide-base-300">
           {pageSummaries.map((summary) => (
             <SummaryRow
@@ -217,49 +212,6 @@ const CsrSection = ({ group, title, order, rowRefs, highlightedFilename, onDelet
   )
 }
 
-const CsrRefreshButton = ({ group }: { group: AppTypes.RenewalPremiumSummaryCsrGroup }) => {
-  const { mutate: refreshAll, isPending, data: result } = useRefreshCsrSummaries()
-
-  const upcomingFilenames = group.summaries
-    .filter((summary) => !isPastRenewal(summary.renewal_date))
-    .map((summary) => summary.filename)
-
-  if(!group.csr_name || upcomingFilenames.length === 0) return null
-
-  const firstName = group.csr_name.split(" ")[0]
-
-  const btnContent = isPending ?
-    <span className="loading loading-spinner loading-xs" /> :
-    <img src={refreshIcon} alt="" className="size-4" />
-
-  return (
-    <div className="flex items-center gap-2">
-      <CsrRefreshFeedback result={isPending ? undefined : result} />
-      <button
-        type="button"
-        disabled={isPending}
-        onClick={() => refreshAll(upcomingFilenames)}
-        title={`Refresh Current/Renewal premiums from AMS360 for all of ${ firstName }'s customers`}
-        className="btn btn-ghost btn-sm hover:bg-secondary">
-          Refresh {firstName}'s Customers
-          {btnContent}
-      </button>
-    </div>
-  )
-}
-
-const CsrRefreshFeedback = ({ result }: { result: { updated: number, failed: number } | undefined }) => {
-  if(!result) return null
-
-  const failedText = result.failed > 0 ? ` (${ result.failed } failed)` : ""
-
-  return (
-    <FadeOut duration={4} className="text-sm text-primary italic">
-      <span>Refreshed {result.updated} customer{result.updated === 1 ? "" : "s"}{failedText}</span>
-    </FadeOut>
-  )
-}
-
 type SummaryRowProps = {
   summary: AppTypes.RenewalPremiumSummaryManifestEntry
   rowRefs: Map<string, HTMLLIElement>
@@ -269,10 +221,8 @@ type SummaryRowProps = {
 
 const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProps) => {
   const { mutate: downloadFile, isPending: isDownloading } = useDownloadRenewalPremiumSummaryFile()
-  const { mutate: refreshFile, isPending: isRefreshing, data: refreshResult, error: refreshError } = useRefreshRenewalPremiumSummaryFile()
   const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeleteRenewalPremiumSummaryFile()
   const preview = usePreviewRenewalPremiumSummaryFile(summary.filename)
-  const pastRenewal = isPastRenewal(summary.renewal_date)
 
   return (
     <li
@@ -285,21 +235,13 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
         <span className="font-semibold">{summary.client_name}</span>
         <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
         <span className="text-sm text-base-content/60">{summary.polnos}</span>
-        <RefreshFeedback result={refreshResult} error={refreshError} />
         {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
       </div>
       <div className="flex flex-col items-center gap-2 sm:items-end">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap">
           <DeleteButton
             isPending={isDeleting}
-            disabled={isRefreshing}
             onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onDeleted(summary.client_name) })} />
-          {!pastRenewal && (
-            <RefreshButton
-              isPending={isRefreshing}
-              disabled={isDeleting}
-              onClick={() => refreshFile(summary.filename)} />
-          )}
           <button type="button" onClick={preview.show} className="btn btn-ghost btn-sm hover:bg-secondary">
             Preview
           </button>
@@ -316,16 +258,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
         open={preview.open}
         onClose={preview.hide}
         fetchBlob={preview.fetchBlob}
-        reloadKey={preview.reloadKey}
-        footerActions={!pastRenewal && (
-          <div className="flex items-center gap-2">
-            <RefreshFeedback result={refreshResult} error={refreshError} />
-            <RefreshButton
-              isPending={isRefreshing}
-              disabled={isDeleting}
-              onClick={() => refreshFile(summary.filename, { onSuccess: () => preview.reload() })} />
-          </div>
-        )}>
+        reloadKey={preview.reloadKey}>
         {(workbook) => <PremiumSummaryTable workbook={workbook} />}
       </XlsxPreviewModal>
     </li>
@@ -375,19 +308,19 @@ const PremiumSummaryTableRow = ({ row }: { row: PremiumSummaryRow }) => (
 
 const CreatedAt = ({ summary }: { summary: AppTypes.RenewalPremiumSummaryManifestEntry }) => {
   if(isUpdatedToday(summary)) return (
-    <span title={formatTimestamp(summary.last_refreshed_at)} className="badge badge-info dark:badge-outline badge-sm rounded-sm not-italic">
+    <span title={updatedTooltip(summary, formatTimestamp(summary.last_refreshed_at))} className="badge badge-info dark:badge-outline badge-sm cursor-default rounded-sm not-italic">
       Updated Today
     </span>
   )
 
   if(isToday(summary.generated_at)) return (
-    <span title={formatTimestamp(summary.generated_at)} className="badge badge-success dark:badge-outline badge-sm rounded-sm not-italic">
+    <span title={formatTimestamp(summary.generated_at)} className="badge badge-success dark:badge-outline badge-sm cursor-default rounded-sm not-italic">
       Created Today
     </span>
   )
 
   if(summary.last_refreshed_at) return (
-    <div title="Last refreshed since this report was generated">
+    <div title={updatedTooltip(summary, formatTimestamp(summary.last_refreshed_at))}>
       Updated {formatTimestamp(summary.last_refreshed_at)}
     </div>
   )
@@ -397,36 +330,12 @@ const CreatedAt = ({ summary }: { summary: AppTypes.RenewalPremiumSummaryManifes
   )
 }
 
-type RefreshFeedbackProps = {
-  result: AppTypes.RenewalPremiumSummaryRefreshResult | undefined
-  error: Error | null
-}
-
-const RefreshFeedback = ({ result, error }: RefreshFeedbackProps) => {
-  if(error) return (
-    <span className="text-sm text-error">{error.message}</span>
-  )
-  
-  if(!result) return null
-
-  const feedbackText = result.changes.length === 0 ?
-    "Refreshed — already up to date" :
-    `Refreshed — ${ result.changes.length } value${ result.changes.length === 1 ? "" : "s" } updated`
-
-  return (
-    <span className="text-sm text-success">
-      {feedbackText}
-    </span>
-  )
-}
-
 type DeleteButtonProps = {
   isPending: boolean
-  disabled: boolean
   onConfirm: () => void
 }
 
-const DeleteButton = ({ isPending, disabled, onConfirm }: DeleteButtonProps) => {
+const DeleteButton = ({ isPending, onConfirm }: DeleteButtonProps) => {
   const { armed, handleClick } = useHandleConfirmButton(onConfirm)
 
   const btnContent = isPending ? 
@@ -436,33 +345,10 @@ const DeleteButton = ({ isPending, disabled, onConfirm }: DeleteButtonProps) => 
   return (
     <button
       type="button"
-      disabled={isPending || disabled}
+      disabled={isPending}
       onClick={handleClick}
       title={armed ? "Click again to permanently delete" : "Delete this report"}
       className={`btn btn-sm btn-square ${ armed ? "btn-error" : "btn-ghost hover:bg-error/20" }`}>
-        {btnContent}
-    </button>
-  )
-}
-
-type RefreshButtonProps = {
-  isPending: boolean
-  disabled: boolean
-  onClick: () => void
-}
-
-const RefreshButton = ({ isPending, disabled, onClick }: RefreshButtonProps) => {
-  const btnContent = isPending ? 
-    <span className="loading loading-spinner loading-xs" /> : 
-    <img src={refreshIcon} alt="Refresh" className="size-4" />
-
-  return (
-    <button
-      type="button"
-      disabled={isPending || disabled}
-      onClick={onClick}
-      title="Refresh Current/Renewal premiums from AMS360"
-      className="btn btn-ghost btn-sm btn-square hover:bg-secondary">
         {btnContent}
     </button>
   )

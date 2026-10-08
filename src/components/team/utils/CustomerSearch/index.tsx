@@ -15,8 +15,8 @@ function CustomerSearch({ value, onChange }: CustomerSearchProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => { if(e.key === "Escape") onChange("") }}
-        placeholder="Search by customer name…"
-        aria-label="Search by customer name" />
+        placeholder="Search customer or policy #…"
+        aria-label="Search by customer name or policy number" />
     </label>
   )
 }

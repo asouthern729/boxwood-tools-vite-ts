@@ -209,7 +209,7 @@ const NoVisibleGroupsMsg = ({ visible, currentMonthOnly, searchQuery }: NoVisibl
   if(!visible) return null
 
   const msg = searchQuery.trim() ?
-    `No customers match "${ searchQuery.trim() }".` :
+    `No customers or policies match "${ searchQuery.trim() }".` :
     currentMonthOnly ?
     "No renewals this month." :
     "No upcoming renewals — all generated profiles are past their renewal date."
@@ -304,7 +304,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
 
 const CreatedAt = ({ generatedAt }: { generatedAt: string }) => {
   if(isToday(generatedAt)) return (
-    <span title={formatTimestamp(generatedAt)} className="badge badge-success dark:badge-outline badge-sm rounded-sm not-italic">
+    <span title={formatTimestamp(generatedAt)} className="badge badge-success dark:badge-outline badge-sm cursor-default rounded-sm not-italic">
       Created Today
     </span>
   )
