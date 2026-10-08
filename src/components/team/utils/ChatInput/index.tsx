@@ -1,3 +1,5 @@
+import { useFocusOnSlash } from "./hooks"
+
 type ChatInputProps = {
   draft: string
   setDraft: (value: string) => void
@@ -7,8 +9,11 @@ type ChatInputProps = {
 }
 
 function ChatInput({ draft, setDraft, isPending, send, placeholder }: ChatInputProps) {
+  const textareaRef = useFocusOnSlash()
+
   return (
     <textarea
+      ref={textareaRef}
       value={draft}
       onChange={(e) => setDraft(e.target.value)}
       onKeyDown={(e) => {
