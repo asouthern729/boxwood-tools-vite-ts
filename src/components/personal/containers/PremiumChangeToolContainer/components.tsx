@@ -1,4 +1,3 @@
-import claudeIcon from "@assets/claude.png"
 import trashIcon from "@assets/icons/trash/trash.svg"
 import { useHandleChatScrolling } from "@utils/hooks"
 import { useDownloadPersonalPremiumChangeFile, useDeletePersonalPremiumChangeFile, usePreviewPersonalPremiumChangeFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton, useCopyForAms } from "./hooks"
@@ -23,6 +22,7 @@ import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
 import SendButton from "@components/team/utils/SendButton"
 import ChatInput from "@components/team/utils/ChatInput"
 import AvailableTools from "@components/team/utils/AvailableTools"
+import ChatHeader from "@components/team/utils/ChatHeader"
 
 type ChatPanelProps = {
   messages: AppTypes.PersonalPremiumChangeChatMessage[]
@@ -38,10 +38,7 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
   return (
     <div className="card border border-base-300 bg-base-100 shadow-sm">
       <div className="card-body gap-3">
-        <h2 className="flex items-center gap-2 font-mono text-xs font-bold tracking-widest text-accent uppercase">
-          <img src={claudeIcon} alt="" className="size-5" />
-          Claude
-        </h2>
+        <ChatHeader />
 
         <AvailableTools tools={AVAILABLE_MCP_TOOLS} />
 

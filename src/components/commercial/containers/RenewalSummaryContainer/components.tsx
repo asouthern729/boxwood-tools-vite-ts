@@ -1,4 +1,3 @@
-import claudeIcon from "@assets/claude.png"
 import trashIcon from "@assets/icons/trash/trash.svg"
 import pdfIcon from "@assets/icons/pdf/pdf.svg"
 import { useHandleChatScrolling } from "@utils/hooks"
@@ -23,6 +22,7 @@ import PdfDropZone from "@components/team/utils/PdfDropZone"
 import SendButton from "@components/team/utils/SendButton"
 import ChatInput from "@components/team/utils/ChatInput"
 import AvailableTools from "@components/team/utils/AvailableTools"
+import ChatHeader from "@components/team/utils/ChatHeader"
 
 type ChatPanelProps = {
   messages: AppTypes.RenewalSummaryChatMessage[]
@@ -38,10 +38,7 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
   return (
     <div className="card border border-base-300 bg-base-100 shadow-sm">
       <div className="card-body gap-3">
-        <h2 className="flex items-center gap-2 font-mono text-xs font-bold tracking-widest text-accent uppercase">
-          <img src={claudeIcon} alt="" className="size-5" />
-          Claude
-        </h2>
+        <ChatHeader />
 
         <AvailableTools tools={AVAILABLE_MCP_TOOLS} />
 
@@ -273,7 +270,8 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
                 isPending={isDownloadingPdf}
                 onClick={() => downloadPdf(summary.filename)} />
             </div>
-            <div className="text-center text-xs text-base-content/50 italic sm:text-right">
+            <div className="flex items-center justify-center gap-2 text-xs text-base-content/50 italic sm:justify-end">
+              <CompleteBadge summary={summary} />
               <CreatedAt summary={summary} />
             </div>
           </div>
@@ -291,6 +289,16 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
         onClose={preview.hide}
         fetchBlob={preview.fetchBlob} />
     </li>
+  )
+}
+
+const CompleteBadge = ({ summary }: { summary: AppTypes.RenewalSummaryManifestEntry }) => {
+  if(summary.pending_sections?.length !== 0) return null
+
+  return (
+    <span title="Every section has renewal terms from AMS360 or an uploaded quote" className="badge badge-soft badge-success badge-sm cursor-default rounded-sm border-success/30 text-success/70 not-italic">
+      ✓ Complete
+    </span>
   )
 }
 
