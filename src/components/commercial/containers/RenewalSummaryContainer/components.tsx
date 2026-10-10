@@ -120,44 +120,46 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
-          <TodayFilter
-            label="Created Today"
-            count={createdToday.length}
-            active={showCreatedToday}
-            disabled={searching}
-            onChange={toggleCreatedToday} />
-          <TodayFilter
-            label="Updated Today"
-            count={updatedToday.length}
-            active={showUpdatedToday}
-            disabled={searching}
-            btnStyle="btn-info"
-            onChange={toggleUpdatedToday} />
-          <div className="ml-auto flex flex-wrap items-center gap-4">
-            <label className="label cursor-pointer gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={showPastRenewals}
-                onChange={(e) => setShowPastRenewals(e.target.checked)}
-                disabled={filtersLocked}
-                className="checkbox checkbox-sm" />
-              Show past renewals
-            </label>
-            <label className="label cursor-pointer gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={currentMonthOnly}
-                onChange={(e) => setCurrentMonthOnly(e.target.checked)}
-                disabled={filtersLocked}
-                className="checkbox checkbox-sm" />
-              Current month only
-            </label>
-          </div>
+        <div className="mb-2 flex flex-wrap items-center justify-end gap-4">
+          <label className="label cursor-pointer gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showPastRenewals}
+              onChange={(e) => setShowPastRenewals(e.target.checked)}
+              disabled={filtersLocked}
+              className="checkbox checkbox-sm" />
+            Show past renewals
+          </label>
+          <label className="label cursor-pointer gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={currentMonthOnly}
+              onChange={(e) => setCurrentMonthOnly(e.target.checked)}
+              disabled={filtersLocked}
+              className="checkbox checkbox-sm" />
+            Current month only
+          </label>
         </div>
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
+          <div className="self-start sm:justify-self-start">
+            <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
+          </div>
           <CustomerSearch value={searchQuery} onChange={setSearchQuery} />
+          <div className="flex flex-wrap items-center gap-4 self-end sm:justify-self-end">
+            <TodayFilter
+              label="Created Today"
+              count={createdToday.length}
+              active={showCreatedToday}
+              disabled={searching}
+              onChange={toggleCreatedToday} />
+            <TodayFilter
+              label="Updated Today"
+              count={updatedToday.length}
+              active={showUpdatedToday}
+              disabled={searching}
+              btnStyle="btn-info"
+              onChange={toggleUpdatedToday} />
+          </div>
         </div>
         {visibleGroups.length === 0 ? (
           <p className="py-8 text-center text-base-content/70">{emptyMsg}</p>

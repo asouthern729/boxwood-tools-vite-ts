@@ -151,34 +151,36 @@ const ListControls = ({ order, setOrder, showPastRenewals, setShowPastRenewals, 
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-4">
-        <Ordering 
-          value={order} 
-          onChange={setOrder} 
-          options={SUMMARY_ORDER_OPTIONS} />
-        <TodayFilter
-          label="Created Today"
-          count={createdTodayCount}
-          active={showCreatedToday}
-          disabled={searching}
-          onChange={setCreatedTodayOnly} />
-        <div className="ml-auto flex flex-wrap items-center gap-4">
-          <FilterToggle
-            label="Show past renewals"
-            checked={showPastRenewals}
-            onChange={setShowPastRenewals}
-            disabled={filtersLocked} />
-          <FilterToggle
-            label="Current month only"
-            checked={currentMonthOnly}
-            onChange={setCurrentMonthOnly}
-            disabled={filtersLocked} />
-        </div>
+      <div className="mb-2 flex flex-wrap items-center justify-end gap-4">
+        <FilterToggle
+          label="Show past renewals"
+          checked={showPastRenewals}
+          onChange={setShowPastRenewals}
+          disabled={filtersLocked} />
+        <FilterToggle
+          label="Current month only"
+          checked={currentMonthOnly}
+          onChange={setCurrentMonthOnly}
+          disabled={filtersLocked} />
       </div>
-      <div className="flex justify-center">
+      <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
+        <div className="self-start sm:justify-self-start">
+          <Ordering 
+            value={order} 
+            onChange={setOrder} 
+            options={SUMMARY_ORDER_OPTIONS} />
+        </div>
         <CustomerSearch
           value={searchQuery}
           onChange={setSearchQuery} />
+        <div className="self-end sm:justify-self-end">
+          <TodayFilter
+            label="Created Today"
+            count={createdTodayCount}
+            active={showCreatedToday}
+            disabled={searching}
+            onChange={setCreatedTodayOnly} />
+        </div>
       </div>
     </>
   )
