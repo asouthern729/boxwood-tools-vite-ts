@@ -2,6 +2,7 @@ export type CommercialTools =
   | "Pre-Renewal Risk Profile"
   | "Renewal Premium Spreadsheet"
   | "Renewal Summary"
+  | "Proposal Builder"
 
 export type PersonalTools =
   | "Download Change Report"
@@ -180,3 +181,48 @@ export type PersonalPremiumChangeManifest = {
 
 export type PersonalPremiumChangeChatMessage = RenewalSummaryChatMessage
 export type PersonalPremiumChangeChatTurn = RenewalSummaryChatTurn
+
+export type ProposalSourceKind = "quote_pdf" | "ams_docx" | "ams_pdf"
+
+export type ProposalAttachment = {
+  id: string
+  filename: string
+  kind: ProposalSourceKind
+  status: "processing" | "done" | "error"
+  error?: string
+}
+
+export type ProposalCreator = {
+  sub: string
+  name: string
+  email: string | null
+}
+
+export type ProposalManifestEntry = {
+  filename: string
+  client_name: string
+  line_type: string
+  created_by: ProposalCreator
+  prepared_by?: string
+  generated_at: string
+  last_refreshed_at?: string
+  last_refresh_reason?: string
+  sections: { title: string, carrier: string | null, source: "quote" | "ams", source_file?: string }[]
+  sources: { id: string, filename: string, kind: ProposalSourceKind }[]
+  sizeBytes: number
+}
+
+export type ProposalGroup = {
+  prepared_by: string | null
+  proposals: ProposalManifestEntry[]
+}
+
+export type ProposalManifest = {
+  viewer_sub: string
+  groups: ProposalGroup[]
+}
+
+export type ProposalScope = "mine" | "all"
+
+export type ProposalChatMessage = RenewalSummaryChatMessage
+export type ProposalChatTurn = RenewalSummaryChatTurn

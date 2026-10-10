@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from "react"
-import { hasDraggedFiles, partitionPdfFiles } from "./utils"
+import { hasDraggedFiles, partitionFiles } from "./utils"
+
+// Types
+import type { DropFileKind } from "./utils"
 
 // Keeps a drop that misses every drop zone from navigating the browser to the file
 export const usePreventWindowFileDrop = () => {
@@ -23,13 +26,13 @@ export const usePreventWindowFileDrop = () => {
   }, [])
 }
 
-export const useHandlePdfDropZone = (onFiles: (files: File[], rejected: string[]) => void) => {
+export const useHandlePdfDropZone = (onFiles: (files: File[], rejected: string[]) => void, accept?: DropFileKind[]) => {
   const [isDragging, setIsDragging] = useState(false)
   const dragDepth = useRef(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const submit = (files: File[]) => {
-    const { accepted, rejected } = partitionPdfFiles(files)
+    const { accepted, rejected } = partitionFiles(files, accept)
     onFiles(accepted, rejected)
   }
 

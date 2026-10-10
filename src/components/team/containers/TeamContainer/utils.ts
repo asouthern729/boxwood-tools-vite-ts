@@ -20,6 +20,11 @@ export const teamNavDescriptions: [Map<AppTypes.CommercialTools, TeamNavDescript
       to: "/commercial/renewal-summary",
       outputs: ["docx", "pdf"],
     }],
+    ["Proposal Builder", {
+      description: "Builds a branded client proposal from carrier quotes and AMS360 proposals dropped into the chat.",
+      to: "/commercial/proposal-builder",
+      outputs: ["docx", "pdf"],
+    }],
   ]),
   new Map([
     ["Download Change Report", {

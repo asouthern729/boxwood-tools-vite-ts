@@ -1,4 +1,8 @@
 import { useHandlePdfDropZone, usePreventWindowFileDrop } from "./hooks"
+import { acceptAttribute } from "./utils"
+
+// Types
+import type { DropFileKind } from "./utils"
 
 type PdfDropZoneProps = {
   variant: "button" | "area"
@@ -6,10 +10,11 @@ type PdfDropZoneProps = {
   children?: React.ReactNode
   className?: string
   title?: string
+  accept?: DropFileKind[]
 }
 
-function PdfDropZone({ variant, onFiles, children, className = "", title }: PdfDropZoneProps) {
-  const { isDragging, dropHandlers, inputRef, onInputChange, openPicker } = useHandlePdfDropZone(onFiles)
+function PdfDropZone({ variant, onFiles, children, className = "", title, accept = ["pdf"] }: PdfDropZoneProps) {
+  const { isDragging, dropHandlers, inputRef, onInputChange, openPicker } = useHandlePdfDropZone(onFiles, accept)
 
   usePreventWindowFileDrop()
 
@@ -22,7 +27,7 @@ function PdfDropZone({ variant, onFiles, children, className = "", title }: PdfD
         <input
           ref={inputRef}
           type="file"
-          accept="application/pdf"
+          accept={acceptAttribute(accept)}
           multiple
           hidden
           onChange={onInputChange} />

@@ -8,11 +8,13 @@ import PreRenewalRiskProfileContainer from '@components/commercial/containers/Pr
 import PremiumChangeToolContainer from '@components/personal/containers/PremiumChangeToolContainer'
 import RenewalSummaryContainer from '@components/commercial/containers/RenewalSummaryContainer'
 import PersonalRenewalSummaryContainer from '@components/personal/containers/RenewalSummaryContainer'
+import ProposalBuilderContainer from '@components/commercial/containers/ProposalBuilderContainer'
 
 export const toolNames: Record<string, AppTypes.AllTools> = {
   "pre-renewal-risk-profile": "Pre-Renewal Risk Profile",
   "renewal-premium-summary": "Renewal Premium Spreadsheet",
   "renewal-summary": "Renewal Summary",
+  "proposal-builder": "Proposal Builder",
   "download-change-report": "Download Change Report",
   "premium-change-tool": "Premium Change Tool",
 }
@@ -25,6 +27,8 @@ export const handleToolContent = (section: string, toolName: AppTypes.AllTools) 
       return RenewalPremiumSummaryContainer
     case "Renewal Summary":
       return section === "personal" ? PersonalRenewalSummaryContainer : RenewalSummaryContainer
+    case "Proposal Builder":
+      return ProposalBuilderContainer
     case "Download Change Report":
       return DownloadChangeReportContainer
     case "Premium Change Tool":

@@ -445,3 +445,130 @@ export const postPersonalPremiumChangeChat = async (message: string, sessionId: 
 
   return await res.json()
 }
+
+/**
+ * List Proposal Builder documents grouped by creator; "mine" returns only the signed-in user's
+ *
+ * GET /proposal-builder/manifest?scope=mine
+ */
+export const getProposalManifest = async (scope: AppTypes.ProposalScope): Promise<AppTypes.ProposalManifest> => {
+  const res = await authorizedFetch(`${ API_BASE }/proposal-builder/manifest?scope=${ scope }`)
+
+  if(!res.ok) throw new Error(`Failed to load proposals: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * Fetch a generated proposal docx as a blob, for download or preview
+ *
+ * GET /proposal-builder/files/Acme_Corp_....docx
+ */
+export const getProposalFileBlob = async (filename: string): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/proposal-builder/files/${ encodeURIComponent(filename) }`)
+
+  if(!res.ok) throw new Error(`Failed to load proposal file: HTTP ${ res.status }`)
+
+  return await res.blob()
+}
+
+/**
+ * Download a generated proposal docx
+ */
+export const downloadProposalFile = async (filename: string): Promise<void> => {
+  triggerBlobDownload(await getProposalFileBlob(filename), filename)
+}
+
+/**
+ * Download a generated proposal as a PDF, converted server-side from the docx
+ *
+ * GET /proposal-builder/files/Acme_Corp_....docx/pdf
+ */
+export const downloadProposalPdf = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/proposal-builder/files/${ encodeURIComponent(filename) }/pdf`)
+
+  if(!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error_description ?? `Failed to download proposal PDF: HTTP ${ res.status }`)
+  }
+
+  triggerBlobDownload(await res.blob(), filename.replace(/\.docx$/i, ".pdf"))
+}
+
+/**
+ * Delete a generated proposal; only its creator may
+ *
+ * DELETE /proposal-builder/files/Acme_Corp_....docx
+ */
+export const deleteProposalFile = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/proposal-builder/files/${ encodeURIComponent(filename) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error_description ?? `Failed to delete proposal: HTTP ${ res.status }`)
+  }
+}
+
+/**
+ * Stage a quote PDF or AMS360 proposal (raw bytes, not multipart) for the next chat turn; the
+ * server reads it in the background
+ *
+ * POST /proposal-builder/attachments?name=quote.pdf
+ */
+export const uploadProposalAttachment = async (file: File): Promise<AppTypes.ProposalAttachment> => {
+  const res = await authorizedFetch(`${ API_BASE }/proposal-builder/attachments?name=${ encodeURIComponent(file.name) }`, {
+    method: "POST",
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  })
+
+  if(res.status === 413) throw new Error("File is too large (24 MB max).")
+  if(!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error_description ?? `Failed to upload file: HTTP ${ res.status }`)
+  }
+
+  return await res.json()
+}
+
+/**
+ * GET /proposal-builder/attachments/:id
+ */
+export const getProposalAttachment = async (id: string): Promise<AppTypes.ProposalAttachment> => {
+  const res = await authorizedFetch(`${ API_BASE }/proposal-builder/attachments/${ encodeURIComponent(id) }`)
+
+  if(!res.ok) throw new Error(`Failed to load attachment: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * DELETE /proposal-builder/attachments/:id
+ */
+export const deleteProposalAttachment = async (id: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/proposal-builder/attachments/${ encodeURIComponent(id) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404) throw new Error(`Failed to remove attachment: HTTP ${ res.status }`)
+}
+
+/**
+ * Send one turn of the Proposal Builder chat (scoped to customer_lookup and proposal_builder) with
+ * any staged attachments, resuming the same agent session when sessionId is given
+ *
+ * POST /proposal-builder/chat
+ */
+export const postProposalChat = async (message: string, attachmentIds: string[], sessionId: string | undefined, preparedBy: string | null, autoBuild: boolean): Promise<AppTypes.ProposalChatTurn> => {
+  const res = await authorizedFetch(`${ API_BASE }/proposal-builder/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, attachment_ids: attachmentIds, session_id: sessionId, prepared_by: preparedBy ?? undefined, auto_build: autoBuild || undefined })
+  })
+
+  if(!res.ok) throw new Error(`Failed to send chat message: HTTP ${ res.status }`)
+
+  return await res.json()
+}
