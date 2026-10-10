@@ -91,7 +91,7 @@ export const deleteRenewalPremiumSummaryFile = async (filename: string): Promise
 
 /**
  * Send one turn of the CL Renewal Premium Spreadsheet chat (scoped to customer_lookup +
- * renewal_premium_summary only), resuming the same agent session when sessionId is given
+ * renewal_premium_spreadsheet only), resuming the same agent session when sessionId is given
  *
  * POST /renewal-premium-summaries/chat
  */

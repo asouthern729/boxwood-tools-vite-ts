@@ -9,7 +9,7 @@ import { PAGE_SIZE } from "@components/team/utils/Pagination/utils"
 import type * as AppTypes from "@context/App/types"
 
 const MANIFEST_QUERY_KEY = ["renewal-premium-summary-manifest"]
-const CHAT_SESSION_KEY = "boxwood_renewal_premium_summary_chat_session"
+const CHAT_SESSION_KEY = "boxwood_renewal_premium_spreadsheet_chat_session"
 
 export const useRenewalPremiumSummaryManifest = () => useQuery({
   queryKey: MANIFEST_QUERY_KEY,
@@ -68,7 +68,7 @@ export const useRenewalPremiumSummaryChat = () => {
       setSessionId(turn.session_id)
       setMessages((prev) => [...prev, { role: "assistant", text: turn.reply || "(no reply)" }])
 
-      const builtWorkbook = turn.tool_calls.some((call) => call.name.endsWith("renewal_premium_summary"))
+      const builtWorkbook = turn.tool_calls.some((call) => call.name.endsWith("renewal_premium_spreadsheet"))
       if(builtWorkbook) {
         await queryClient.invalidateQueries({ queryKey: MANIFEST_QUERY_KEY })
         setScrollSignal((n) => n + 1)
