@@ -76,7 +76,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
   if(groups.length === 0) {
     return (
       <>
-        <p className="py-8 text-center text-base-content/70">No renewal premium summaries generated yet.</p>
+        <p className="py-8 text-center text-base-content/70">No renewal premium spreadsheets generated yet.</p>
         <FooterMessage message={deletedMessage} />
       </>
     )
@@ -381,7 +381,7 @@ const ChatTip = ({ visible }: { visible: boolean }) => {
   return (
     <p className="text-sm text-base-content/60">
       Ask Claude to run the renewal premium tool for a customer — e.g. "Build the renewal
-      premium summary for Acme Corp." — or search for customers with upcoming renewals.
+      premium spreadsheet for Acme Corp." — or search for customers with upcoming renewals.
     </p>
   )
 }

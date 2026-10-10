@@ -1,6 +1,6 @@
 export type CommercialTools =
   | "Pre-Renewal Risk Profile"
-  | "Renewal Premium Summary"
+  | "Renewal Premium Spreadsheet"
   | "Renewal Summary"
 
 export type PersonalTools =

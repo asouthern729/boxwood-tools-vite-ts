@@ -44,40 +44,40 @@ export const downloadReportFile = async (filename: string): Promise<void> => {
 }
 
 /**
- * List generated CL Renewal Premium Summary xlsx files, grouped by CSR
+ * List generated CL Renewal Premium Spreadsheet xlsx files, grouped by CSR
  *
  * GET /renewal-premium-summaries/manifest
  */
 export const getRenewalPremiumSummaryManifest = async (): Promise<AppTypes.RenewalPremiumSummaryManifest> => {
   const res = await authorizedFetch(`${ API_BASE }/renewal-premium-summaries/manifest`)
 
-  if(!res.ok) throw new Error(`Failed to load renewal premium summary manifest: HTTP ${ res.status }`)
+  if(!res.ok) throw new Error(`Failed to load renewal premium spreadsheet manifest: HTTP ${ res.status }`)
 
   return await res.json()
 }
 
 /**
- * Fetch a generated CL Renewal Premium Summary xlsx as a blob, for download or preview
+ * Fetch a generated CL Renewal Premium Spreadsheet xlsx as a blob, for download or preview
  *
  * GET /renewal-premium-summaries/files/Acme_Corp_....xlsx
  */
 export const getRenewalPremiumSummaryFileBlob = async (filename: string): Promise<Blob> => {
   const res = await authorizedFetch(`${ API_BASE }/renewal-premium-summaries/files/${ encodeURIComponent(filename) }`)
 
-  if(!res.ok) throw new Error(`Failed to load renewal premium summary file: HTTP ${ res.status }`)
+  if(!res.ok) throw new Error(`Failed to load renewal premium spreadsheet file: HTTP ${ res.status }`)
 
   return await res.blob()
 }
 
 /**
- * Download a generated CL Renewal Premium Summary xlsx
+ * Download a generated CL Renewal Premium Spreadsheet xlsx
  */
 export const downloadRenewalPremiumSummaryFile = async (filename: string): Promise<void> => {
   triggerBlobDownload(await getRenewalPremiumSummaryFileBlob(filename), filename)
 }
 
 /**
- * Delete a generated CL Renewal Premium Summary xlsx
+ * Delete a generated CL Renewal Premium Spreadsheet xlsx
  *
  * DELETE /renewal-premium-summaries/files/Acme_Corp_....xlsx
  */
@@ -86,11 +86,11 @@ export const deleteRenewalPremiumSummaryFile = async (filename: string): Promise
     method: "DELETE",
   })
 
-  if(!res.ok && res.status !== 404) throw new Error(`Failed to delete renewal premium summary file: HTTP ${ res.status }`)
+  if(!res.ok && res.status !== 404) throw new Error(`Failed to delete renewal premium spreadsheet file: HTTP ${ res.status }`)
 }
 
 /**
- * Send one turn of the CL Renewal Premium Summary chat (scoped to customer_lookup +
+ * Send one turn of the CL Renewal Premium Spreadsheet chat (scoped to customer_lookup +
  * renewal_premium_summary only), resuming the same agent session when sessionId is given
  *
  * POST /renewal-premium-summaries/chat

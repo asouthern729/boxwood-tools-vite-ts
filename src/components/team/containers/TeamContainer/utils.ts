@@ -5,8 +5,8 @@ type TeamNavDescription = { description: string, to: string, outputs: AppTypes.T
 
 export const teamNavDescriptions: [Map<AppTypes.CommercialTools, TeamNavDescription>, Map<AppTypes.PersonalTools, TeamNavDescription>] = [
   new Map([
-    ["Renewal Premium Summary", {
-      description: "Builds the renewal premium summary spreadsheet so account managers can review and adjust it before the renewal conversation.",
+    ["Renewal Premium Spreadsheet", {
+      description: "Builds the renewal premium spreadsheet so account managers can review and adjust it before the renewal conversation.",
       to: "/commercial/renewal-premium-summary",
       outputs: ["xlsx"],
     }],

@@ -21,7 +21,7 @@ function RenewalPremiumSummaryContainer() {
           isPending={isPending} />
 
         {isLoading && <LoadingMsg />}
-        {isError && <ErrorMsg message="Couldn't load renewal premium summaries right now." />}
+        {isError && <ErrorMsg message="Couldn't load renewal premium spreadsheets right now." />}
         {isReady && (
           <Components.CsrGroupList
             groups={manifest?.groups ?? []}
