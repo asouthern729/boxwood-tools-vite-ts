@@ -107,7 +107,7 @@ export type RenewalSummaryManifestEntry = {
   generated_at: string
   last_refreshed_at?: string
   last_refresh_reason?: string
-  pending_sections?: { title: string, polno: string }[]
+  sections?: { title: string, polno: string, renewed: boolean }[]
   csr_code: string | null
   csr_name: string | null
   client_name: string

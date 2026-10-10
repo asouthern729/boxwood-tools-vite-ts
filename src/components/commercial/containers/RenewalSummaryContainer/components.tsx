@@ -245,6 +245,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
             <span className="font-semibold">{summary.client_name}</span>
             <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
             <span className="text-sm text-base-content/60">{summary.polnos}</span>
+            <LineItemStatus summary={summary} />
             {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
             {pdfError && <span className="text-sm text-error">{pdfError.message}</span>}
           </div>
@@ -271,7 +272,6 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
                 onClick={() => downloadPdf(summary.filename)} />
             </div>
             <div className="flex items-center justify-center gap-2 text-xs text-base-content/50 italic sm:justify-end">
-              <CompleteBadge summary={summary} />
               <CreatedAt summary={summary} />
             </div>
           </div>
@@ -292,15 +292,34 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
   )
 }
 
-const CompleteBadge = ({ summary }: { summary: AppTypes.RenewalSummaryManifestEntry }) => {
-  if(summary.pending_sections?.length !== 0) return null
+const LineItemStatus = ({ summary }: { summary: AppTypes.RenewalSummaryManifestEntry }) => {
+  if(!summary.sections?.length) return null
+
+  if(summary.sections.every((s) => s.renewed)) return (
+    <div className="mt-1">
+      <CompleteBadge />
+    </div>
+  )
 
   return (
-    <span title="Every section has renewal terms from AMS360 or an uploaded quote" className="badge badge-soft badge-success badge-sm cursor-default rounded-sm border-success/30 text-success/70 not-italic">
-      ✓ Complete
-    </span>
+    <ul className="mt-1 flex flex-wrap gap-x-3 text-sm">
+      {summary.sections.map((s) => (
+        <li
+          key={`${ s.polno }-${ s.title }`}
+          title={s.renewed ? "Renewed" : "Awaiting renewal terms"}
+          className={s.renewed ? "text-success/70" : "text-base-content/35"}>
+          {s.renewed && "✓ "}{s.title}
+        </li>
+      ))}
+    </ul>
   )
 }
+
+const CompleteBadge = () => (
+  <span title="Every section has renewal terms from AMS360 or an uploaded quote" className="badge badge-soft badge-success badge-sm cursor-default rounded-sm border-success/30 text-success/70 not-italic">
+    ✓ Complete
+  </span>
+)
 
 const CreatedAt = ({ summary }: { summary: AppTypes.RenewalSummaryManifestEntry }) => {
   if(isUpdatedToday(summary)) return (
