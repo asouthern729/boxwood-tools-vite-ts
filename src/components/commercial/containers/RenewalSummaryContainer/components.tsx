@@ -376,8 +376,8 @@ const QuoteList = ({ filename, quotes, uploading, errors, onDismissErrors }: Quo
           <li key={upload.key} className="flex items-center gap-2 rounded-box bg-base-200 px-3 py-1.5 text-sm">
             <img src={pdfIcon} alt="" className="size-4" />
             <span className="truncate font-medium">{upload.name}</span>
-            <span className="loading loading-spinner loading-xs" />
-            <span className="text-base-content/60 italic">Uploading…</span>
+            <span className="loading loading-spinner loading-xs text-base-content/90" />
+            <span className="text-base-content/80 italic">Uploading…</span>
           </li>
         ))}
       </ul>
@@ -423,8 +423,8 @@ const QuoteChipStatusMsg = ({ status, error }: { status: "processing" | "done" |
       return <span className="badge badge-success badge-sm">Done</span>
     default:
       return (
-        <span className="flex items-center gap-1.5 text-base-content/60 italic">
-          <span className="loading loading-spinner loading-xs" />Reading quote…
+        <span className="flex items-center gap-1.5 text-base-content/80 italic">
+          <span className="loading loading-spinner loading-xs text-base-content/90" />Reading quote…
         </span>
       )
   }
