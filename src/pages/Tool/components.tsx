@@ -1,26 +1,45 @@
 import { NavLink, useLocation } from "react-router"
 import { teamNavDescriptions } from "@components/team/containers/TeamContainer/utils"
-import { useHandleToolName } from "./hooks"
-import { handleToolContent, toolSchedules, getScheduleRuns, formatScheduleRun } from "./utils"
+import { useHandleToolName, useToolJobStatuses } from "./hooks"
+import { handleToolContent, toolSchedules, getScheduleRuns, formatScheduleRun, getJobLastRun } from "./utils"
 
-export const ToolName = () => {
+// Types
+import type * as AppTypes from "@context/App/types"
+
+export const ToolHeader = () => (
+  <header className="mx-auto my-8 flex w-fit max-w-full flex-col items-center gap-3 rounded-box border-t border-l border-r-2 border-b-2 border-t-neutral-content/50 border-l-neutral-content/50 border-r-primary border-b-primary bg-base-100/60 px-10 py-6 backdrop-blur-md">
+    <ToolName />
+    <ToolSchedule />
+  </header>
+)
+
+const ToolName = () => {
   const toolName = useHandleToolName()
 
   return (
-    <h2 className="font-display text-3xl uppercase tracking-wide text-center text-primary my-8">{toolName}</h2>
+    <h2 className="font-display text-3xl uppercase tracking-wide text-center text-primary">{toolName}</h2>
   )
 }
 
-export const ToolSchedule = () => {
+const ToolSchedule = () => {
   const { pathname } = useLocation()
+  const { data: jobs, isError } = useToolJobStatuses()
   const schedule = toolSchedules[pathname]
 
-  if(!schedule) return null
+  if(jobs?.length) return (
+    <div className="flex flex-col items-center gap-4 text-xs">
+      {jobs.map((job) => (
+        <JobBadges key={job.job} job={job} showLabel={jobs.length > 1} />
+      ))}
+    </div>
+  )
+
+  if(!isError || !schedule) return null
 
   const { lastRun, nextRun } = getScheduleRuns(schedule)
 
   return (
-    <div title={`Runs automatically: ${ schedule.label }`} className="-mt-4 mb-6 flex flex-wrap justify-center gap-2 text-xs">
+    <div title={`Runs automatically: ${ schedule.label }`} className="flex flex-wrap justify-center gap-2 text-xs">
       <span className="badge badge-ghost badge-sm gap-1.5">
         <ClockIcon />
         Last run {formatScheduleRun(lastRun)}
@@ -29,6 +48,28 @@ export const ToolSchedule = () => {
         <ClockIcon />
         Next run {formatScheduleRun(nextRun)}
       </span>
+    </div>
+  )
+}
+
+const JobBadges = ({ job, showLabel }: { job: AppTypes.JobStatus, showLabel: boolean }) => {
+  const lastRun = getJobLastRun(job)
+  const summary = job.last_run?.summary
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div title={`Runs automatically: ${ job.schedule }`} className="flex flex-wrap items-center justify-center gap-2">
+        {showLabel && <span className="text-base-content/60">{job.label}</span>}
+        <span className={`badge badge-sm gap-1.5 ${ lastRun.warn ? "badge-warning" : "badge-ghost" }`}>
+          <ClockIcon />
+          {lastRun.text}
+        </span>
+        <span className="badge badge-primary dark:badge-outline badge-sm gap-1.5">
+          <ClockIcon />
+          Next run {formatScheduleRun(job.next_run_at ? new Date(job.next_run_at) : null)}
+        </span>
+      </div>
+      {summary && <p className={`text-center ${ job.last_run?.ok ? "text-base-content/60" : "text-error" }`}>{summary}</p>}
     </div>
   )
 }

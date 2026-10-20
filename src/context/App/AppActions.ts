@@ -572,3 +572,17 @@ export const postProposalChat = async (message: string, attachmentIds: string[],
 
   return await res.json()
 }
+
+/**
+ * Status of scheduled cron jobs, in the order requested
+ *
+ * GET /jobs?names=cl-renewal-summaries,morning-download
+ */
+export const getJobStatuses = async (names: string[]): Promise<AppTypes.JobStatus[]> => {
+  const res = await authorizedFetch(`${ API_BASE }/jobs?names=${ names.map(encodeURIComponent).join(",") }`)
+
+  if(!res.ok) throw new Error(`Failed to load job status: HTTP ${ res.status }`)
+
+  const body: { jobs: AppTypes.JobStatus[] } = await res.json()
+  return body.jobs
+}
