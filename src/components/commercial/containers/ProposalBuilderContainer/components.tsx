@@ -23,14 +23,14 @@ import AvailableTools from "@components/team/utils/AvailableTools"
 
 type ChatPanelProps = {
   messages: AppTypes.ProposalChatMessage[]
-  onSend: (message: string, attachmentIds: string[], attachedNames: string[], autoBuild?: boolean) => void
+  onSend: (message: string, attachmentIds: string[], attachedNames: string[], shown?: string) => void
   onAnnounce: (text: string) => void
   isPending: boolean
 }
 
 export const ChatPanel = ({ messages, onSend, onAnnounce, isPending }: ChatPanelProps) => {
   const staged = useProposalAttachments()
-  const { messagesRef, send, draft, setDraft } = useHandleChatPanel(onSend, staged, isPending)
+  const { messagesRef, send, build, canBuild, draft, setDraft } = useHandleChatPanel(onSend, staged, isPending)
   useHandleChatScrolling(messagesRef, messages, isPending)
   useAnnounceReadErrors(staged.attachments, onAnnounce)
 
@@ -61,7 +61,7 @@ export const ChatPanel = ({ messages, onSend, onAnnounce, isPending }: ChatPanel
             setDraft={setDraft}
             isPending={isPending}
             send={send}
-            placeholder="Drop quotes or AMS360 proposals here, then ask Claude to build a proposal…"
+            placeholder="Drop quotes or AMS360 proposals here, add any notes, then press Build proposal…"
             onFiles={addFiles}
             accept={ACCEPTED_FILES}
             attachments={staged.attachments}
@@ -70,11 +70,38 @@ export const ChatPanel = ({ messages, onSend, onAnnounce, isPending }: ChatPanel
             draft={staged.uploading ? "" : draft}
             isPending={isPending}
             onClick={send} />
+          <BuildButton
+            visible={staged.attachments.length > 0}
+            disabled={!canBuild}
+            reading={!staged.allRead}
+            onClick={build} />
         </div>
 
         <ClaudeDisclaimer />
       </div>
     </div>
+  )
+}
+
+type BuildButtonProps = {
+  visible: boolean
+  disabled: boolean
+  reading: boolean
+  onClick: () => void
+}
+
+const BuildButton = ({ visible, disabled, reading, onClick }: BuildButtonProps) => {
+  if(!visible) return null
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      title={reading ? "Waiting for the files to finish reading" : "Build the proposal from these files, using anything typed as guidance"}
+      className="btn btn-accent w-full self-end sm:w-auto">
+        {reading ? "Reading files…" : "Build proposal"}
+    </button>
   )
 }
 

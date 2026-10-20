@@ -561,11 +561,11 @@ export const deleteProposalAttachment = async (id: string): Promise<void> => {
  *
  * POST /proposal-builder/chat
  */
-export const postProposalChat = async (message: string, attachmentIds: string[], sessionId: string | undefined, preparedBy: string | null, autoBuild: boolean): Promise<AppTypes.ProposalChatTurn> => {
+export const postProposalChat = async (message: string, attachmentIds: string[], sessionId: string | undefined, preparedBy: string | null): Promise<AppTypes.ProposalChatTurn> => {
   const res = await authorizedFetch(`${ API_BASE }/proposal-builder/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, attachment_ids: attachmentIds, session_id: sessionId, prepared_by: preparedBy ?? undefined, auto_build: autoBuild || undefined })
+    body: JSON.stringify({ message, attachment_ids: attachmentIds, session_id: sessionId, prepared_by: preparedBy ?? undefined })
   })
 
   if(!res.ok) throw new Error(`Failed to send chat message: HTTP ${ res.status }`)

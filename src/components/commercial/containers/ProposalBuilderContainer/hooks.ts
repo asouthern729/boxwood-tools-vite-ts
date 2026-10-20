@@ -13,7 +13,7 @@ const MANIFEST_QUERY_KEY = ["proposal-builder-manifest"]
 const CHAT_SESSION_KEY = "boxwood_proposal_builder_chat_session"
 const PREPARED_BY_KEY = "boxwood_proposal_builder_prepared_by"
 const ATTACHMENT_POLL_MS = 4000
-const AUTO_BUILD_MESSAGE = "Build the proposal from these files."
+const BUILD_MESSAGE = "Build the proposal from these files."
 
 export const useProposalManifest = (scope: AppTypes.ProposalScope) => useQuery({
   queryKey: [...MANIFEST_QUERY_KEY, scope],
@@ -95,7 +95,7 @@ export const useProposalAttachments = () => {
     return ready.map((a) => a.id!)
   }
 
-  return { attachments, addFiles, remove, take, uploading, allRead }
+  return { attachments, addFiles, remove, take, uploading, allRead, ready }
 }
 
 const readPreparedBy = () => {
@@ -122,7 +122,7 @@ const listNames = (names: string[]) =>
   names.length <= 2 ? names.join(" and ") : `${ names.slice(0, -1).join(", ") } and ${ names.at(-1) }`
 
 export const announceReading = (names: string[]) =>
-  `Reading ${ listNames(names) } — this usually takes about a minute. I'll build the proposal as soon as ${ names.length > 1 ? "they're" : "it's" } done.`
+  `Reading ${ listNames(names) } — this usually takes about a minute. Add any other files and notes for the proposal, then press Build proposal.`
 
 export const useAnnounceReadErrors = (attachments: ChatAttachment[], onAnnounce: (text: string) => void) => {
   const announced = useRef(new Set<string>())
@@ -144,8 +144,8 @@ export const useProposalBuilderChat = () => {
   const [scrollSignal, setScrollSignal] = useState(0)
 
   const { mutate, isPending } = useMutation({
-    mutationFn: ({ message, attachmentIds, autoBuild }: { message: string, attachmentIds: string[], autoBuild: boolean }) =>
-      AppActions.postProposalChat(message, attachmentIds, sessionId, readPreparedBy(), autoBuild),
+    mutationFn: ({ message, attachmentIds }: { message: string, attachmentIds: string[] }) =>
+      AppActions.postProposalChat(message, attachmentIds, sessionId, readPreparedBy()),
     onSuccess: async (turn) => {
       sessionStorage.setItem(CHAT_SESSION_KEY, turn.session_id)
       setSessionId(turn.session_id)
@@ -166,48 +166,50 @@ export const useProposalBuilderChat = () => {
 
   const announce = useCallback((text: string) => setMessages((prev) => [...prev, { role: "assistant", text }]), [])
 
-  const sendMessage = (message: string, attachmentIds: string[], attachedNames: string[], autoBuild = false) => {
+  // shown: what the chat displays for the user's turn, when it differs from what Claude is sent
+  const sendMessage = (message: string, attachmentIds: string[], attachedNames: string[], shown?: string) => {
     const trimmed = message.trim()
     if(!trimmed || isPending) return
 
-    if(autoBuild && trimmed === AUTO_BUILD_MESSAGE) {
-      announce(`Finished reading ${ listNames(attachedNames) }. Building your proposal now…`)
-    } else {
-      const text = attachedNames.length > 0 ? `${ trimmed }\n\n📎 ${ attachedNames.join(", ") }` : trimmed
-      setMessages((prev) => [...prev, { role: "user", text }])
-    }
-    mutate({ message: trimmed, attachmentIds, autoBuild })
+    const display = shown ?? trimmed
+    const text = attachedNames.length > 0 ? `${ display }\n\n📎 ${ attachedNames.join(", ") }` : display
+    setMessages((prev) => [...prev, { role: "user", text }])
+    mutate({ message: trimmed, attachmentIds })
   }
 
   return { messages, sendMessage, announce, isPending, scrollSignal }
 }
 
 export const useHandleChatPanel = (
-  onSend: (message: string, attachmentIds: string[], attachedNames: string[], autoBuild?: boolean) => void,
+  onSend: (message: string, attachmentIds: string[], attachedNames: string[], shown?: string) => void,
   staged: ReturnType<typeof useProposalAttachments>,
   isPending: boolean
 ) => {
   const [draft, setDraft] = useState("")
   const messagesRef = useRef<HTMLDivElement>(null)
 
-  const sendStaged = (message: string, autoBuild: boolean) => {
-    const names = staged.attachments.filter((a) => a.id && a.status !== "error").map((a) => a.filename)
-    onSend(message, staged.take(), names, autoBuild)
+  const sendStaged = (message: string, shown?: string) => {
+    const names = staged.ready.map((a) => a.filename)
+    onSend(message, staged.take(), names, shown)
     setDraft("")
   }
 
   const send = () => {
     if(!draft.trim() || staged.uploading) return
-    sendStaged(draft, false)
+    sendStaged(draft)
   }
 
-  // Once every dropped file is read, build without waiting for a prompt; anything typed meanwhile rides along
-  useEffect(() => {
-    if(!staged.allRead || isPending) return
-    sendStaged(draft.trim() || AUTO_BUILD_MESSAGE, true)
-  }, [staged.allRead, isPending])
+  // Nothing builds on its own (Patrick, 2026-10-18: the first file to finish reading used to build
+  // before the rest were in). Build waits for every staged file, and whatever's typed rides along as
+  // guidance for the build.
+  const canBuild = staged.allRead && !isPending
+  const build = () => {
+    if(!canBuild) return
+    const guidance = draft.trim()
+    sendStaged(guidance ? `${ BUILD_MESSAGE } ${ guidance }` : BUILD_MESSAGE, guidance || "Build proposal")
+  }
 
-  return { messagesRef, send, draft, setDraft }
+  return { messagesRef, send, build, canBuild, draft, setDraft }
 }
 
 const FOOTER_MESSAGE_TIMEOUT_MS = 4000
