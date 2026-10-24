@@ -1,7 +1,8 @@
+import { Fragment } from "react"
 import { NavLink, useLocation } from "react-router"
 import { teamNavDescriptions } from "@components/team/containers/TeamContainer/utils"
 import { useHandleToolName, useToolJobStatuses } from "./hooks"
-import { handleToolContent, toolSchedules, getScheduleRuns, formatScheduleRun, getJobLastRun } from "./utils"
+import { handleToolContent, toolSchedules, getScheduleRuns, formatScheduleRun, getJobLastRun, splitJobSummary } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
@@ -28,8 +29,11 @@ const ToolSchedule = () => {
 
   if(jobs?.length) return (
     <div className="flex flex-col items-center gap-4 text-xs">
-      {jobs.map((job) => (
-        <JobBadges key={job.job} job={job} showLabel={jobs.length > 1} />
+      {jobs.map((job, i) => (
+        <Fragment key={job.job}>
+          {i > 0 && <hr className="w-full border-neutral-content/30" />}
+          <JobBadges job={job} showLabel={jobs.length > 1} />
+        </Fragment>
       ))}
     </div>
   )
@@ -44,7 +48,7 @@ const ToolSchedule = () => {
         <ClockIcon />
         Last run {formatScheduleRun(lastRun)}
       </span>
-      <span className="badge badge-primary dark:badge-outline badge-sm gap-1.5">
+      <span className="badge badge-neutral dark:badge-outline dark:border-neutral-content dark:text-neutral-content badge-sm gap-1.5">
         <ClockIcon />
         Next run {formatScheduleRun(nextRun)}
       </span>
@@ -57,22 +61,36 @@ const JobBadges = ({ job, showLabel }: { job: AppTypes.JobStatus, showLabel: boo
   const summary = job.last_run?.summary
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-2.5">
       <div title={`Runs automatically: ${ job.schedule }`} className="flex flex-wrap items-center justify-center gap-2">
         {showLabel && <span className="text-base-content/60">{job.label}</span>}
         <span className={`badge badge-sm gap-1.5 ${ lastRun.warn ? "badge-warning" : "badge-ghost" }`}>
           <ClockIcon />
           {lastRun.text}
         </span>
-        <span className="badge badge-primary dark:badge-outline badge-sm gap-1.5">
+        <span className="badge badge-neutral dark:badge-outline dark:border-neutral-content dark:text-neutral-content badge-sm gap-1.5">
           <ClockIcon />
           Next run {formatScheduleRun(job.next_run_at ? new Date(job.next_run_at) : null)}
         </span>
       </div>
-      {summary && <p className={`text-center ${ job.last_run?.ok ? "text-base-content/60" : "text-error" }`}>{summary}</p>}
+      {summary && (
+        <p className={`text-center ${ job.last_run?.ok ? "text-base-content/60" : "text-error" }`}>
+          {job.last_run?.ok ? <JobSummary job={job.job} summary={summary} /> : summary}
+        </p>
+      )}
     </div>
   )
 }
+
+const JobSummary = ({ job, summary }: { job: string, summary: string }) => (
+  splitJobSummary(job, summary).map((part, i) => {
+    if(i % 2 === 0) return part
+
+    return (
+      <b key={i} className={part.startsWith("Built") ? "text-success" : "text-info"}>{part}</b>
+    )
+  })
+)
 
 const ClockIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="size-3">

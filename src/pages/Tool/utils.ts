@@ -110,7 +110,14 @@ export const toolJobs: Record<string, string[]> = {
   "/personal/renewal-summary": ["pl-renewal-summary"],
 }
 
-export const getJobLastRun = ({ last_run, overdue }: AppTypes.JobStatus) => {
+const UNHIGHLIGHTED_JOBS = ["morning-download"]
+
+export const splitJobSummary = (job: string, summary: string) =>
+  UNHIGHLIGHTED_JOBS.includes(job) ?
+    [summary] :
+    summary.split(/\b((?:Built|Updated|rebuilt) \d+)/)
+
+export const getJobLastRun =({ last_run, overdue }: AppTypes.JobStatus) => {
   const when = formatScheduleRun(last_run ? new Date(last_run.started_at) : null)
 
   if(last_run && !last_run.ok) return { warn: true, text: `Last run failed ${ when }` }
