@@ -41,7 +41,7 @@ export const handleToolContent = (section: string, toolName: AppTypes.AllTools) 
 // Times are America/Chicago wall-clock; "last run" is the most recent scheduled time, not a confirmed job result.
 const SCHEDULE_TZ = "America/Chicago"
 
-type ToolSchedule = {
+export type ToolSchedule = {
   label: string
   hour: number
   minute: number
