@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react"
+import { useCountedDownload } from "@components/team/utils/DownloadOdometer/hooks"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { usePreviewModal } from "@components/team/utils/PreviewModal/hooks"
 import * as AppActions from '@context/App/AppActions'
@@ -16,9 +17,7 @@ export const useRenewalPremiumSummaryManifest = () => useQuery({
   queryFn: AppActions.getRenewalPremiumSummaryManifest,
 })
 
-export const useDownloadRenewalPremiumSummaryFile = () => useMutation({
-  mutationFn: AppActions.downloadRenewalPremiumSummaryFile,
-})
+export const useDownloadRenewalPremiumSummaryFile = () => useCountedDownload(AppActions.downloadRenewalPremiumSummaryFile)
 
 export const useDeleteRenewalPremiumSummaryFile = () => {
   const queryClient = useQueryClient()
@@ -30,7 +29,7 @@ export const useDeleteRenewalPremiumSummaryFile = () => {
 }
 
 export const usePreviewRenewalPremiumSummaryFile = (filename: string) =>
-  usePreviewModal(useCallback(() => AppActions.getRenewalPremiumSummaryFileBlob(filename), [filename]))
+  usePreviewModal(useCallback(() => AppActions.getRenewalPremiumSummaryFileBlob(filename, true), [filename]))
 
 const CONFIRM_TIMEOUT_MS = 3000
 

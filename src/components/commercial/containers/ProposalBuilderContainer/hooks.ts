@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react"
+import { useCountedDownload } from "@components/team/utils/DownloadOdometer/hooks"
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { usePreviewModal } from "@components/team/utils/PreviewModal/hooks"
 import * as AppActions from '@context/App/AppActions'
@@ -21,13 +22,9 @@ export const useProposalManifest = (scope: AppTypes.ProposalScope) => useQuery({
   placeholderData: keepPreviousData,
 })
 
-export const useDownloadProposalFile = () => useMutation({
-  mutationFn: AppActions.downloadProposalFile,
-})
+export const useDownloadProposalFile = () => useCountedDownload(AppActions.downloadProposalFile)
 
-export const useDownloadProposalPdf = () => useMutation({
-  mutationFn: AppActions.downloadProposalPdf,
-})
+export const useDownloadProposalPdf = () => useCountedDownload(AppActions.downloadProposalPdf)
 
 export const useDeleteProposalFile = () => {
   const queryClient = useQueryClient()
@@ -39,7 +36,7 @@ export const useDeleteProposalFile = () => {
 }
 
 export const usePreviewProposalFile = (filename: string) =>
-  usePreviewModal(useCallback(() => AppActions.getProposalFileBlob(filename), [filename]))
+  usePreviewModal(useCallback(() => AppActions.getProposalFileBlob(filename, true), [filename]))
 
 type StagedAttachment = ChatAttachment & { id?: string }
 

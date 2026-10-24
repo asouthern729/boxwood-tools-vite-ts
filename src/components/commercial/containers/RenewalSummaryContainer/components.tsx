@@ -18,6 +18,7 @@ import TodayFilter from "@components/team/utils/TodayFilter"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
+import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import PdfDropZone from "@components/team/utils/PdfDropZone"
 import SendButton from "@components/team/utils/SendButton"
 import ChatInput from "@components/team/utils/ChatInput"
@@ -78,6 +79,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
     return (
       <>
         <p className="py-8 text-center text-base-content/70">No renewal summaries generated yet.</p>
+        <DownloadOdometer tool="cl-renewal-summary" />
         <FooterMessage message={footerMessage?.text ?? null} error={footerMessage?.error} />
       </>
     )
@@ -176,6 +178,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
           ))
         )}
       </div>
+      <DownloadOdometer tool="cl-renewal-summary" />
       <FooterMessage message={footerMessage?.text ?? null} error={footerMessage?.error} />
     </>
   )

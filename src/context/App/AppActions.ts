@@ -61,8 +61,8 @@ export const getRenewalPremiumSummaryManifest = async (): Promise<AppTypes.Renew
  *
  * GET /renewal-premium-summaries/files/Acme_Corp_....xlsx
  */
-export const getRenewalPremiumSummaryFileBlob = async (filename: string): Promise<Blob> => {
-  const res = await authorizedFetch(`${ API_BASE }/renewal-premium-summaries/files/${ encodeURIComponent(filename) }`)
+export const getRenewalPremiumSummaryFileBlob = async (filename: string, preview = false): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/renewal-premium-summaries/files/${ encodeURIComponent(filename) }${ preview ? "?preview=1" : "" }`)
 
   if(!res.ok) throw new Error(`Failed to load renewal premium spreadsheet file: HTTP ${ res.status }`)
 
@@ -125,8 +125,8 @@ export const getPreRenewalRiskProfileManifest = async (): Promise<AppTypes.PreRe
  *
  * GET /risk-profile/files/Acme_Corp_....docx
  */
-export const getPreRenewalRiskProfileFileBlob = async (filename: string): Promise<Blob> => {
-  const res = await authorizedFetch(`${ API_BASE }/risk-profile/files/${ encodeURIComponent(filename) }`)
+export const getPreRenewalRiskProfileFileBlob = async (filename: string, preview = false): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/risk-profile/files/${ encodeURIComponent(filename) }${ preview ? "?preview=1" : "" }`)
 
   if(!res.ok) throw new Error(`Failed to load pre-renewal risk profile file: HTTP ${ res.status }`)
 
@@ -189,8 +189,8 @@ export const getRenewalSummaryManifest = async (): Promise<AppTypes.RenewalSumma
  *
  * GET /cl-renewal-summary/files/Acme_Corp_....docx
  */
-export const getRenewalSummaryFileBlob = async (filename: string): Promise<Blob> => {
-  const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/files/${ encodeURIComponent(filename) }`)
+export const getRenewalSummaryFileBlob = async (filename: string, preview = false): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/files/${ encodeURIComponent(filename) }${ preview ? "?preview=1" : "" }`)
 
   if(!res.ok) throw new Error(`Failed to load renewal summary file: HTTP ${ res.status }`)
 
@@ -320,8 +320,8 @@ export const getPersonalRenewalSummaryManifest = async (): Promise<AppTypes.Pers
  *
  * GET /pl-renewal-summary/files/Jane_Doe_H01_....docx
  */
-export const getPersonalRenewalSummaryFileBlob = async (filename: string): Promise<Blob> => {
-  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-summary/files/${ encodeURIComponent(filename) }`)
+export const getPersonalRenewalSummaryFileBlob = async (filename: string, preview = false): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-summary/files/${ encodeURIComponent(filename) }${ preview ? "?preview=1" : "" }`)
 
   if(!res.ok) throw new Error(`Failed to load renewal summary file: HTTP ${ res.status }`)
 
@@ -400,8 +400,8 @@ export const getPersonalPremiumChangeManifest = async (): Promise<AppTypes.Perso
  *
  * GET /pl-renewal-premium-change/files/Jane_Doe_2026-10-18_Renewal_Change.xlsx
  */
-export const getPersonalPremiumChangeFileBlob = async (filename: string): Promise<Blob> => {
-  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-premium-change/files/${ encodeURIComponent(filename) }`)
+export const getPersonalPremiumChangeFileBlob = async (filename: string, preview = false): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/pl-renewal-premium-change/files/${ encodeURIComponent(filename) }${ preview ? "?preview=1" : "" }`)
 
   if(!res.ok) throw new Error(`Failed to load premium change file: HTTP ${ res.status }`)
 
@@ -464,8 +464,8 @@ export const getProposalManifest = async (scope: AppTypes.ProposalScope): Promis
  *
  * GET /proposal-builder/files/Acme_Corp_....docx
  */
-export const getProposalFileBlob = async (filename: string): Promise<Blob> => {
-  const res = await authorizedFetch(`${ API_BASE }/proposal-builder/files/${ encodeURIComponent(filename) }`)
+export const getProposalFileBlob = async (filename: string, preview = false): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/proposal-builder/files/${ encodeURIComponent(filename) }${ preview ? "?preview=1" : "" }`)
 
   if(!res.ok) throw new Error(`Failed to load proposal file: HTTP ${ res.status }`)
 
@@ -585,4 +585,18 @@ export const getJobStatuses = async (names: string[]): Promise<AppTypes.JobStatu
 
   const body: { jobs: AppTypes.JobStatus[] } = await res.json()
   return body.jobs
+}
+
+/**
+ * All-time download counts keyed by tool id; a missing tool means 0
+ *
+ * GET /downloads/stats
+ */
+export const getDownloadStats = async (): Promise<AppTypes.DownloadCounts> => {
+  const res = await authorizedFetch(`${ API_BASE }/downloads/stats`)
+
+  if(!res.ok) throw new Error(`Failed to load download stats: HTTP ${ res.status }`)
+
+  const body: { counts: AppTypes.DownloadCounts } = await res.json()
+  return body.counts
 }

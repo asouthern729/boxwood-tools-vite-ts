@@ -1,5 +1,6 @@
 import { useRef, useState } from "react"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useCountedDownload } from "@components/team/utils/DownloadOdometer/hooks"
+import { useQuery } from "@tanstack/react-query"
 import { usePersistedState } from "@utils/hooks"
 import { REPORT_ORDER_OPTIONS, sortReports } from './utils'
 import { PAGE_SIZE } from "@components/team/utils/Pagination/utils"
@@ -17,9 +18,7 @@ export const useDownloadReportManifest = () => useQuery({
   queryFn: getDownloadReportManifest,
 })
 
-export const useDownloadReportFile = () => useMutation({
-  mutationFn: downloadReportFile,
-})
+export const useDownloadReportFile = () => useCountedDownload(downloadReportFile)
 
 export const useHandleReportList = (reports: AppTypes.DownloadReportManifestEntry[]) => {
   const [order, setOrder] = usePersistedState(ORDER_STORAGE_KEY, REPORT_ORDER_OPTIONS[0].value)

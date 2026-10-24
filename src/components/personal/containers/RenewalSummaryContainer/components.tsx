@@ -17,6 +17,7 @@ import TodayFilter from "@components/team/utils/TodayFilter"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
+import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import SendButton from "@components/team/utils/SendButton"
 import ChatInput from "@components/team/utils/ChatInput"
 import AvailableTools from "@components/team/utils/AvailableTools"
@@ -76,6 +77,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Person
     return (
       <>
         <p className="py-8 text-center text-base-content/70">No renewal summaries generated yet.</p>
+        <DownloadOdometer tool="pl-renewal-summary" />
         <FooterMessage message={deletedMessage} />
       </>
     )
@@ -153,6 +155,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Person
           ))
         )}
       </div>
+      <DownloadOdometer tool="pl-renewal-summary" />
       <FooterMessage message={deletedMessage} />
     </>
   )

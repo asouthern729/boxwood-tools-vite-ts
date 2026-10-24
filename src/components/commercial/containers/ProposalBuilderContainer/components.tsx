@@ -17,6 +17,7 @@ import Ordering from "@components/team/utils/Ordering"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
+import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import SendButton from "@components/team/utils/SendButton"
 import ChatInput from "@components/team/utils/ChatInput"
 import AvailableTools from "@components/team/utils/AvailableTools"
@@ -152,6 +153,7 @@ export const ProposalList = ({ manifest, scope, onScopeChange, scrollSignal }: P
           ))
         )}
       </div>
+      <DownloadOdometer tool="proposal-builder" />
       <FooterMessage message={footerMessage?.text ?? null} error={footerMessage?.error} />
     </>
   )
