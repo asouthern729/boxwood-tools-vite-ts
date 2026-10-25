@@ -13,3 +13,9 @@ export const PaginationBtn = ({ disabled, onClick, children }: PaginationBtnProp
       {children}
   </button>
 )
+
+export const PageLabel = ({ page, totalPages }: { page: number, totalPages: number }) => (
+  <span className="join-item btn btn-sm btn-disabled pointer-events-none text-secondary">
+    Page {page + 1} of {totalPages}
+  </span>
+)

@@ -1,19 +1,17 @@
 import { linkify } from "./utils"
 
+// Components
+import * as Components from "./components"
+
 function LinkifiedText({ text }: { text: string }) {
   return (
     <>
       {linkify(text).map((segment, i) => (
         typeof segment === "string" ?
           segment :
-          <a
+          <Components.ExternalLink
             key={i}
-            href={segment.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="link text-secondary break-all">
-              {segment.url}
-          </a>
+            url={segment.url} />
       ))}
     </>
   )

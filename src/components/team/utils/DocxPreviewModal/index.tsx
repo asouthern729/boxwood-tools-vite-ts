@@ -3,6 +3,7 @@ import { useHandleDocPreviewModal } from "./hooks"
 // Components
 import LoadingMsg from "@components/team/utils/LoadingMsg"
 import ErrorMsg from "@components/team/utils/ErrorMsg"
+import * as PreviewModal from "@components/team/utils/PreviewModal/components"
 
 type DocxPreviewModalProps = {
   title: string
@@ -27,15 +28,9 @@ function DocxPreviewModal({ title, open, onClose, fetchBlob }: DocxPreviewModalP
           className="max-h-[65vh] overflow-y-auto rounded-box border border-base-300 bg-white"
           hidden={isLoading || !!error} />
 
-        <div className="modal-action">
-          <form method="dialog">
-            <button type="submit" className="btn">Close</button>
-          </form>
-        </div>
+        <PreviewModal.ModalActions />
       </div>
-      <form method="dialog" className="modal-backdrop">
-        <button type="submit">close</button>
-      </form>
+      <PreviewModal.ModalBackdrop />
     </dialog>
   )
 }
