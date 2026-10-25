@@ -94,14 +94,20 @@ type BuildButtonProps = {
 const BuildButton = ({ visible, disabled, reading, onClick }: BuildButtonProps) => {
   if(!visible) return null
 
+  const title = reading ?
+    "Waiting for the files to finish reading" :
+    "Build the proposal from these files, using anything typed as guidance"
+
+  const btnContent = reading ? "Reading files…" : "Build proposal"
+
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={onClick}
-      title={reading ? "Waiting for the files to finish reading" : "Build the proposal from these files, using anything typed as guidance"}
+      title={title}
       className="btn btn-accent w-full self-end sm:w-auto">
-        {reading ? "Reading files…" : "Build proposal"}
+        {btnContent}
     </button>
   )
 }
@@ -119,39 +125,32 @@ export const ProposalList = ({ manifest, scope, onScopeChange, scrollSignal }: P
   const [order, setOrder] = useState(PROPOSAL_ORDER_OPTIONS[0].value)
 
   const visibleGroups = filterProposals(manifest.groups, searchQuery)
-  const searching = searchQuery.trim() !== ""
-
-  const emptyMsg = searching ?
-    `No proposals match "${ searchQuery.trim() }".` :
-    scope === "mine" ? "You haven't built any proposals yet." : "No proposals have been built yet."
 
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
-          <div className="self-start sm:justify-self-start">
-            <Ordering value={order} onChange={setOrder} options={PROPOSAL_ORDER_OPTIONS} />
-          </div>
-          <CustomerSearch value={searchQuery} onChange={setSearchQuery} />
-          <div className="self-end sm:justify-self-end">
-            <ScopeToggle scope={scope} onChange={onScopeChange} />
-          </div>
-        </div>
-        {visibleGroups.length === 0 ? (
-          <p className="py-8 text-center text-base-content/70">{emptyMsg}</p>
-        ) : (
-          visibleGroups.map((group) => (
-            <ProposalSection
-              key={group.prepared_by ?? "__unattributed__"}
-              group={group}
-              title={scope === "mine" ? "Created By Me" : group.prepared_by ?? "No Prepared By Name"}
-              order={order}
-              viewerSub={manifest.viewer_sub}
-              rowRefs={rowRefs.current}
-              highlightedFilename={highlightedFilename}
-              onNotify={notify} />
-          ))
-        )}
+        <ListControls
+          order={order}
+          setOrder={setOrder}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          scope={scope}
+          onScopeChange={onScopeChange} />
+        <NoVisibleGroupsMsg
+          visible={visibleGroups.length === 0}
+          scope={scope}
+          searchQuery={searchQuery} />
+        {visibleGroups.map((group) => (
+          <ProposalSection
+            key={group.prepared_by ?? "__unattributed__"}
+            group={group}
+            scope={scope}
+            order={order}
+            viewerSub={manifest.viewer_sub}
+            rowRefs={rowRefs.current}
+            highlightedFilename={highlightedFilename}
+            onNotify={notify} />
+        ))}
       </div>
       <DownloadOdometer tool="proposal-builder" />
       <FooterMessage message={footerMessage?.text ?? null} error={footerMessage?.error} />
@@ -159,26 +158,85 @@ export const ProposalList = ({ manifest, scope, onScopeChange, scrollSignal }: P
   )
 }
 
+type ListControlsProps = {
+  order: string
+  setOrder: (value: string) => void
+  searchQuery: string
+  setSearchQuery: (value: string) => void
+  scope: AppTypes.ProposalScope
+  onScopeChange: (scope: AppTypes.ProposalScope) => void
+}
+
+const ListControls = ({ order, setOrder, searchQuery, setSearchQuery, scope, onScopeChange }: ListControlsProps) => (
+  <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
+    <div className="self-start sm:justify-self-start">
+      <Ordering
+        value={order}
+        onChange={setOrder}
+        options={PROPOSAL_ORDER_OPTIONS} />
+    </div>
+    <CustomerSearch
+      value={searchQuery}
+      onChange={setSearchQuery} />
+    <div className="self-end sm:justify-self-end">
+      <ScopeToggle
+        scope={scope}
+        onChange={onScopeChange} />
+    </div>
+  </div>
+)
+
+type NoVisibleGroupsMsgProps = {
+  visible: boolean
+  scope: AppTypes.ProposalScope
+  searchQuery: string
+}
+
+const NoVisibleGroupsMsg = ({ visible, scope, searchQuery }: NoVisibleGroupsMsgProps) => {
+  if(!visible) return null
+
+  const msg = searchQuery.trim() ?
+    `No proposals match "${ searchQuery.trim() }".` :
+    scope === "mine" ?
+    "You haven't built any proposals yet." :
+    "No proposals have been built yet."
+
+  return (
+    <p className="py-8 text-center text-base-content/70">{msg}</p>
+  )
+}
+
 const ScopeToggle = ({ scope, onChange }: { scope: AppTypes.ProposalScope, onChange: (scope: AppTypes.ProposalScope) => void }) => (
   <div className="join">
-    <button
-      type="button"
-      onClick={() => onChange("mine")}
-      className={`btn join-item btn-sm ${ scope === "mine" ? "btn-secondary" : "btn-ghost" }`}>
-        My Proposals
-    </button>
-    <button
-      type="button"
-      onClick={() => onChange("all")}
-      className={`btn join-item btn-sm ${ scope === "all" ? "btn-secondary" : "btn-ghost" }`}>
-        All Proposals
-    </button>
+    <ScopeBtn
+      label="My Proposals"
+      active={scope === "mine"}
+      onClick={() => onChange("mine")} />
+    <ScopeBtn
+      label="All Proposals"
+      active={scope === "all"}
+      onClick={() => onChange("all")} />
   </div>
+)
+
+type ScopeBtnProps = {
+  label: string
+  active: boolean
+  onClick: () => void
+}
+
+const ScopeBtn = ({ label, active, onClick }: ScopeBtnProps) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`btn join-item btn-sm ${ active ? "btn-secondary" : "btn-ghost" }`}>
+      {label}
+  </button>
 )
 
 type ProposalSectionProps = {
   group: AppTypes.ProposalGroup
-  title: string
+  scope: AppTypes.ProposalScope
   order: string
   viewerSub: string
   rowRefs: Map<string, HTMLLIElement>
@@ -186,8 +244,12 @@ type ProposalSectionProps = {
   onNotify: (message: string, error?: boolean) => void
 }
 
-const ProposalSection = ({ group, title, order, viewerSub, rowRefs, highlightedFilename, onNotify }: ProposalSectionProps) => {
+const ProposalSection = ({ group, scope, order, viewerSub, rowRefs, highlightedFilename, onNotify }: ProposalSectionProps) => {
   const { pageProposals, currentPage, totalItems, setPage, sectionRef } = useHandleProposalSection(group.proposals, order)
+
+  const title = scope === "mine" ?
+    "Created By Me" :
+    group.prepared_by ?? "No Prepared By Name"
 
   return (
     <div ref={sectionRef} className="card border border-base-300 bg-base-100 shadow-sm">
@@ -235,23 +297,16 @@ const ProposalRow = ({ proposal, canDelete, rowRefs, highlighted, onNotify }: Pr
         else rowRefs.delete(proposal.filename)
       }}
       className={`flex flex-col gap-3 px-4 py-3 transition-colors duration-1000 sm:flex-row sm:items-center ${ highlighted ? "bg-base-200" : "" }`}>
-      <div className="flex w-full min-w-0 flex-col sm:w-auto sm:flex-1">
-        <span className="font-semibold">{proposal.client_name}</span>
-        <SectionList sections={proposal.sections} />
-        <SourceList sources={proposal.sources} />
-        {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
-        {pdfError && <span className="text-sm text-error">{pdfError.message}</span>}
-      </div>
+      <ProposalRowDetails
+        proposal={proposal}
+        errors={[deleteError, pdfError]} />
       <div className="flex flex-col items-center gap-2 sm:items-end">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap">
-          {canDelete && (
-            <DeleteButton
-              isPending={isDeleting}
-              onConfirm={() => deleteFile(proposal.filename, { onSuccess: () => onNotify(`Deleted ${ proposal.client_name }...`) })} />
-          )}
-          <button type="button" onClick={preview.show} className="btn btn-ghost btn-sm hover:bg-secondary">
-            Preview
-          </button>
+          <DeleteButton
+            visible={canDelete}
+            isPending={isDeleting}
+            onConfirm={() => deleteFile(proposal.filename, { onSuccess: () => onNotify(`Deleted ${ proposal.client_name }...`) })} />
+          <PreviewButton onClick={preview.show} />
           <DownloadButton
             label="Word"
             title="Download as Word (.docx)"
@@ -276,18 +331,53 @@ const ProposalRow = ({ proposal, canDelete, rowRefs, highlighted, onNotify }: Pr
   )
 }
 
+const ProposalRowDetails = ({ proposal, errors }: { proposal: AppTypes.ProposalManifestEntry, errors: (Error | null)[] }) => (
+  <div className="flex w-full min-w-0 flex-col sm:w-auto sm:flex-1">
+    <span className="font-semibold">{proposal.client_name}</span>
+    <SectionList sections={proposal.sections} />
+    <SourceList sources={proposal.sources} />
+    {errors.map((error, i) => error && <span key={i} className="text-sm text-error">{error.message}</span>)}
+  </div>
+)
+
+const PreviewButton = ({ onClick }: { onClick: () => void }) => (
+  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary">
+    Preview
+  </button>
+)
+
 const SectionList = ({ sections }: { sections: AppTypes.ProposalManifestEntry["sections"] }) => {
   if(sections.length === 0) return null
 
   return (
     <ul className="mt-1 flex flex-wrap gap-x-3 text-sm text-base-content/70">
       {sections.map((section, i) => (
-        <li key={`${ section.title }-${ i }`} title={section.source_file ?? (section.source === "quote" ? "From a carrier quote" : "From an AMS360 proposal")}>
-          {section.title}
-          {section.carrier && <span className="text-base-content/40"> · {section.carrier}</span>}
-        </li>
+        <SectionItem
+          key={`${ section.title }-${ i }`}
+          section={section} />
       ))}
     </ul>
+  )
+}
+
+const SectionItem = ({ section }: { section: AppTypes.ProposalManifestEntry["sections"][number] }) => {
+  const sourceLabel = section.source === "quote" ?
+    "From a carrier quote" :
+    "From an AMS360 proposal"
+
+  return (
+    <li title={section.source_file ?? sourceLabel}>
+      {section.title}
+      <SectionCarrier carrier={section.carrier} />
+    </li>
+  )
+}
+
+const SectionCarrier = ({ carrier }: { carrier: string | null }) => {
+  if(!carrier) return null
+
+  return (
+    <span className="text-base-content/40"> · {carrier}</span>
   )
 }
 
@@ -297,14 +387,20 @@ const SourceList = ({ sources }: { sources: AppTypes.ProposalManifestEntry["sour
   return (
     <ul className="mt-1 flex flex-wrap gap-1.5">
       {sources.map((source) => (
-        <li key={source.id} title={source.filename} className="badge badge-ghost badge-sm max-w-56 gap-1 rounded-sm">
-          <span className="font-semibold">{SOURCE_LABELS[source.kind]}</span>
-          <span className="truncate">{source.filename}</span>
-        </li>
+        <SourceBadge
+          key={source.id}
+          source={source} />
       ))}
     </ul>
   )
 }
+
+const SourceBadge = ({ source }: { source: AppTypes.ProposalManifestEntry["sources"][number] }) => (
+  <li title={source.filename} className="badge badge-ghost badge-sm max-w-56 gap-1 rounded-sm">
+    <span className="font-semibold">{SOURCE_LABELS[source.kind]}</span>
+    <span className="truncate">{source.filename}</span>
+  </li>
+)
 
 const CreatedAt = ({ proposal }: { proposal: AppTypes.ProposalManifestEntry }) => {
   if(isUpdatedToday(proposal)) return (
@@ -330,8 +426,16 @@ const CreatedAt = ({ proposal }: { proposal: AppTypes.ProposalManifestEntry }) =
   )
 }
 
-const DeleteButton = ({ isPending, onConfirm }: { isPending: boolean, onConfirm: () => void }) => {
+type DeleteButtonProps = {
+  visible: boolean
+  isPending: boolean
+  onConfirm: () => void
+}
+
+const DeleteButton = ({ visible, isPending, onConfirm }: DeleteButtonProps) => {
   const { armed, handleClick } = useHandleConfirmButton(onConfirm)
+
+  if(!visible) return null
 
   const btnContent = isPending ?
     <span className="loading loading-spinner loading-xs" /> :
@@ -356,16 +460,20 @@ type DownloadButtonProps = {
   onClick: () => void
 }
 
-const DownloadButton = ({ label, title, isPending, onClick }: DownloadButtonProps) => (
-  <button
-    type="button"
-    disabled={isPending}
-    onClick={onClick}
-    title={title}
-    className="btn btn-neutral btn-sm hover:bg-secondary">
-      {isPending ? "Downloading…" : label}
-  </button>
-)
+const DownloadButton = ({ label, title, isPending, onClick }: DownloadButtonProps) => {
+  const btnContent = isPending ? "Downloading…" : label
+
+  return (
+    <button
+      type="button"
+      disabled={isPending}
+      onClick={onClick}
+      title={title}
+      className="btn btn-neutral btn-sm hover:bg-secondary">
+        {btnContent}
+    </button>
+  )
+}
 
 const ChatTip = ({ visible }: { visible: boolean }) => {
   if(!visible) return null
@@ -381,20 +489,37 @@ const ChatTip = ({ visible }: { visible: boolean }) => {
 const ChatMsgs = ({ messages }: { messages: AppTypes.ProposalChatMessage[] }) => (
   <>
     {messages.map((message, i) => (
-      <div key={i} className={`chat ${ message.role === "user" ? "chat-end" : "chat-start" }`}>
-        {message.role === "assistant" && (
-          <div className="chat-header text-xs font-semibold text-accent">Claude</div>
-        )}
-        <div
-          className={`chat-bubble whitespace-pre-wrap text-sm ${ message.role === "user" ?
-            "bg-base-300 text-base-content" :
-            "bg-accent/20 text-base-content" }`}>
-          <ChatMessageText text={message.text} />
-        </div>
-      </div>
+      <ChatMsg
+        key={i}
+        message={message} />
     ))}
   </>
 )
+
+const ChatMsg = ({ message }: { message: AppTypes.ProposalChatMessage }) => {
+  const isUser = message.role === "user"
+
+  const bubbleClass = isUser ?
+    "bg-base-300 text-base-content" :
+    "bg-accent/20 text-base-content"
+
+  return (
+    <div className={`chat ${ isUser ? "chat-end" : "chat-start" }`}>
+      <ChatMsgHeader visible={message.role === "assistant"} />
+      <div className={`chat-bubble whitespace-pre-wrap text-sm ${ bubbleClass }`}>
+        <ChatMessageText text={message.text} />
+      </div>
+    </div>
+  )
+}
+
+const ChatMsgHeader = ({ visible }: { visible: boolean }) => {
+  if(!visible) return null
+
+  return (
+    <div className="chat-header text-xs font-semibold text-accent">Claude</div>
+  )
+}
 
 const ClaudeLoading = ({ visible }: { visible: boolean }) => {
   if(!visible) return null

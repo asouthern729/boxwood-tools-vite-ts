@@ -98,41 +98,67 @@ const FallbackSchedule = ({ schedule }: { schedule: ToolSchedule }) => {
 
   return (
     <div title={`Runs automatically: ${ schedule.label }`} className="flex flex-wrap justify-center gap-2 text-xs">
-      <span className="badge badge-ghost badge-sm gap-1.5">
-        <ClockIcon />
-        Last run {formatScheduleRun(lastRun)}
-      </span>
-      <span className="badge badge-neutral dark:badge-outline dark:border-neutral-content dark:text-neutral-content badge-sm gap-1.5">
-        <ClockIcon />
-        Next run {formatScheduleRun(nextRun)}
-      </span>
+      <LastRunBadge
+        text={`Last run ${ formatScheduleRun(lastRun) }`}
+        warn={false} />
+      <NextRunBadge nextRun={nextRun} />
     </div>
   )
 }
 
 const JobBadges = ({ job, showLabel }: { job: AppTypes.JobStatus, showLabel: boolean }) => {
   const lastRun = getJobLastRun(job)
-  const summary = job.last_run?.summary
+  const nextRun = job.next_run_at ? new Date(job.next_run_at) : null
 
   return (
     <div className="flex flex-col items-center gap-2.5">
       <div title={`Runs automatically: ${ job.schedule }`} className="flex flex-wrap items-center justify-center gap-2">
-        {showLabel && <span className="text-base-content/60">{job.label}</span>}
-        <span className={`badge badge-sm gap-1.5 ${ lastRun.warn ? "badge-warning" : "badge-ghost" }`}>
-          <ClockIcon />
-          {lastRun.text}
-        </span>
-        <span className="badge badge-neutral dark:badge-outline dark:border-neutral-content dark:text-neutral-content badge-sm gap-1.5">
-          <ClockIcon />
-          Next run {formatScheduleRun(job.next_run_at ? new Date(job.next_run_at) : null)}
-        </span>
+        <JobLabel
+          visible={showLabel}
+          label={job.label} />
+        <LastRunBadge
+          text={lastRun.text}
+          warn={lastRun.warn} />
+        <NextRunBadge nextRun={nextRun} />
       </div>
-      {summary && (
-        <p className={`text-center ${ job.last_run?.ok ? "text-base-content/60" : "text-error" }`}>
-          {job.last_run?.ok ? <JobSummary job={job.job} summary={summary} /> : summary}
-        </p>
-      )}
+      <JobSummaryLine job={job} />
     </div>
+  )
+}
+
+const JobLabel = ({ visible, label }: { visible: boolean, label: string }) => {
+  if(!visible) return null
+
+  return (
+    <span className="text-base-content/60">{label}</span>
+  )
+}
+
+const LastRunBadge = ({ text, warn }: { text: string, warn: boolean }) => (
+  <span className={`badge badge-sm gap-1.5 ${ warn ? "badge-warning" : "badge-ghost" }`}>
+    <ClockIcon />
+    {text}
+  </span>
+)
+
+const NextRunBadge = ({ nextRun }: { nextRun: Date | null }) => (
+  <span className="badge badge-neutral dark:badge-outline dark:border-neutral-content dark:text-neutral-content badge-sm gap-1.5">
+    <ClockIcon />
+    Next run {formatScheduleRun(nextRun)}
+  </span>
+)
+
+const JobSummaryLine = ({ job }: { job: AppTypes.JobStatus }) => {
+  const summary = job.last_run?.summary
+
+  if(!summary) return null
+
+  const ok = job.last_run?.ok
+  const textColor = ok ? "text-base-content/60" : "text-error"
+  const content = ok ? <JobSummary job={job.job} summary={summary} /> : summary
+
+  return (
+    <p className={`text-center ${ textColor }`}>{content}</p>
   )
 }
 

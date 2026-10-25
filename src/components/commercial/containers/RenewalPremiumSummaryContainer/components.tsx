@@ -90,7 +90,6 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
   const searching = searchQuery.trim() !== ""
   const showCreatedToday = !searching && createdTodayOnly && createdToday.length > 0
   const showUpdatedToday = !searching && !showCreatedToday && updatedTodayOnly && updatedToday.length > 0
-  const filtersLocked = searching || showCreatedToday || showUpdatedToday
   const sectionTitle = searching ? "Search Results" : showCreatedToday ? "Created Today" : showUpdatedToday ? "Updated Today" : undefined
 
   const toggleCreatedToday = (active: boolean) => {
@@ -114,72 +113,146 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
       .map((group) => ({ ...group, summaries: filterCurrentMonth(filterPastRenewals(group.summaries, showPastRenewals), currentMonthOnly) }))
       .filter((group) => group.summaries.length > 0)
 
-  const emptyMsg = searching ?
-    `No customers or policies match "${ searchQuery.trim() }".` :
-    currentMonthOnly ? "No renewals this month." : "No upcoming renewals — all generated summaries are past their renewal date."
-
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="mb-2 flex flex-wrap items-center justify-end gap-4">
-          <label className="label cursor-pointer gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={showPastRenewals}
-              onChange={(e) => setShowPastRenewals(e.target.checked)}
-              disabled={filtersLocked}
-              className="checkbox checkbox-sm" />
-            Show past renewals
-          </label>
-          <label className="label cursor-pointer gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={currentMonthOnly}
-              onChange={(e) => setCurrentMonthOnly(e.target.checked)}
-              disabled={filtersLocked}
-              className="checkbox checkbox-sm" />
-            Current month only
-          </label>
-        </div>
-        <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
-          <div className="self-start sm:justify-self-start">
-            <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
-          </div>
-          <CustomerSearch value={searchQuery} onChange={setSearchQuery} />
-          <div className="flex flex-wrap items-center gap-4 self-end sm:justify-self-end">
-            <TodayFilter
-              label="Created Today"
-              count={createdToday.length}
-              active={showCreatedToday}
-              disabled={searching}
-              onChange={toggleCreatedToday} />
-            <TodayFilter
-              label="Updated Today"
-              count={updatedToday.length}
-              active={showUpdatedToday}
-              disabled={searching}
-              btnStyle="btn-info"
-              onChange={toggleUpdatedToday} />
-          </div>
-        </div>
-        {visibleGroups.length === 0 ? (
-          <p className="py-8 text-center text-base-content/70">{emptyMsg}</p>
-        ) : (
-          visibleGroups.map((group) => (
-            <CsrSection
-              key={group.csr_code ?? "__unassigned__"}
-              group={group}
-              title={sectionTitle}
-              order={order}
-              rowRefs={rowRefs.current}
-              highlightedFilename={highlightedFilename}
-              onDeleted={notifyDeleted} />
-          ))
-        )}
+        <ListControls
+          order={order}
+          setOrder={setOrder}
+          showPastRenewals={showPastRenewals}
+          setShowPastRenewals={setShowPastRenewals}
+          currentMonthOnly={currentMonthOnly}
+          setCurrentMonthOnly={setCurrentMonthOnly}
+          createdTodayCount={createdToday.length}
+          showCreatedToday={showCreatedToday}
+          toggleCreatedToday={toggleCreatedToday}
+          updatedTodayCount={updatedToday.length}
+          showUpdatedToday={showUpdatedToday}
+          toggleUpdatedToday={toggleUpdatedToday}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery} />
+        <NoVisibleGroupsMsg
+          visible={visibleGroups.length === 0}
+          currentMonthOnly={currentMonthOnly}
+          searchQuery={searchQuery} />
+        {visibleGroups.map((group) => (
+          <CsrSection
+            key={group.csr_code ?? "__unassigned__"}
+            group={group}
+            title={sectionTitle}
+            order={order}
+            rowRefs={rowRefs.current}
+            highlightedFilename={highlightedFilename}
+            onDeleted={notifyDeleted} />
+        ))}
       </div>
       <DownloadOdometer tool="renewal-premium-summaries" />
       <FooterMessage message={deletedMessage} />
     </>
+  )
+}
+
+type ListControlsProps = {
+  order: string
+  setOrder: (value: string) => void
+  showPastRenewals: boolean
+  setShowPastRenewals: (value: boolean) => void
+  currentMonthOnly: boolean
+  setCurrentMonthOnly: (value: boolean) => void
+  createdTodayCount: number
+  showCreatedToday: boolean
+  toggleCreatedToday: (active: boolean) => void
+  updatedTodayCount: number
+  showUpdatedToday: boolean
+  toggleUpdatedToday: (active: boolean) => void
+  searchQuery: string
+  setSearchQuery: (value: string) => void
+}
+
+const ListControls = ({ order, setOrder, showPastRenewals, setShowPastRenewals, currentMonthOnly, setCurrentMonthOnly, createdTodayCount, showCreatedToday, toggleCreatedToday, updatedTodayCount, showUpdatedToday, toggleUpdatedToday, searchQuery, setSearchQuery }: ListControlsProps) => {
+  const searching = searchQuery.trim() !== ""
+  const filtersLocked = searching || showCreatedToday || showUpdatedToday
+
+  return (
+    <>
+      <div className="mb-2 flex flex-wrap items-center justify-end gap-4">
+        <FilterToggle
+          label="Show past renewals"
+          checked={showPastRenewals}
+          onChange={setShowPastRenewals}
+          disabled={filtersLocked} />
+        <FilterToggle
+          label="Current month only"
+          checked={currentMonthOnly}
+          onChange={setCurrentMonthOnly}
+          disabled={filtersLocked} />
+      </div>
+      <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
+        <div className="self-start sm:justify-self-start">
+          <Ordering
+            value={order}
+            onChange={setOrder}
+            options={SUMMARY_ORDER_OPTIONS} />
+        </div>
+        <CustomerSearch
+          value={searchQuery}
+          onChange={setSearchQuery} />
+        <div className="flex flex-wrap items-center gap-4 self-end sm:justify-self-end">
+          <TodayFilter
+            label="Created Today"
+            count={createdTodayCount}
+            active={showCreatedToday}
+            disabled={searching}
+            onChange={toggleCreatedToday} />
+          <TodayFilter
+            label="Updated Today"
+            count={updatedTodayCount}
+            active={showUpdatedToday}
+            disabled={searching}
+            btnStyle="btn-info"
+            onChange={toggleUpdatedToday} />
+        </div>
+      </div>
+    </>
+  )
+}
+
+type FilterToggleProps = {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+  disabled: boolean
+}
+
+const FilterToggle = ({ label, checked, onChange, disabled }: FilterToggleProps) => (
+  <label className="label cursor-pointer gap-2 text-sm">
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={(e) => onChange(e.target.checked)}
+      disabled={disabled}
+      className="checkbox checkbox-sm" />
+    {label}
+  </label>
+)
+
+type NoVisibleGroupsMsgProps = {
+  visible: boolean
+  currentMonthOnly: boolean
+  searchQuery: string
+}
+
+const NoVisibleGroupsMsg = ({ visible, currentMonthOnly, searchQuery }: NoVisibleGroupsMsgProps) => {
+  if(!visible) return null
+
+  const msg = searchQuery.trim() ?
+    `No customers or policies match "${ searchQuery.trim() }".` :
+    currentMonthOnly ?
+    "No renewals this month." :
+    "No upcoming renewals — all generated summaries are past their renewal date."
+
+  return (
+    <p className="py-8 text-center text-base-content/70">{msg}</p>
   )
 }
 
@@ -211,7 +284,11 @@ const CsrSection = ({ group, title, order, rowRefs, highlightedFilename, onDelet
               onDeleted={onDeleted} />
           ))}
         </ul>
-        <Pagination page={currentPage} totalItems={totalItems} onPageChange={setPage} scrollTargetRef={sectionRef} />
+        <Pagination
+          page={currentPage}
+          totalItems={totalItems}
+          onPageChange={setPage}
+          scrollTargetRef={sectionRef} />
       </div>
     </div>
   )
@@ -236,20 +313,15 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
         else rowRefs.delete(summary.filename)
       }}
       className={`flex flex-col gap-3 px-4 py-3 transition-colors duration-1000 sm:flex-row sm:items-center ${ highlighted ? "bg-base-200" : "" }`}>
-      <div className="flex w-full min-w-0 flex-col sm:w-auto sm:flex-1">
-        <span className="font-semibold">{summary.client_name}</span>
-        <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
-        <span className="text-sm text-base-content/60">{summary.polnos}</span>
-        {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
-      </div>
+      <SummaryRowDetails
+        summary={summary}
+        error={deleteError} />
       <div className="flex flex-col items-center gap-2 sm:items-end">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap">
           <DeleteButton
             isPending={isDeleting}
             onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onDeleted(summary.client_name) })} />
-          <button type="button" onClick={preview.show} className="btn btn-ghost btn-sm hover:bg-secondary">
-            Preview
-          </button>
+          <PreviewButton onClick={preview.show} />
           <DownloadButton
             isPending={isDownloading}
             onClick={() => downloadFile(summary.filename)} />
@@ -291,8 +363,8 @@ const PremiumSummaryTable = ({ workbook }: { workbook: WorkBook }) => {
       </thead>
       <tbody>
         {rows.map((row) => (
-          <PremiumSummaryTableRow 
-            key={row.coverage} 
+          <PremiumSummaryTableRow
+            key={row.coverage}
             row={row} />
         ))}
       </tbody>
@@ -301,7 +373,7 @@ const PremiumSummaryTable = ({ workbook }: { workbook: WorkBook }) => {
 }
 
 const PremiumSummaryTableRow = ({ row }: { row: PremiumSummaryRow }) => (
-  <tr key={row.coverage}>
+  <tr>
     <td>{row.coverage}</td>
     <td>{row.policyNumbers}</td>
     <td>{row.carrier}</td>
@@ -309,6 +381,21 @@ const PremiumSummaryTableRow = ({ row }: { row: PremiumSummaryRow }) => (
     <td>{row.renewal !== null ? formatCurrency(row.renewal) : "—"}</td>
     <td>{row.percentChange !== null ? formatPercentChange(row.percentChange) : "—"}</td>
   </tr>
+)
+
+const SummaryRowDetails = ({ summary, error }: { summary: AppTypes.RenewalPremiumSummaryManifestEntry, error: Error | null }) => (
+  <div className="flex w-full min-w-0 flex-col sm:w-auto sm:flex-1">
+    <span className="font-semibold">{summary.client_name}</span>
+    <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
+    <span className="text-sm text-base-content/60">{summary.polnos}</span>
+    {error && <span className="text-sm text-error">{error.message}</span>}
+  </div>
+)
+
+const PreviewButton = ({ onClick }: { onClick: () => void }) => (
+  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary">
+    Preview
+  </button>
 )
 
 const CreatedAt = ({ summary }: { summary: AppTypes.RenewalPremiumSummaryManifestEntry }) => {
@@ -343,8 +430,8 @@ type DeleteButtonProps = {
 const DeleteButton = ({ isPending, onConfirm }: DeleteButtonProps) => {
   const { armed, handleClick } = useHandleConfirmButton(onConfirm)
 
-  const btnContent = isPending ? 
-    <span className="loading loading-spinner loading-xs" /> : 
+  const btnContent = isPending ?
+    <span className="loading loading-spinner loading-xs" /> :
     <img src={trashIcon} alt="Delete" className="size-4" />
 
   return (
@@ -365,10 +452,10 @@ type DownloadButtonProps = {
 }
 
 const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
-  const btnContent = isPending ? 
-    "Downloading…" : 
+  const btnContent = isPending ?
+    "Downloading…" :
     "Download"
-  
+
   return (
     <button
       type="button"
@@ -394,20 +481,37 @@ const ChatTip = ({ visible }: { visible: boolean }) => {
 const ChatMsgs = ({ messages }: { messages: AppTypes.RenewalPremiumSummaryChatMessage[] }) => (
   <>
     {messages.map((message, i) => (
-      <div key={i} className={`chat ${ message.role === "user" ? "chat-end" : "chat-start" }`}>
-        {message.role === "assistant" && (
-          <div className="chat-header text-xs font-semibold text-accent">Claude</div>
-        )}
-        <div
-          className={`chat-bubble whitespace-pre-wrap text-sm ${ message.role === "user" ?
-            "bg-base-300 text-base-content" :
-            "bg-accent/20 text-base-content" }`}>
-          <ChatMessageText text={message.text} />
-        </div>
-      </div>
+      <ChatMsg
+        key={i}
+        message={message} />
     ))}
   </>
 )
+
+const ChatMsg = ({ message }: { message: AppTypes.RenewalPremiumSummaryChatMessage }) => {
+  const isUser = message.role === "user"
+
+  const bubbleClass = isUser ?
+    "bg-base-300 text-base-content" :
+    "bg-accent/20 text-base-content"
+
+  return (
+    <div className={`chat ${ isUser ? "chat-end" : "chat-start" }`}>
+      <ChatMsgHeader visible={message.role === "assistant"} />
+      <div className={`chat-bubble whitespace-pre-wrap text-sm ${ bubbleClass }`}>
+        <ChatMessageText text={message.text} />
+      </div>
+    </div>
+  )
+}
+
+const ChatMsgHeader = ({ visible }: { visible: boolean }) => {
+  if(!visible) return null
+
+  return (
+    <div className="chat-header text-xs font-semibold text-accent">Claude</div>
+  )
+}
 
 const ClaudeLoading = ({ visible }: { visible: boolean }) => {
   if(!visible) return null

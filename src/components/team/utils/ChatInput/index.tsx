@@ -48,7 +48,9 @@ function ChatInput({ draft, setDraft, isPending, send, placeholder, onFiles, acc
       onFiles={onFiles}
       accept={accept}
       className="flex w-full flex-1 flex-col gap-2 rounded-box">
-        <Components.AttachmentChips attachments={attachments} onRemove={onRemoveAttachment} />
+        <Components.AttachmentChips
+          attachments={attachments}
+          onRemove={onRemoveAttachment} />
         {textarea}
     </PdfDropZone>
   )

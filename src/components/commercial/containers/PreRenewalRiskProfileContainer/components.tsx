@@ -168,9 +168,9 @@ const ListControls = ({ order, setOrder, showPastRenewals, setShowPastRenewals, 
       </div>
       <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
         <div className="self-start sm:justify-self-start">
-          <Ordering 
-            value={order} 
-            onChange={setOrder} 
+          <Ordering
+            value={order}
+            onChange={setOrder}
             options={SUMMARY_ORDER_OPTIONS} />
         </div>
         <CustomerSearch
@@ -256,10 +256,10 @@ const CsrSection = ({ group, title, order, rowRefs, highlightedFilename, onDelet
               onDeleted={onDeleted} />
           ))}
         </ul>
-        <Pagination 
-          page={currentPage} 
-          totalItems={totalItems} 
-          onPageChange={setPage} 
+        <Pagination
+          page={currentPage}
+          totalItems={totalItems}
+          onPageChange={setPage}
           scrollTargetRef={sectionRef} />
       </div>
     </div>
