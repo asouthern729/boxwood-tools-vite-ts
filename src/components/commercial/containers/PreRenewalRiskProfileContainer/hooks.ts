@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react"
+import { useCountedDownload } from "@components/team/utils/DownloadOdometer/hooks"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { usePreviewModal } from "@components/team/utils/PreviewModal/hooks"
 import * as AppActions from '@context/App/AppActions'
@@ -16,9 +17,7 @@ export const usePreRenewalRiskProfileManifest = () => useQuery({
   queryFn: AppActions.getPreRenewalRiskProfileManifest,
 })
 
-export const useDownloadPreRenewalRiskProfileFile = () => useMutation({
-  mutationFn: AppActions.downloadPreRenewalRiskProfileFile,
-})
+export const useDownloadPreRenewalRiskProfileFile = () => useCountedDownload(AppActions.downloadPreRenewalRiskProfileFile)
 
 export const useDeletePreRenewalRiskProfileFile = () => {
   const queryClient = useQueryClient()
@@ -30,7 +29,7 @@ export const useDeletePreRenewalRiskProfileFile = () => {
 }
 
 export const usePreviewPreRenewalRiskProfileFile = (filename: string) =>
-  usePreviewModal(useCallback(() => AppActions.getPreRenewalRiskProfileFileBlob(filename), [filename]))
+  usePreviewModal(useCallback(() => AppActions.getPreRenewalRiskProfileFileBlob(filename, true), [filename]))
 
 const CONFIRM_TIMEOUT_MS = 3000
 

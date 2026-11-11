@@ -26,34 +26,38 @@ export const Footer = () => (
         <FooterNavLinks />
         {FOOTER_EXT_LINKS.map(({ href, label }) => (
           <FooterExtLink
-            key={href} 
-            href={href} 
+            key={href}
+            href={href}
             label={label} />
         ))}
       </nav>
       Boxwood Tools
     </div>
 
-    <div className="relative h-40 shrink-0 overflow-hidden bg-[linear-gradient(to_left,var(--color-neutral),var(--color-base-300))] dark:bg-[linear-gradient(to_right,var(--color-neutral),var(--color-base-300))]">
-      <a
-        href="https://tyneside.io"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="absolute inset-0 z-2 flex flex-col items-center justify-center text-white no-underline"
-        style={{
-          fontFamily:
-            "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-        }}>
-        <Magpie />
-        <span className="text-[0.95rem] font-extrabold tracking-[6px] uppercase sm:text-lg sm:tracking-[10px]">
-          Tyneside Innovations
-        </span>
-        <span className="mt-1 text-[0.8rem] tracking-[4px] uppercase sm:text-base sm:tracking-[8px]">
-          Madison, Tennessee
-        </span>
-      </a>
-    </div>
+    <TynesideBanner />
   </footer>
+)
+
+const TynesideBanner = () => (
+  <div className="relative h-40 shrink-0 overflow-hidden bg-[linear-gradient(to_left,var(--color-neutral),var(--color-base-300))] dark:bg-[linear-gradient(to_right,var(--color-neutral),var(--color-base-300))]">
+    <a
+      href="https://tyneside.io"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="absolute inset-0 z-2 flex flex-col items-center justify-center text-white no-underline"
+      style={{
+        fontFamily:
+          "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      }}>
+      <Magpie />
+      <span className="text-[0.95rem] font-extrabold tracking-[6px] uppercase sm:text-lg sm:tracking-[10px]">
+        Tyneside Innovations
+      </span>
+      <span className="mt-1 text-[0.8rem] tracking-[4px] uppercase sm:text-base sm:tracking-[8px]">
+        Madison, Tennessee
+      </span>
+    </a>
+  </div>
 )
 
 type FooterExtLinkProps = {
@@ -63,7 +67,6 @@ type FooterExtLinkProps = {
 
 const FooterExtLink = ({ href, label }: FooterExtLinkProps) => (
   <a
-    key={href}
     href={href}
     target="_blank"
     rel="noopener noreferrer"

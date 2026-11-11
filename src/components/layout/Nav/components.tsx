@@ -5,8 +5,8 @@ export const NavButtons = () => (
   <div className="join shadow-md">
     {NAV_LINKS.map(({ to, label }) => (
       <NavBtn
-        key={to} 
-        to={to} 
+        key={to}
+        to={to}
         label={label} />
     ))}
   </div>
@@ -14,7 +14,6 @@ export const NavButtons = () => (
 
 const NavBtn = ({ to, label }: { to: string, label: string }) => (
   <NavLink
-    key={to}
     to={to}
     className={({ isActive }) =>
       isActive ? "btn bg-neutral-content text-neutral join-item w-40" : "btn btn-ghost join-item bg-base-100/50 backdrop-blur-sm hover:bg-neutral hover:text-neutral-content w-40"}>

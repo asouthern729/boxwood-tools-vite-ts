@@ -41,7 +41,7 @@ export const handleToolContent = (section: string, toolName: AppTypes.AllTools) 
 // Times are America/Chicago wall-clock; "last run" is the most recent scheduled time, not a confirmed job result.
 const SCHEDULE_TZ = "America/Chicago"
 
-type ToolSchedule = {
+export type ToolSchedule = {
   label: string
   hour: number
   minute: number
@@ -100,3 +100,27 @@ export const formatScheduleRun = (date: Date | null) =>
   date ?
     date.toLocaleString("en-US", { timeZone: SCHEDULE_TZ, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) :
     "—"
+
+export const toolJobs: Record<string, string[]> = {
+  "/commercial/renewal-premium-summary": ["monthly-renewal-premium-summaries", "renewal-premium-summary-refresh"],
+  "/commercial/pre-renewal-risk-profile": ["monthly-risk-profiles"],
+  "/commercial/renewal-summary": ["cl-renewal-summaries"],
+  "/personal/download-change-report": ["morning-download"],
+  "/personal/premium-change-tool": ["pl-premium-change"],
+  "/personal/renewal-summary": ["pl-renewal-summary"],
+}
+
+const UNHIGHLIGHTED_JOBS = ["morning-download"]
+
+export const splitJobSummary = (job: string, summary: string) =>
+  UNHIGHLIGHTED_JOBS.includes(job) ?
+    [summary] :
+    summary.split(/\b((?:Built|Updated|rebuilt) \d+)/)
+
+export const getJobLastRun =({ last_run, overdue }: AppTypes.JobStatus) => {
+  const when = formatScheduleRun(last_run ? new Date(last_run.started_at) : null)
+
+  if(last_run && !last_run.ok) return { warn: true, text: `Last run failed ${ when }` }
+  if(overdue) return { warn: true, text: `Last run ${ when } — overdue` }
+  return { warn: false, text: `Last run ${ when }` }
+}

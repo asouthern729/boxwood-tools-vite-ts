@@ -17,6 +17,7 @@ import TodayFilter from "@components/team/utils/TodayFilter"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
+import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import SendButton from "@components/team/utils/SendButton"
 import ChatInput from "@components/team/utils/ChatInput"
 import AvailableTools from "@components/team/utils/AvailableTools"
@@ -76,6 +77,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
     return (
       <>
         <p className="py-8 text-center text-base-content/70">No pre-renewal risk profiles generated yet.</p>
+        <DownloadOdometer tool="risk-profile" />
         <FooterMessage message={deletedMessage} />
       </>
     )
@@ -126,6 +128,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
             onDeleted={notifyDeleted} />
         ))}
       </div>
+      <DownloadOdometer tool="risk-profile" />
       <FooterMessage message={deletedMessage} />
     </>
   )
@@ -165,9 +168,9 @@ const ListControls = ({ order, setOrder, showPastRenewals, setShowPastRenewals, 
       </div>
       <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
         <div className="self-start sm:justify-self-start">
-          <Ordering 
-            value={order} 
-            onChange={setOrder} 
+          <Ordering
+            value={order}
+            onChange={setOrder}
             options={SUMMARY_ORDER_OPTIONS} />
         </div>
         <CustomerSearch
@@ -253,10 +256,10 @@ const CsrSection = ({ group, title, order, rowRefs, highlightedFilename, onDelet
               onDeleted={onDeleted} />
           ))}
         </ul>
-        <Pagination 
-          page={currentPage} 
-          totalItems={totalItems} 
-          onPageChange={setPage} 
+        <Pagination
+          page={currentPage}
+          totalItems={totalItems}
+          onPageChange={setPage}
           scrollTargetRef={sectionRef} />
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { handlePagination } from "./utils"
+
 // Components
-import * as Components from './components'
+import * as Components from "./components"
 
 type PaginationProps = {
   page: number
@@ -21,7 +22,9 @@ function Pagination({ page, totalItems, onPageChange, scrollTargetRef }: Paginat
         onClick={() => goToPage(page - 1)}>
           «
       </Components.PaginationBtn>
-      <span className="join-item btn btn-sm btn-disabled pointer-events-none text-secondary">Page {page + 1} of {totalPages}</span>
+      <Components.PageLabel
+        page={page}
+        totalPages={totalPages} />
       <Components.PaginationBtn
         disabled={page >= totalPages - 1}
         onClick={() => goToPage(page + 1)}>

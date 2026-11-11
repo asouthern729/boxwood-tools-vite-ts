@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react"
+import { useCountedDownload } from "@components/team/utils/DownloadOdometer/hooks"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { usePreviewModal } from "@components/team/utils/PreviewModal/hooks"
 import * as AppActions from '@context/App/AppActions'
@@ -16,13 +17,9 @@ export const useRenewalSummaryManifest = () => useQuery({
   queryFn: AppActions.getRenewalSummaryManifest,
 })
 
-export const useDownloadRenewalSummaryFile = () => useMutation({
-  mutationFn: AppActions.downloadRenewalSummaryFile,
-})
+export const useDownloadRenewalSummaryFile = () => useCountedDownload(AppActions.downloadRenewalSummaryFile)
 
-export const useDownloadRenewalSummaryPdf = () => useMutation({
-  mutationFn: AppActions.downloadRenewalSummaryPdf,
-})
+export const useDownloadRenewalSummaryPdf = () => useCountedDownload(AppActions.downloadRenewalSummaryPdf)
 
 export const useDeleteRenewalSummaryFile = () => {
   const queryClient = useQueryClient()
@@ -34,7 +31,7 @@ export const useDeleteRenewalSummaryFile = () => {
 }
 
 export const usePreviewRenewalSummaryFile = (filename: string) =>
-  usePreviewModal(useCallback(() => AppActions.getRenewalSummaryFileBlob(filename), [filename]))
+  usePreviewModal(useCallback(() => AppActions.getRenewalSummaryFileBlob(filename, true), [filename]))
 
 const QUOTE_POLL_MS = 4000
 

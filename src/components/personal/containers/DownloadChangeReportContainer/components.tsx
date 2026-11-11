@@ -7,6 +7,7 @@ import type * as AppTypes from "@context/App/types"
 // Components
 import Ordering from "@components/team/utils/Ordering"
 import Pagination from "@components/team/utils/Pagination"
+import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 
 export const ReportList = ({ reports }: { reports: AppTypes.DownloadReportManifestEntry[] }) => {
   const { order, setOrder, pageReports, currentPage, totalItems, setPage, listRef } = useHandleReportList(reports)
@@ -17,9 +18,9 @@ export const ReportList = ({ reports }: { reports: AppTypes.DownloadReportManife
 
   return (
     <>
-      <Ordering 
-        value={order} 
-        onChange={setOrder} 
+      <Ordering
+        value={order}
+        onChange={setOrder}
         options={REPORT_ORDER_OPTIONS} />
       <ul ref={listRef} className="divide-y divide-base-300">
         {pageReports.map((report) => (
@@ -28,11 +29,12 @@ export const ReportList = ({ reports }: { reports: AppTypes.DownloadReportManife
             report={report} />
         ))}
       </ul>
-      <Pagination 
-        page={currentPage} 
-        totalItems={totalItems} 
-        onPageChange={setPage} 
+      <Pagination
+        page={currentPage}
+        totalItems={totalItems}
+        onPageChange={setPage}
         scrollTargetRef={listRef} />
+      <DownloadOdometer tool="download-report" />
     </>
   )
 }

@@ -18,6 +18,7 @@ import TodayFilter from "@components/team/utils/TodayFilter"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
+import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import PdfDropZone from "@components/team/utils/PdfDropZone"
 import SendButton from "@components/team/utils/SendButton"
 import ChatInput from "@components/team/utils/ChatInput"
@@ -78,6 +79,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
     return (
       <>
         <p className="py-8 text-center text-base-content/70">No renewal summaries generated yet.</p>
+        <DownloadOdometer tool="cl-renewal-summary" />
         <FooterMessage message={footerMessage?.text ?? null} error={footerMessage?.error} />
       </>
     )
@@ -89,7 +91,6 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
   const searching = searchQuery.trim() !== ""
   const showCreatedToday = !searching && createdTodayOnly && createdToday.length > 0
   const showUpdatedToday = !searching && !showCreatedToday && updatedTodayOnly && updatedToday.length > 0
-  const filtersLocked = searching || showCreatedToday || showUpdatedToday
   const sectionTitle = searching ? "Search Results" : showCreatedToday ? "Created Today" : showUpdatedToday ? "Updated Today" : undefined
 
   const toggleCreatedToday = (active: boolean) => {
@@ -113,71 +114,146 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
       .map((group) => ({ ...group, summaries: filterCurrentMonth(filterPastRenewals(group.summaries, showPastRenewals), currentMonthOnly) }))
       .filter((group) => group.summaries.length > 0)
 
-  const emptyMsg = searching ?
-    `No customers or policies match "${ searchQuery.trim() }".` :
-    currentMonthOnly ? "No renewals this month." : "No upcoming renewals — all generated summaries are past their renewal date."
-
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="mb-2 flex flex-wrap items-center justify-end gap-4">
-          <label className="label cursor-pointer gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={showPastRenewals}
-              onChange={(e) => setShowPastRenewals(e.target.checked)}
-              disabled={filtersLocked}
-              className="checkbox checkbox-sm" />
-            Show past renewals
-          </label>
-          <label className="label cursor-pointer gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={currentMonthOnly}
-              onChange={(e) => setCurrentMonthOnly(e.target.checked)}
-              disabled={filtersLocked}
-              className="checkbox checkbox-sm" />
-            Current month only
-          </label>
-        </div>
-        <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
-          <div className="self-start sm:justify-self-start">
-            <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
-          </div>
-          <CustomerSearch value={searchQuery} onChange={setSearchQuery} />
-          <div className="flex flex-wrap items-center gap-4 self-end sm:justify-self-end">
-            <TodayFilter
-              label="Created Today"
-              count={createdToday.length}
-              active={showCreatedToday}
-              disabled={searching}
-              onChange={toggleCreatedToday} />
-            <TodayFilter
-              label="Updated Today"
-              count={updatedToday.length}
-              active={showUpdatedToday}
-              disabled={searching}
-              btnStyle="btn-info"
-              onChange={toggleUpdatedToday} />
-          </div>
-        </div>
-        {visibleGroups.length === 0 ? (
-          <p className="py-8 text-center text-base-content/70">{emptyMsg}</p>
-        ) : (
-          visibleGroups.map((group) => (
-            <CsrSection
-              key={group.csr_code ?? "__unassigned__"}
-              group={group}
-              title={sectionTitle}
-              order={order}
-              rowRefs={rowRefs.current}
-              highlightedFilename={highlightedFilename}
-              onNotify={notify} />
-          ))
-        )}
+        <ListControls
+          order={order}
+          setOrder={setOrder}
+          showPastRenewals={showPastRenewals}
+          setShowPastRenewals={setShowPastRenewals}
+          currentMonthOnly={currentMonthOnly}
+          setCurrentMonthOnly={setCurrentMonthOnly}
+          createdTodayCount={createdToday.length}
+          showCreatedToday={showCreatedToday}
+          toggleCreatedToday={toggleCreatedToday}
+          updatedTodayCount={updatedToday.length}
+          showUpdatedToday={showUpdatedToday}
+          toggleUpdatedToday={toggleUpdatedToday}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery} />
+        <NoVisibleGroupsMsg
+          visible={visibleGroups.length === 0}
+          currentMonthOnly={currentMonthOnly}
+          searchQuery={searchQuery} />
+        {visibleGroups.map((group) => (
+          <CsrSection
+            key={group.csr_code ?? "__unassigned__"}
+            group={group}
+            title={sectionTitle}
+            order={order}
+            rowRefs={rowRefs.current}
+            highlightedFilename={highlightedFilename}
+            onNotify={notify} />
+        ))}
       </div>
+      <DownloadOdometer tool="cl-renewal-summary" />
       <FooterMessage message={footerMessage?.text ?? null} error={footerMessage?.error} />
     </>
+  )
+}
+
+type ListControlsProps = {
+  order: string
+  setOrder: (value: string) => void
+  showPastRenewals: boolean
+  setShowPastRenewals: (value: boolean) => void
+  currentMonthOnly: boolean
+  setCurrentMonthOnly: (value: boolean) => void
+  createdTodayCount: number
+  showCreatedToday: boolean
+  toggleCreatedToday: (active: boolean) => void
+  updatedTodayCount: number
+  showUpdatedToday: boolean
+  toggleUpdatedToday: (active: boolean) => void
+  searchQuery: string
+  setSearchQuery: (value: string) => void
+}
+
+const ListControls = ({ order, setOrder, showPastRenewals, setShowPastRenewals, currentMonthOnly, setCurrentMonthOnly, createdTodayCount, showCreatedToday, toggleCreatedToday, updatedTodayCount, showUpdatedToday, toggleUpdatedToday, searchQuery, setSearchQuery }: ListControlsProps) => {
+  const searching = searchQuery.trim() !== ""
+  const filtersLocked = searching || showCreatedToday || showUpdatedToday
+
+  return (
+    <>
+      <div className="mb-2 flex flex-wrap items-center justify-end gap-4">
+        <FilterToggle
+          label="Show past renewals"
+          checked={showPastRenewals}
+          onChange={setShowPastRenewals}
+          disabled={filtersLocked} />
+        <FilterToggle
+          label="Current month only"
+          checked={currentMonthOnly}
+          onChange={setCurrentMonthOnly}
+          disabled={filtersLocked} />
+      </div>
+      <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
+        <div className="self-start sm:justify-self-start">
+          <Ordering
+            value={order}
+            onChange={setOrder}
+            options={SUMMARY_ORDER_OPTIONS} />
+        </div>
+        <CustomerSearch
+          value={searchQuery}
+          onChange={setSearchQuery} />
+        <div className="flex flex-wrap items-center gap-4 self-end sm:justify-self-end">
+          <TodayFilter
+            label="Created Today"
+            count={createdTodayCount}
+            active={showCreatedToday}
+            disabled={searching}
+            onChange={toggleCreatedToday} />
+          <TodayFilter
+            label="Updated Today"
+            count={updatedTodayCount}
+            active={showUpdatedToday}
+            disabled={searching}
+            btnStyle="btn-info"
+            onChange={toggleUpdatedToday} />
+        </div>
+      </div>
+    </>
+  )
+}
+
+type FilterToggleProps = {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+  disabled: boolean
+}
+
+const FilterToggle = ({ label, checked, onChange, disabled }: FilterToggleProps) => (
+  <label className="label cursor-pointer gap-2 text-sm">
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={(e) => onChange(e.target.checked)}
+      disabled={disabled}
+      className="checkbox checkbox-sm" />
+    {label}
+  </label>
+)
+
+type NoVisibleGroupsMsgProps = {
+  visible: boolean
+  currentMonthOnly: boolean
+  searchQuery: string
+}
+
+const NoVisibleGroupsMsg = ({ visible, currentMonthOnly, searchQuery }: NoVisibleGroupsMsgProps) => {
+  if(!visible) return null
+
+  const msg = searchQuery.trim() ?
+    `No customers or policies match "${ searchQuery.trim() }".` :
+    currentMonthOnly ?
+    "No renewals this month." :
+    "No upcoming renewals — all generated summaries are past their renewal date."
+
+  return (
+    <p className="py-8 text-center text-base-content/70">{msg}</p>
   )
 }
 
@@ -243,29 +319,16 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
       className={`transition-colors duration-1000 ${ highlighted ? "bg-base-200" : "" }`}>
       <PdfDropZone variant="area" onFiles={upload} className="flex flex-col gap-2 px-4 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex w-full min-w-0 flex-col sm:w-auto sm:flex-1">
-            <span className="font-semibold">{summary.client_name}</span>
-            <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
-            <span className="text-sm text-base-content/60">{summary.polnos}</span>
-            <LineItemStatus summary={summary} />
-            {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
-            {pdfError && <span className="text-sm text-error">{pdfError.message}</span>}
-          </div>
+          <SummaryRowDetails
+            summary={summary}
+            errors={[deleteError, pdfError]} />
           <div className="flex flex-col items-center gap-2 sm:items-end">
             <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap">
               <DeleteButton
                 isPending={isDeleting}
                 onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onNotify(`Deleted ${ summary.client_name }...`) })} />
-              <PdfDropZone
-                variant="button"
-                onFiles={upload}
-                title={`Upload a carrier quote PDF, or drop it on this row. ${ QUOTE_HELP_TEXT }`}
-                className="btn btn-ghost btn-sm hover:bg-secondary">
-                  Upload Quote
-              </PdfDropZone>
-              <button type="button" onClick={preview.show} className="btn btn-ghost btn-sm hover:bg-secondary">
-                Preview
-              </button>
+              <UploadQuoteButton onFiles={upload} />
+              <PreviewButton onClick={preview.show} />
               <DownloadButton
                 isPending={isDownloading}
                 onClick={() => downloadFile(summary.filename)} />
@@ -294,6 +357,32 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
   )
 }
 
+const SummaryRowDetails = ({ summary, errors }: { summary: AppTypes.RenewalSummaryManifestEntry, errors: (Error | null)[] }) => (
+  <div className="flex w-full min-w-0 flex-col sm:w-auto sm:flex-1">
+    <span className="font-semibold">{summary.client_name}</span>
+    <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
+    <span className="text-sm text-base-content/60">{summary.polnos}</span>
+    <LineItemStatus summary={summary} />
+    {errors.map((error, i) => error && <span key={i} className="text-sm text-error">{error.message}</span>)}
+  </div>
+)
+
+const UploadQuoteButton = ({ onFiles }: { onFiles: (files: File[], rejected: string[]) => void }) => (
+  <PdfDropZone
+    variant="button"
+    onFiles={onFiles}
+    title={`Upload a carrier quote PDF, or drop it on this row. ${ QUOTE_HELP_TEXT }`}
+    className="btn btn-ghost btn-sm hover:bg-secondary">
+      Upload Quote
+  </PdfDropZone>
+)
+
+const PreviewButton = ({ onClick }: { onClick: () => void }) => (
+  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary">
+    Preview
+  </button>
+)
+
 const LineItemStatus = ({ summary }: { summary: AppTypes.RenewalSummaryManifestEntry }) => {
   if(!summary.sections?.length) return null
 
@@ -305,15 +394,23 @@ const LineItemStatus = ({ summary }: { summary: AppTypes.RenewalSummaryManifestE
 
   return (
     <ul className="mt-1 flex flex-wrap gap-x-3 text-sm">
-      {summary.sections.map((s) => (
-        <li
-          key={`${ s.polno }-${ s.title }`}
-          title={s.renewed ? "Renewed" : "Awaiting renewal terms"}
-          className={s.renewed ? "text-success/70" : "text-base-content/35"}>
-          {s.renewed && "✓ "}{s.title}
-        </li>
+      {summary.sections.map((section) => (
+        <LineItemSection
+          key={`${ section.polno }-${ section.title }`}
+          section={section} />
       ))}
     </ul>
+  )
+}
+
+const LineItemSection = ({ section }: { section: { title: string, renewed: boolean } }) => {
+  const title = section.renewed ? "Renewed" : "Awaiting renewal terms"
+  const textColor = section.renewed ? "text-success/70" : "text-base-content/35"
+
+  return (
+    <li title={title} className={textColor}>
+      {section.renewed && "✓ "}{section.title}
+    </li>
   )
 }
 
@@ -360,31 +457,54 @@ const QuoteList = ({ filename, quotes, uploading, errors, onDismissErrors }: Quo
 
   return (
     <div className="flex flex-col gap-1.5">
-      {errors.length > 0 && (
-        <div className="flex items-start gap-2 text-sm text-error">
-          <div className="flex flex-1 flex-col">
-            {errors.map((error, i) => <span key={i}>{error}</span>)}
-          </div>
-          <button type="button" onClick={onDismissErrors} title="Dismiss" className="btn btn-ghost btn-xs">×</button>
-        </div>
-      )}
+      <UploadErrors
+        errors={errors}
+        onDismiss={onDismissErrors} />
       <ul className="flex flex-col gap-1.5">
         {quotes.map((quote) => (
-          <QuoteChip key={quote.id} filename={filename} quote={quote} />
+          <QuoteChip
+            key={quote.id}
+            filename={filename}
+            quote={quote} />
         ))}
         {uploading.map((upload) => (
-          <li key={upload.key} className="flex items-center gap-2 rounded-box bg-base-200 px-3 py-1.5 text-sm">
-            <img src={pdfIcon} alt="" className="size-4" />
-            <span className="truncate font-medium">{upload.name}</span>
-            <span className="loading loading-spinner loading-xs text-base-content/90" />
-            <span className="text-base-content/80 italic">Uploading…</span>
-          </li>
+          <UploadingChip
+            key={upload.key}
+            name={upload.name} />
         ))}
       </ul>
-      {quotes.some((quote) => quote.status === "done") && (
-        <p className="text-xs text-base-content/50 italic">{QUOTE_HELP_TEXT}</p>
-      )}
+      <QuoteHelpText visible={quotes.some((quote) => quote.status === "done")} />
     </div>
+  )
+}
+
+const UploadErrors = ({ errors, onDismiss }: { errors: string[], onDismiss: () => void }) => {
+  if(errors.length === 0) return null
+
+  return (
+    <div className="flex items-start gap-2 text-sm text-error">
+      <div className="flex flex-1 flex-col">
+        {errors.map((error, i) => <span key={i}>{error}</span>)}
+      </div>
+      <button type="button" onClick={onDismiss} title="Dismiss" className="btn btn-ghost btn-xs">×</button>
+    </div>
+  )
+}
+
+const UploadingChip = ({ name }: { name: string }) => (
+  <li className="flex items-center gap-2 rounded-box bg-base-200 px-3 py-1.5 text-sm">
+    <img src={pdfIcon} alt="" className="size-4" />
+    <span className="truncate font-medium">{name}</span>
+    <span className="loading loading-spinner loading-xs text-base-content/90" />
+    <span className="text-base-content/80 italic">Uploading…</span>
+  </li>
+)
+
+const QuoteHelpText = ({ visible }: { visible: boolean }) => {
+  if(!visible) return null
+
+  return (
+    <p className="text-xs text-base-content/50 italic">{QUOTE_HELP_TEXT}</p>
   )
 }
 
@@ -399,14 +519,14 @@ const QuoteChip = ({ filename, quote }: { filename: string, quote: AppTypes.Rene
         <QuoteChipStatusMsg
           status={quote.status}
           error={quote.error} />
-        <QuoteChipActionContent 
-          confirming={confirming} 
-          isPending={isPending} 
-          cancel={cancel} 
-          remove={remove} 
+        <QuoteChipActionContent
+          confirming={confirming}
+          isPending={isPending}
+          cancel={cancel}
+          remove={remove}
           askConfirm={askConfirm} />
       </div>
-      <Quotes 
+      <Quotes
         visible={quote.status === "done" && quote.lines.length > 0}
         lines={quote.lines} />
       <NoLinesMsg visible={quote.status === "done" && quote.lines.length === 0} />
@@ -473,7 +593,7 @@ const Quotes = ({ visible, lines }: { visible: boolean, lines: AppTypes.RenewalS
 const NoLinesMsg = ({ visible }: { visible: boolean }) => {
   if(!visible) return null
 
-  return ( 
+  return (
     <span className="pl-6 text-base-content/60 italic">No lines found in this quote.</span>
   )
 }
@@ -508,8 +628,8 @@ type DownloadButtonProps = {
 }
 
 const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
-  const btnContent = isPending ? 
-    "Downloading…" : 
+  const btnContent = isPending ?
+    "Downloading…" :
     "Word"
 
   return (
@@ -526,7 +646,7 @@ const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
 
 const PdfDownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
   const btnContent = isPending ?
-    "Downloading…" : 
+    "Downloading…" :
     "PDF"
 
   return (
@@ -555,20 +675,37 @@ const ChatTip = ({ visible }: { visible: boolean }) => {
 const ChatMsgs = ({ messages }: { messages: AppTypes.RenewalSummaryChatMessage[] }) => (
   <>
     {messages.map((message, i) => (
-      <div key={i} className={`chat ${ message.role === "user" ? "chat-end" : "chat-start" }`}>
-        {message.role === "assistant" && (
-          <div className="chat-header text-xs font-semibold text-accent">Claude</div>
-        )}
-        <div
-          className={`chat-bubble whitespace-pre-wrap text-sm ${ message.role === "user" ?
-            "bg-base-300 text-base-content" :
-            "bg-accent/20 text-base-content" }`}>
-          <ChatMessageText text={message.text} />
-        </div>
-      </div>
+      <ChatMsg
+        key={i}
+        message={message} />
     ))}
   </>
 )
+
+const ChatMsg = ({ message }: { message: AppTypes.RenewalSummaryChatMessage }) => {
+  const isUser = message.role === "user"
+
+  const bubbleClass = isUser ?
+    "bg-base-300 text-base-content" :
+    "bg-accent/20 text-base-content"
+
+  return (
+    <div className={`chat ${ isUser ? "chat-end" : "chat-start" }`}>
+      <ChatMsgHeader visible={message.role === "assistant"} />
+      <div className={`chat-bubble whitespace-pre-wrap text-sm ${ bubbleClass }`}>
+        <ChatMessageText text={message.text} />
+      </div>
+    </div>
+  )
+}
+
+const ChatMsgHeader = ({ visible }: { visible: boolean }) => {
+  if(!visible) return null
+
+  return (
+    <div className="chat-header text-xs font-semibold text-accent">Claude</div>
+  )
+}
 
 const ClaudeLoading = ({ visible }: { visible: boolean }) => {
   if(!visible) return null

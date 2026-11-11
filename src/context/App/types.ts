@@ -226,3 +226,32 @@ export type ProposalScope = "mine" | "all"
 
 export type ProposalChatMessage = RenewalSummaryChatMessage
 export type ProposalChatTurn = RenewalSummaryChatTurn
+
+export type JobRun = {
+  started_at: string
+  finished_at: string
+  ok: boolean
+  summary: string | null
+}
+
+export type JobStatus = {
+  job: string
+  label: string
+  schedule: string
+  last_run: JobRun | null
+  last_success_at: string | null
+  overdue: boolean
+  expected_at: string | null
+  next_run_at: string | null
+}
+
+export type DownloadTool =
+  | "cl-renewal-summary"
+  | "renewal-premium-summaries"
+  | "risk-profile"
+  | "pl-renewal-premium-change"
+  | "proposal-builder"
+  | "pl-renewal-summary"
+  | "download-report"
+
+export type DownloadCounts = Partial<Record<DownloadTool | "chat-link", number>>

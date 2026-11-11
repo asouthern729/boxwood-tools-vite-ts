@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react"
+import { useCountedDownload } from "@components/team/utils/DownloadOdometer/hooks"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { usePreviewModal } from "@components/team/utils/PreviewModal/hooks"
 import * as AppActions from '@context/App/AppActions'
@@ -16,13 +17,9 @@ export const usePersonalRenewalSummaryManifest = () => useQuery({
   queryFn: AppActions.getPersonalRenewalSummaryManifest,
 })
 
-export const useDownloadPersonalRenewalSummaryFile = () => useMutation({
-  mutationFn: AppActions.downloadPersonalRenewalSummaryFile,
-})
+export const useDownloadPersonalRenewalSummaryFile = () => useCountedDownload(AppActions.downloadPersonalRenewalSummaryFile)
 
-export const useDownloadPersonalRenewalSummaryPdf = () => useMutation({
-  mutationFn: AppActions.downloadPersonalRenewalSummaryPdf,
-})
+export const useDownloadPersonalRenewalSummaryPdf = () => useCountedDownload(AppActions.downloadPersonalRenewalSummaryPdf)
 
 // onDeleted lives on the hook, not mutate(), because mutate() callbacks are dropped once the deleted row unmounts
 export const useDeletePersonalRenewalSummaryFile = (onDeleted: () => void) => {
@@ -38,7 +35,7 @@ export const useDeletePersonalRenewalSummaryFile = (onDeleted: () => void) => {
 }
 
 export const usePreviewPersonalRenewalSummaryFile = (filename: string) =>
-  usePreviewModal(useCallback(() => AppActions.getPersonalRenewalSummaryFileBlob(filename), [filename]))
+  usePreviewModal(useCallback(() => AppActions.getPersonalRenewalSummaryFileBlob(filename, true), [filename]))
 
 const CONFIRM_TIMEOUT_MS = 3000
 

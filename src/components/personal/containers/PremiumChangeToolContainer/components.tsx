@@ -18,6 +18,7 @@ import TodayFilter from "@components/team/utils/TodayFilter"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
+import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
 import SendButton from "@components/team/utils/SendButton"
 import ChatInput from "@components/team/utils/ChatInput"
@@ -78,6 +79,7 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Person
     return (
       <>
         <p className="py-8 text-center text-base-content/70">No premium change workbooks generated yet.</p>
+        <DownloadOdometer tool="pl-renewal-premium-change" />
         <FooterMessage message={deletedMessage} />
       </>
     )
@@ -87,7 +89,6 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Person
   const searchResults = collectSearchMatches(groups, searchQuery)
   const searching = searchQuery.trim() !== ""
   const showCreatedToday = !searching && createdTodayOnly && createdToday.length > 0
-  const filtersLocked = searching || showCreatedToday
   const sectionTitle = searching ? "Search Results" : showCreatedToday ? "Created Today" : undefined
 
   // Search and Created Today ignore the other filters so they never land on a filtered-out list
@@ -99,64 +100,133 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Person
       .map((group) => ({ ...group, summaries: filterCurrentMonth(filterPastRenewals(group.summaries, showPastRenewals), currentMonthOnly) }))
       .filter((group) => group.summaries.length > 0)
 
-  const emptyMsg = searching ?
-    `No customers or policies match "${ searchQuery.trim() }".` :
-    currentMonthOnly ? "No renewals this month." : "No upcoming renewals — all generated workbooks are past their renewal date."
-
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div className="mb-2 flex flex-wrap items-center justify-end gap-4">
-          <label className="label cursor-pointer gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={showPastRenewals}
-              onChange={(e) => setShowPastRenewals(e.target.checked)}
-              disabled={filtersLocked}
-              className="checkbox checkbox-sm" />
-            Show past renewals
-          </label>
-          <label className="label cursor-pointer gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={currentMonthOnly}
-              onChange={(e) => setCurrentMonthOnly(e.target.checked)}
-              disabled={filtersLocked}
-              className="checkbox checkbox-sm" />
-            Current month only
-          </label>
-        </div>
-        <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
-          <div className="self-start sm:justify-self-start">
-            <Ordering value={order} onChange={setOrder} options={SUMMARY_ORDER_OPTIONS} />
-          </div>
-          <CustomerSearch value={searchQuery} onChange={setSearchQuery} />
-          <div className="self-end sm:justify-self-end">
-            <TodayFilter
-              label="Created Today"
-              count={createdToday.length}
-              active={showCreatedToday}
-              disabled={searching}
-              onChange={setCreatedTodayOnly} />
-          </div>
-        </div>
-        {visibleGroups.length === 0 ? (
-          <p className="py-8 text-center text-base-content/70">{emptyMsg}</p>
-        ) : (
-          visibleGroups.map((group) => (
-            <CsrSection
-              key={group.csr_code ?? "__unassigned__"}
-              group={group}
-              title={sectionTitle}
-              order={order}
-              rowRefs={rowRefs.current}
-              highlightedFilename={highlightedFilename}
-              onDeleted={notifyDeleted} />
-          ))
-        )}
+        <ListControls
+          order={order}
+          setOrder={setOrder}
+          showPastRenewals={showPastRenewals}
+          setShowPastRenewals={setShowPastRenewals}
+          currentMonthOnly={currentMonthOnly}
+          setCurrentMonthOnly={setCurrentMonthOnly}
+          createdTodayCount={createdToday.length}
+          showCreatedToday={showCreatedToday}
+          setCreatedTodayOnly={setCreatedTodayOnly}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery} />
+        <NoVisibleGroupsMsg
+          visible={visibleGroups.length === 0}
+          currentMonthOnly={currentMonthOnly}
+          searchQuery={searchQuery} />
+        {visibleGroups.map((group) => (
+          <CsrSection
+            key={group.csr_code ?? "__unassigned__"}
+            group={group}
+            title={sectionTitle}
+            order={order}
+            rowRefs={rowRefs.current}
+            highlightedFilename={highlightedFilename}
+            onDeleted={notifyDeleted} />
+        ))}
       </div>
+      <DownloadOdometer tool="pl-renewal-premium-change" />
       <FooterMessage message={deletedMessage} />
     </>
+  )
+}
+
+type ListControlsProps = {
+  order: string
+  setOrder: (value: string) => void
+  showPastRenewals: boolean
+  setShowPastRenewals: (value: boolean) => void
+  currentMonthOnly: boolean
+  setCurrentMonthOnly: (value: boolean) => void
+  createdTodayCount: number
+  showCreatedToday: boolean
+  setCreatedTodayOnly: (value: boolean) => void
+  searchQuery: string
+  setSearchQuery: (value: string) => void
+}
+
+const ListControls = ({ order, setOrder, showPastRenewals, setShowPastRenewals, currentMonthOnly, setCurrentMonthOnly, createdTodayCount, showCreatedToday, setCreatedTodayOnly, searchQuery, setSearchQuery }: ListControlsProps) => {
+  const searching = searchQuery.trim() !== ""
+  const filtersLocked = searching || showCreatedToday
+
+  return (
+    <>
+      <div className="mb-2 flex flex-wrap items-center justify-end gap-4">
+        <FilterToggle
+          label="Show past renewals"
+          checked={showPastRenewals}
+          onChange={setShowPastRenewals}
+          disabled={filtersLocked} />
+        <FilterToggle
+          label="Current month only"
+          checked={currentMonthOnly}
+          onChange={setCurrentMonthOnly}
+          disabled={filtersLocked} />
+      </div>
+      <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
+        <div className="self-start sm:justify-self-start">
+          <Ordering
+            value={order}
+            onChange={setOrder}
+            options={SUMMARY_ORDER_OPTIONS} />
+        </div>
+        <CustomerSearch
+          value={searchQuery}
+          onChange={setSearchQuery} />
+        <div className="self-end sm:justify-self-end">
+          <TodayFilter
+            label="Created Today"
+            count={createdTodayCount}
+            active={showCreatedToday}
+            disabled={searching}
+            onChange={setCreatedTodayOnly} />
+        </div>
+      </div>
+    </>
+  )
+}
+
+type FilterToggleProps = {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+  disabled: boolean
+}
+
+const FilterToggle = ({ label, checked, onChange, disabled }: FilterToggleProps) => (
+  <label className="label cursor-pointer gap-2 text-sm">
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={(e) => onChange(e.target.checked)}
+      disabled={disabled}
+      className="checkbox checkbox-sm" />
+    {label}
+  </label>
+)
+
+type NoVisibleGroupsMsgProps = {
+  visible: boolean
+  currentMonthOnly: boolean
+  searchQuery: string
+}
+
+const NoVisibleGroupsMsg = ({ visible, currentMonthOnly, searchQuery }: NoVisibleGroupsMsgProps) => {
+  if(!visible) return null
+
+  const msg = searchQuery.trim() ?
+    `No customers or policies match "${ searchQuery.trim() }".` :
+    currentMonthOnly ?
+    "No renewals this month." :
+    "No upcoming renewals — all generated workbooks are past their renewal date."
+
+  return (
+    <p className="py-8 text-center text-base-content/70">{msg}</p>
   )
 }
 
@@ -217,21 +287,16 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
         else rowRefs.delete(summary.filename)
       }}
       className={`flex flex-col gap-3 px-4 py-3 transition-colors duration-1000 sm:flex-row sm:items-center ${ highlighted ? "bg-base-200" : "" }`}>
-      <div className="flex w-full min-w-0 flex-col sm:w-auto sm:flex-1">
-        <span className="font-semibold">{summary.client_name}</span>
-        <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
-        <span className="text-sm text-base-content/60">{summary.polnos}</span>
-        {deleteError && <span className="text-sm text-error">{deleteError.message}</span>}
-      </div>
+      <SummaryRowDetails
+        summary={summary}
+        error={deleteError} />
       <div className="flex flex-col items-center gap-2 sm:items-end">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap">
           <DeleteButton
             isPending={isDeleting}
             onConfirm={() => deleteFile(summary.filename)} />
           <CopyForAmsButton note={summary.note} />
-          <button type="button" onClick={preview.show} className="btn btn-ghost btn-sm hover:bg-secondary">
-            Preview
-          </button>
+          <PreviewButton onClick={preview.show} />
           <DownloadButton
             isPending={isDownloading}
             onClick={() => downloadFile(summary.filename)} />
@@ -251,6 +316,21 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
     </li>
   )
 }
+
+const SummaryRowDetails = ({ summary, error }: { summary: AppTypes.PersonalPremiumChangeManifestEntry, error: Error | null }) => (
+  <div className="flex w-full min-w-0 flex-col sm:w-auto sm:flex-1">
+    <span className="font-semibold">{summary.client_name}</span>
+    <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
+    <span className="text-sm text-base-content/60">{summary.polnos}</span>
+    {error && <span className="text-sm text-error">{error.message}</span>}
+  </div>
+)
+
+const PreviewButton = ({ onClick }: { onClick: () => void }) => (
+  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary">
+    Preview
+  </button>
+)
 
 const CreatedAt = ({ generatedAt }: { generatedAt: string }) => {
   if(isToday(generatedAt)) return (
@@ -304,13 +384,15 @@ const PremiumChangeTableRow = ({ row }: { row: PremiumChangeRow }) => (
 const CopyForAmsButton = ({ note }: { note: string }) => {
   const { copied, copy } = useCopyForAms(note)
 
+  const btnContent = copied ? "Copied!" : "Copy For AMS"
+
   return (
     <button
       type="button"
       onClick={copy}
       title="Copy the renewal premium change, column-aligned, for pasting into AMS360"
       className="btn btn-ghost btn-sm hover:bg-secondary">
-        {copied ? "Copied!" : "Copy For AMS"}
+        {btnContent}
     </button>
   )
 }
@@ -372,20 +454,37 @@ const ChatTip = ({ visible }: { visible: boolean }) => {
 const ChatMsgs = ({ messages }: { messages: AppTypes.PersonalPremiumChangeChatMessage[] }) => (
   <>
     {messages.map((message, i) => (
-      <div key={i} className={`chat ${ message.role === "user" ? "chat-end" : "chat-start" }`}>
-        {message.role === "assistant" && (
-          <div className="chat-header text-xs font-semibold text-accent">Claude</div>
-        )}
-        <div
-          className={`chat-bubble whitespace-pre-wrap text-sm ${ message.role === "user" ?
-            "bg-base-300 text-base-content" :
-            "bg-accent/20 text-base-content" }`}>
-          <ChatMessageText text={message.text} />
-        </div>
-      </div>
+      <ChatMsg
+        key={i}
+        message={message} />
     ))}
   </>
 )
+
+const ChatMsg = ({ message }: { message: AppTypes.PersonalPremiumChangeChatMessage }) => {
+  const isUser = message.role === "user"
+
+  const bubbleClass = isUser ?
+    "bg-base-300 text-base-content" :
+    "bg-accent/20 text-base-content"
+
+  return (
+    <div className={`chat ${ isUser ? "chat-end" : "chat-start" }`}>
+      <ChatMsgHeader visible={message.role === "assistant"} />
+      <div className={`chat-bubble whitespace-pre-wrap text-sm ${ bubbleClass }`}>
+        <ChatMessageText text={message.text} />
+      </div>
+    </div>
+  )
+}
+
+const ChatMsgHeader = ({ visible }: { visible: boolean }) => {
+  if(!visible) return null
+
+  return (
+    <div className="chat-header text-xs font-semibold text-accent">Claude</div>
+  )
+}
 
 const ClaudeLoading = ({ visible }: { visible: boolean }) => {
   if(!visible) return null

@@ -1,8 +1,10 @@
 import { useHandlePdfDropZone, usePreventWindowFileDrop } from "./hooks"
-import { acceptAttribute } from "./utils"
 
 // Types
 import type { DropFileKind } from "./utils"
+
+// Components
+import * as Components from "./components"
 
 type PdfDropZoneProps = {
   variant: "button" | "area"
@@ -24,12 +26,9 @@ function PdfDropZone({ variant, onFiles, children, className = "", title, accept
         <button type="button" onClick={openPicker} title={title} className={className}>
           {children}
         </button>
-        <input
-          ref={inputRef}
-          type="file"
-          accept={acceptAttribute(accept)}
-          multiple
-          hidden
+        <Components.HiddenFileInput
+          inputRef={inputRef}
+          accept={accept}
           onChange={onInputChange} />
       </>
     )

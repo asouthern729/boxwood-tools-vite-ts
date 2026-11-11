@@ -9,7 +9,9 @@ function ChatMessageText({ text }: { text: string }) {
     <>
       {parseChatSegments(text).map((segment, i) => (
         segment.type === "text" ?
-          <LinkifiedText key={i} text={segment.text} /> :
+          <LinkifiedText
+            key={i}
+            text={segment.text} /> :
           <Components.ChatTable
             key={i}
             header={segment.header}

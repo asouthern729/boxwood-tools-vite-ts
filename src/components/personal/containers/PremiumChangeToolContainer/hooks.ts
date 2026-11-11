@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react"
+import { useCountedDownload } from "@components/team/utils/DownloadOdometer/hooks"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { usePreviewModal } from "@components/team/utils/PreviewModal/hooks"
 import * as AppActions from '@context/App/AppActions'
@@ -16,9 +17,7 @@ export const usePersonalPremiumChangeManifest = () => useQuery({
   queryFn: AppActions.getPersonalPremiumChangeManifest,
 })
 
-export const useDownloadPersonalPremiumChangeFile = () => useMutation({
-  mutationFn: AppActions.downloadPersonalPremiumChangeFile,
-})
+export const useDownloadPersonalPremiumChangeFile = () => useCountedDownload(AppActions.downloadPersonalPremiumChangeFile)
 
 // onDeleted lives on the hook, not mutate(), because mutate() callbacks are dropped once the deleted row unmounts
 export const useDeletePersonalPremiumChangeFile = (onDeleted: () => void) => {
@@ -34,7 +33,7 @@ export const useDeletePersonalPremiumChangeFile = (onDeleted: () => void) => {
 }
 
 export const usePreviewPersonalPremiumChangeFile = (filename: string) =>
-  usePreviewModal(useCallback(() => AppActions.getPersonalPremiumChangeFileBlob(filename), [filename]))
+  usePreviewModal(useCallback(() => AppActions.getPersonalPremiumChangeFileBlob(filename, true), [filename]))
 
 const CONFIRM_TIMEOUT_MS = 3000
 
