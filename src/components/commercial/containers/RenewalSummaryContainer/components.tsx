@@ -616,7 +616,7 @@ const DeleteButton = ({ isPending, onConfirm }: DeleteButtonProps) => {
 
   const btnContent = isPending ?
     <span className="loading loading-spinner loading-xs" /> :
-    <img src={trashIcon} alt="Delete" className="size-4" />
+    <img src={trashIcon} alt="Delete" className={`size-4 ${ armed ? "" : "invert dark:invert-0" }`} />
 
   return (
     <button
