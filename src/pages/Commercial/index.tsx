@@ -5,7 +5,7 @@ import { useSetTheme } from "@utils/hooks"
 import { CommercialProvider } from "@components/commercial/context/CommercialCtx"
 
 function Commercial() {
-  useSetTheme("boxwood-dark")
+  useSetTheme("boxwood")
 
   return (
     <CommercialProvider>

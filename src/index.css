@@ -90,6 +90,10 @@
 }
 
 @theme {
+  /* Claude orange (#d97757 = --accent-clay), for orange on dark surfaces such as the Send button.
+     The light theme's accent is the darker clay-solid (#b74b25), which reads brown there. */
+  --color-claude: oklch(67.2% 0.131 38.8);
+
   --font-sans: 'Play', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-display: 'Teko', var(--font-sans);

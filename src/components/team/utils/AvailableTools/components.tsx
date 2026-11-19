@@ -7,7 +7,7 @@ export const ToolsLabel = () => (
 export const ToolBadge = ({ name, description }: { name: string, description: string }) => (
   <span
     title={description}
-    className="badge badge-outline badge-accent badge-sm cursor-default">
+    className="badge badge-accent badge-sm cursor-default">
       {name}
   </span>
 )
