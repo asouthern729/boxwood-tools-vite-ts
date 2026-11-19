@@ -142,7 +142,7 @@ const LastRunBadge = ({ text, warn }: { text: string, warn: boolean }) => (
 )
 
 const NextRunBadge = ({ nextRun }: { nextRun: Date | null }) => (
-  <span className="badge badge-neutral dark:badge-outline dark:border-neutral-content dark:text-neutral-content badge-sm gap-1.5">
+  <span className="badge badge-neutral text-white/90 dark:badge-outline dark:border-neutral-content dark:text-neutral-content badge-sm gap-1.5">
     <ClockIcon />
     Next run {formatScheduleRun(nextRun)}
   </span>
