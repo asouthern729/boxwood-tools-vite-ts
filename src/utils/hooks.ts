@@ -41,3 +41,26 @@ export const usePersistedState = (key: string, defaultValue: string) => {
 
   return [value, setValue] as const
 }
+
+// Page chats keep their agent session id in sessionStorage so a reload continues the same conversation.
+// resetSession starts over: the next turn goes out with no session_id, so the backend opens a fresh one.
+export const useChatSession = <M,>(storageKey: string) => {
+  const [messages, setMessages] = useState<M[]>([])
+  const [sessionId, setSessionId] = useState<string | undefined>(() => sessionStorage.getItem(storageKey) ?? undefined)
+
+  const saveSession = (id: string) => {
+    sessionStorage.setItem(storageKey, id)
+    setSessionId(id)
+  }
+
+  const resetSession = () => {
+    sessionStorage.removeItem(storageKey)
+    setSessionId(undefined)
+    setMessages([])
+  }
+
+  // A restored session has no visible messages but is still a live conversation
+  const hasConversation = messages.length > 0 || sessionId !== undefined
+
+  return { messages, setMessages, sessionId, saveSession, resetSession, hasConversation }
+}

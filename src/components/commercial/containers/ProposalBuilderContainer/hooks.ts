@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { useCountedDownload } from "@components/team/utils/DownloadOdometer/hooks"
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { usePreviewModal } from "@components/team/utils/PreviewModal/hooks"
+import { useChatSession } from "@utils/hooks"
 import * as AppActions from '@context/App/AppActions'
 import { PAGE_SIZE } from "@components/team/utils/Pagination/utils"
 import { sortProposals } from "./utils"
@@ -136,16 +137,14 @@ export const useAnnounceReadErrors = (attachments: ChatAttachment[], onAnnounce:
 
 export const useProposalBuilderChat = () => {
   const queryClient = useQueryClient()
-  const [messages, setMessages] = useState<AppTypes.ProposalChatMessage[]>([])
-  const [sessionId, setSessionId] = useState<string | undefined>(() => sessionStorage.getItem(CHAT_SESSION_KEY) ?? undefined)
+  const { messages, setMessages, sessionId, saveSession, resetSession, hasConversation } = useChatSession<AppTypes.ProposalChatMessage>(CHAT_SESSION_KEY)
   const [scrollSignal, setScrollSignal] = useState(0)
 
   const { mutate, isPending } = useMutation({
     mutationFn: ({ message, attachmentIds }: { message: string, attachmentIds: string[] }) =>
       AppActions.postProposalChat(message, attachmentIds, sessionId, readPreparedBy()),
     onSuccess: async (turn) => {
-      sessionStorage.setItem(CHAT_SESSION_KEY, turn.session_id)
-      setSessionId(turn.session_id)
+      saveSession(turn.session_id)
       setMessages((prev) => [...prev, { role: "assistant", text: turn.reply || "(no reply)" }])
 
       savePreparedBy(turn)
@@ -161,7 +160,7 @@ export const useProposalBuilderChat = () => {
     },
   })
 
-  const announce = useCallback((text: string) => setMessages((prev) => [...prev, { role: "assistant", text }]), [])
+  const announce = useCallback((text: string) => setMessages((prev) => [...prev, { role: "assistant", text }]), [setMessages])
 
   // shown: what the chat displays for the user's turn, when it differs from what Claude is sent
   const sendMessage = (message: string, attachmentIds: string[], attachedNames: string[], shown?: string) => {
@@ -174,7 +173,13 @@ export const useProposalBuilderChat = () => {
     mutate({ message: trimmed, attachmentIds })
   }
 
-  return { messages, sendMessage, announce, isPending, scrollSignal }
+  // Waits out an in-flight turn, otherwise its reply would land in (and re-save the session of) the new chat
+  const canStartNewChat = hasConversation && !isPending
+  const newChat = () => {
+    if(canStartNewChat) resetSession()
+  }
+
+  return { messages, sendMessage, announce, isPending, scrollSignal, newChat, canStartNewChat }
 }
 
 export const useHandleChatPanel = (

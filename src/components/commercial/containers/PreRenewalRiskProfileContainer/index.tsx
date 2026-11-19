@@ -8,7 +8,7 @@ import * as Components from './components'
 
 function PreRenewalRiskProfileContainer() {
   const { data: manifest, isLoading, isError } = usePreRenewalRiskProfileManifest()
-  const { messages, sendMessage, isPending, scrollSignal } = usePreRenewalRiskProfileChat()
+  const { messages, sendMessage, isPending, scrollSignal, newChat, canStartNewChat } = usePreRenewalRiskProfileChat()
 
   const isReady = !isLoading && !isError
 
@@ -18,7 +18,9 @@ function PreRenewalRiskProfileContainer() {
         <Components.ChatPanel
           messages={messages}
           onSend={sendMessage}
-          isPending={isPending} />
+          isPending={isPending}
+          onNewChat={newChat}
+          canStartNewChat={canStartNewChat} />
 
         {isLoading && <LoadingMsg />}
         {isError && <ErrorMsg message="Couldn't load pre-renewal risk profiles right now." />}

@@ -8,7 +8,7 @@ import * as Components from './components'
 
 function RenewalSummaryContainer() {
   const { data: manifest, isLoading, isError } = useRenewalSummaryManifest()
-  const { messages, sendMessage, isPending, scrollSignal } = useRenewalSummaryChat()
+  const { messages, sendMessage, isPending, scrollSignal, newChat, canStartNewChat } = useRenewalSummaryChat()
 
   const isReady = !isLoading && !isError
 
@@ -18,7 +18,9 @@ function RenewalSummaryContainer() {
         <Components.ChatPanel
           messages={messages}
           onSend={sendMessage}
-          isPending={isPending} />
+          isPending={isPending}
+          onNewChat={newChat}
+          canStartNewChat={canStartNewChat} />
 
         {isLoading && <LoadingMsg />}
         {isError && <ErrorMsg message="Couldn't load renewal summaries right now." />}

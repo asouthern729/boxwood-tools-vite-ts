@@ -8,7 +8,7 @@ import * as Components from './components'
 
 function RenewalPremiumSummaryContainer() {
   const { data: manifest, isLoading, isError } = useRenewalPremiumSummaryManifest()
-  const { messages, sendMessage, isPending, scrollSignal } = useRenewalPremiumSummaryChat()
+  const { messages, sendMessage, isPending, scrollSignal, newChat, canStartNewChat } = useRenewalPremiumSummaryChat()
 
   const isReady = !isLoading && !isError
 
@@ -18,7 +18,9 @@ function RenewalPremiumSummaryContainer() {
         <Components.ChatPanel
           messages={messages}
           onSend={sendMessage}
-          isPending={isPending} />
+          isPending={isPending}
+          onNewChat={newChat}
+          canStartNewChat={canStartNewChat} />
 
         {isLoading && <LoadingMsg />}
         {isError && <ErrorMsg message="Couldn't load renewal premium spreadsheets right now." />}

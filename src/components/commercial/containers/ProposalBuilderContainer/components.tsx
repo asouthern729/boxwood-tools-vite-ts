@@ -19,6 +19,7 @@ import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import SendButton from "@components/team/utils/SendButton"
+import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
 import AvailableTools from "@components/team/utils/AvailableTools"
 
@@ -27,9 +28,11 @@ type ChatPanelProps = {
   onSend: (message: string, attachmentIds: string[], attachedNames: string[], shown?: string) => void
   onAnnounce: (text: string) => void
   isPending: boolean
+  onNewChat: () => void
+  canStartNewChat: boolean
 }
 
-export const ChatPanel = ({ messages, onSend, onAnnounce, isPending }: ChatPanelProps) => {
+export const ChatPanel = ({ messages, onSend, onAnnounce, isPending, onNewChat, canStartNewChat }: ChatPanelProps) => {
   const staged = useProposalAttachments()
   const { messagesRef, send, build, canBuild, draft, setDraft } = useHandleChatPanel(onSend, staged, isPending)
   useHandleChatScrolling(messagesRef, messages, isPending)
@@ -67,10 +70,15 @@ export const ChatPanel = ({ messages, onSend, onAnnounce, isPending }: ChatPanel
             accept={ACCEPTED_FILES}
             attachments={staged.attachments}
             onRemoveAttachment={staged.remove} />
-          <SendButton
-            draft={staged.uploading ? "" : draft}
-            isPending={isPending}
-            onClick={send} />
+          <div className="flex flex-col gap-2 sm:w-32 sm:self-end">
+            <NewChatButton
+              disabled={!canStartNewChat}
+              onClick={onNewChat} />
+            <SendButton
+              draft={staged.uploading ? "" : draft}
+              isPending={isPending}
+              onClick={send} />
+          </div>
           <BuildButton
             visible={staged.attachments.length > 0}
             disabled={!canBuild}

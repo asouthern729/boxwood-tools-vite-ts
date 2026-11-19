@@ -21,6 +21,7 @@ import FooterMessage from "@components/team/utils/FooterMessage"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
 import SendButton from "@components/team/utils/SendButton"
+import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
 import AvailableTools from "@components/team/utils/AvailableTools"
 import ChatHeader from "@components/team/utils/ChatHeader"
@@ -29,9 +30,11 @@ type ChatPanelProps = {
   messages: AppTypes.PersonalPremiumChangeChatMessage[]
   onSend: (message: string) => void
   isPending: boolean
+  onNewChat: () => void
+  canStartNewChat: boolean
 }
 
-export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
+export const ChatPanel = ({ messages, onSend, isPending, onNewChat, canStartNewChat }: ChatPanelProps) => {
   const { messagesRef, send, draft, setDraft } = useHandleChatPanel(onSend)
 
   useHandleChatScrolling(messagesRef, messages, isPending)
@@ -59,10 +62,15 @@ export const ChatPanel = ({ messages, onSend, isPending }: ChatPanelProps) => {
             isPending={isPending}
             send={send}
             placeholder="Ask Claude to build a renewal premium change…" />
-          <SendButton
-            draft={draft}
-            isPending={isPending}
-            onClick={send} />
+          <div className="flex flex-col gap-2 sm:w-32 sm:self-end">
+            <NewChatButton
+              disabled={!canStartNewChat}
+              onClick={onNewChat} />
+            <SendButton
+              draft={draft}
+              isPending={isPending}
+              onClick={send} />
+          </div>
         </div>
 
         <ClaudeDisclaimer />

@@ -12,7 +12,7 @@ function SendButton({ draft, isPending, onClick }: SendButtonProps) {
       type="button"
       disabled={isPending || !draft.trim()}
       onClick={onClick}
-      className="btn btn-neutral w-full self-end text-accent hover:bg-accent hover:text-accent-content sm:w-auto">
+      className="btn btn-neutral w-full text-accent hover:bg-accent hover:text-accent-content">
         {btnContent}
     </button>
   )

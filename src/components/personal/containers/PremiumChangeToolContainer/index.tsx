@@ -8,7 +8,7 @@ import * as Components from './components'
 
 function PremiumChangeToolContainer() {
   const { data: manifest, isLoading, isError } = usePersonalPremiumChangeManifest()
-  const { messages, sendMessage, isPending, scrollSignal } = usePersonalPremiumChangeChat()
+  const { messages, sendMessage, isPending, scrollSignal, newChat, canStartNewChat } = usePersonalPremiumChangeChat()
 
   const isReady = !isLoading && !isError
 
@@ -18,7 +18,9 @@ function PremiumChangeToolContainer() {
         <Components.ChatPanel
           messages={messages}
           onSend={sendMessage}
-          isPending={isPending} />
+          isPending={isPending}
+          onNewChat={newChat}
+          canStartNewChat={canStartNewChat} />
 
         {isLoading && <LoadingMsg />}
         {isError && <ErrorMsg message="Couldn't load premium change workbooks right now." />}

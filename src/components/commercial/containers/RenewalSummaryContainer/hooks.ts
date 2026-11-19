@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { useCountedDownload } from "@components/team/utils/DownloadOdometer/hooks"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { usePreviewModal } from "@components/team/utils/PreviewModal/hooks"
+import { useChatSession } from "@utils/hooks"
 import * as AppActions from '@context/App/AppActions'
 import { sortSummaries } from '@components/commercial/context/utils'
 import { PAGE_SIZE } from "@components/team/utils/Pagination/utils"
@@ -129,15 +130,13 @@ export const useHandleConfirmButton = (onConfirm: () => void) => {
 
 export const useRenewalSummaryChat = () => {
   const queryClient = useQueryClient()
-  const [messages, setMessages] = useState<AppTypes.RenewalSummaryChatMessage[]>([])
-  const [sessionId, setSessionId] = useState<string | undefined>(() => sessionStorage.getItem(CHAT_SESSION_KEY) ?? undefined)
+  const { messages, setMessages, sessionId, saveSession, resetSession, hasConversation } = useChatSession<AppTypes.RenewalSummaryChatMessage>(CHAT_SESSION_KEY)
   const [scrollSignal, setScrollSignal] = useState(0)
 
   const { mutate, isPending } = useMutation({
     mutationFn: (message: string) => AppActions.postRenewalSummaryChat(message, sessionId),
     onSuccess: async (turn) => {
-      sessionStorage.setItem(CHAT_SESSION_KEY, turn.session_id)
-      setSessionId(turn.session_id)
+      saveSession(turn.session_id)
       setMessages((prev) => [...prev, { role: "assistant", text: turn.reply || "(no reply)" }])
 
       const builtSummary = turn.tool_calls.some((call) => call.name.endsWith("renewal_summary"))
@@ -159,7 +158,13 @@ export const useRenewalSummaryChat = () => {
     mutate(trimmed)
   }
 
-  return { messages, sendMessage, isPending, scrollSignal }
+  // Waits out an in-flight turn, otherwise its reply would land in (and re-save the session of) the new chat
+  const canStartNewChat = hasConversation && !isPending
+  const newChat = () => {
+    if(canStartNewChat) resetSession()
+  }
+
+  return { messages, sendMessage, isPending, scrollSignal, newChat, canStartNewChat }
 }
 
 export const useHandleChatPanel = (onSend: (message: string) => void) => {

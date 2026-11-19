@@ -13,7 +13,7 @@ import * as Components from './components'
 function ProposalBuilderContainer() {
   const [scope, setScope] = useState<AppTypes.ProposalScope>("mine")
   const { data: manifest, isLoading, isError } = useProposalManifest(scope)
-  const { messages, sendMessage, announce, isPending, scrollSignal } = useProposalBuilderChat()
+  const { messages, sendMessage, announce, isPending, scrollSignal, newChat, canStartNewChat } = useProposalBuilderChat()
 
   return (
     <FadeIn>
@@ -22,7 +22,9 @@ function ProposalBuilderContainer() {
           messages={messages}
           onSend={sendMessage}
           onAnnounce={announce}
-          isPending={isPending} />
+          isPending={isPending}
+          onNewChat={newChat}
+          canStartNewChat={canStartNewChat} />
 
         {isLoading && <LoadingMsg />}
         {isError && <ErrorMsg message="Couldn't load proposals right now." />}
