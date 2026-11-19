@@ -66,9 +66,35 @@ export const authorizedFetch = async (url: string, init?: RequestInit): Promise<
   return res
 }
 
+/**
+ * Whether a token is stored, expired or not
+ *
+ * An expired token still means the user signed in this tab (and likely still has an Auth0
+ * session), so they still have something to log out of.
+ */
+export const hasStoredToken = (): boolean => sessionStorage.getItem(TOKEN_KEY) !== null
+
+/**
+ * Sign out of the tools and end the Auth0 session
+ *
+ * GET /logout?return_to=…
+ *
+ * Clears all of sessionStorage, which holds only auth state and the page chats' agent session ids.
+ * The backend ends the Auth0 session (otherwise the next login would sign straight back in) and
+ * sends the browser to return_to, the app's landing page, which doesn't trigger a login itself.
+ */
+export const logout = (): void => {
+  sessionStorage.clear()
+
+  const url = new URL(`${ ORIGIN }/logout`)
+  url.searchParams.set("return_to", POST_LOGOUT_URI)
+  window.location.href = url.toString()
+}
+
 const ORIGIN = window.location.origin
 const APP_BASE = import.meta.env.VITE_APP_BASE.replace(/\/$/, "")
 const REDIRECT_URI = `${ ORIGIN }${ APP_BASE }/login`
+const POST_LOGOUT_URI = `${ ORIGIN }${ APP_BASE }/`
 
 const TOKEN_KEY = "boxwood_tools_token"
 const CLIENT_KEY = "boxwood_tools_client_id"

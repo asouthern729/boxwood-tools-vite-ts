@@ -3,11 +3,13 @@ import { Outlet } from "react-router"
 // Components
 import * as Components from './components'
 import Nav from '../Nav'
+import LogoutButton from '../LogoutButton'
 
 function Layout() {
 
   return (
     <div className="relative flex flex-col w-full min-h-screen lg:h-full">
+      <LogoutButton />
       <Components.Header />
       <Nav />
       <main className="flex flex-col lg:flex-1">
