@@ -23,6 +23,7 @@ import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
 import AvailableTools from "@components/team/utils/AvailableTools"
 import ChatHeader from "@components/team/utils/ChatHeader"
+import CoverageGapsBadge from "@components/team/utils/CoverageGapsBadge"
 
 type ChatPanelProps = {
   messages: AppTypes.PreRenewalRiskProfileChatMessage[]
@@ -336,6 +337,7 @@ const SummaryRowDetails = ({ summary, error }: { summary: AppTypes.PreRenewalRis
     <span className="font-semibold">{summary.client_name}</span>
     <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
     <span className="text-sm text-base-content/60">{summary.polnos}</span>
+    <CoverageGapsBadge gaps={summary.coverage_gaps} />
     {error && <span className="text-sm text-error">{error.message}</span>}
   </div>
 )

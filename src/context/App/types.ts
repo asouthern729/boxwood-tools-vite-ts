@@ -70,6 +70,14 @@ export type RenewalPremiumSummaryChatTurn = {
   tool_calls: { name: string; input: unknown }[]
 }
 
+// A line of business on the policy in AMS360 that has no section in the archived document.
+// Absent on documents archived before the backend started recording it.
+export type CoverageGap = {
+  polno: string
+  line: string
+  missing: string
+}
+
 export type PreRenewalRiskProfileManifestEntry = {
   filename: string
   generated_at: string
@@ -80,6 +88,7 @@ export type PreRenewalRiskProfileManifestEntry = {
   renewal_date: string
   renewal_date_label: string
   sizeBytes: number
+  coverage_gaps?: CoverageGap[]
 }
 
 export type PreRenewalRiskProfileCsrGroup = {
@@ -116,6 +125,7 @@ export type RenewalSummaryManifestEntry = {
   renewal_date: string
   renewal_date_label: string
   sizeBytes: number
+  coverage_gaps?: CoverageGap[]
 }
 
 export type RenewalSummaryCsrGroup = {
