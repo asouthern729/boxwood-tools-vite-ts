@@ -1,13 +1,13 @@
 export type CommercialTools =
   | "Pre-Renewal Risk Profile"
   | "Renewal Premium Spreadsheet"
-  | "Renewal Summary"
+  | "CL Renewal Summary"
   | "Proposal Builder"
 
 export type PersonalTools =
   | "Download Change Report"
   | "Premium Change Tool"
-  | "Renewal Summary"
+  | "PL Renewal Summary"
 
 export type AllTools = CommercialTools|PersonalTools
 

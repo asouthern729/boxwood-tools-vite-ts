@@ -10,23 +10,27 @@ import RenewalSummaryContainer from '@components/commercial/containers/RenewalSu
 import PersonalRenewalSummaryContainer from '@components/personal/containers/RenewalSummaryContainer'
 import ProposalBuilderContainer from '@components/commercial/containers/ProposalBuilderContainer'
 
+// Keyed by "section/slug" since both teams have a renewal-summary route
 export const toolNames: Record<string, AppTypes.AllTools> = {
-  "pre-renewal-risk-profile": "Pre-Renewal Risk Profile",
-  "renewal-premium-summary": "Renewal Premium Spreadsheet",
-  "renewal-summary": "Renewal Summary",
-  "proposal-builder": "Proposal Builder",
-  "download-change-report": "Download Change Report",
-  "premium-change-tool": "Premium Change Tool",
+  "commercial/pre-renewal-risk-profile": "Pre-Renewal Risk Profile",
+  "commercial/renewal-premium-summary": "Renewal Premium Spreadsheet",
+  "commercial/renewal-summary": "CL Renewal Summary",
+  "commercial/proposal-builder": "Proposal Builder",
+  "personal/download-change-report": "Download Change Report",
+  "personal/premium-change-tool": "Premium Change Tool",
+  "personal/renewal-summary": "PL Renewal Summary",
 }
 
-export const handleToolContent = (section: string, toolName: AppTypes.AllTools) => {
+export const handleToolContent = (toolName: AppTypes.AllTools) => {
   switch(toolName) {
     case "Pre-Renewal Risk Profile":
       return PreRenewalRiskProfileContainer
     case "Renewal Premium Spreadsheet":
       return RenewalPremiumSummaryContainer
-    case "Renewal Summary":
-      return section === "personal" ? PersonalRenewalSummaryContainer : RenewalSummaryContainer
+    case "CL Renewal Summary":
+      return RenewalSummaryContainer
+    case "PL Renewal Summary":
+      return PersonalRenewalSummaryContainer
     case "Proposal Builder":
       return ProposalBuilderContainer
     case "Download Change Report":

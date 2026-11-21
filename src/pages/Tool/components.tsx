@@ -204,9 +204,8 @@ export const ToolNavLinks = () => {
 }
 
 export const ToolContent = () => {
-  const { pathname } = useLocation()
   const toolName = useHandleToolName()
-  const Component = handleToolContent(pathname.split('/')[1], toolName)
+  const Component = handleToolContent(toolName)
 
   if(!Component) return null
 

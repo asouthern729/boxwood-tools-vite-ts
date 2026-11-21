@@ -8,7 +8,8 @@ import { getJobStatuses } from "@context/App/AppActions"
 export const useHandleToolName = () => {
   const { pathname } = useLocation()
 
-  const toolName = toolNames[pathname.split('/')[2]]
+  const [, section, slug] = pathname.split('/')
+  const toolName = toolNames[`${ section }/${ slug }`]
 
   return toolName
 }

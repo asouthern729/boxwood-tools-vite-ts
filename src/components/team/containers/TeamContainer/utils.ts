@@ -15,7 +15,7 @@ export const teamNavDescriptions: [Map<AppTypes.CommercialTools, TeamNavDescript
       to: "/commercial/pre-renewal-risk-profile",
       outputs: ["docx"],
     }],
-    ["Renewal Summary", {
+    ["CL Renewal Summary", {
       description: "Generates a branded pre-renewal review document for a commercial policy, ready to send or walk through with the client.",
       to: "/commercial/renewal-summary",
       outputs: ["docx", "pdf"],
@@ -37,7 +37,7 @@ export const teamNavDescriptions: [Map<AppTypes.CommercialTools, TeamNavDescript
       to: "/personal/premium-change-tool",
       outputs: ["xlsx"],
     }],
-    ["Renewal Summary", {
+    ["PL Renewal Summary", {
       description: "Puts together a renewal summary for a personal lines account so it's ready to review with the client ahead of renewal.",
       to: "/personal/renewal-summary",
       outputs: ["docx", "pdf"],
