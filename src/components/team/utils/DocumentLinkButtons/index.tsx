@@ -25,7 +25,7 @@ function DocumentLinkButtons({ links }: { links?: DocumentLink[] }) {
           type="button"
           onClick={() => navigate(`${ TOOL_PATHS[link.tool] }?${ DOC_PARAM }=${ link.id }`)}
           className="btn btn-secondary">
-            Open {link.label} →
+            Open {link.label}
         </button>
       ))}
     </>
