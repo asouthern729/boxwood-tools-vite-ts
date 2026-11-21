@@ -314,9 +314,16 @@ const CsrSection = ({ group, title, order, rowRefs, highlightedFilename, onNotif
   return (
     <div ref={sectionRef} className="card border border-base-300 bg-base-100 shadow-sm">
       <div className="card-body gap-1 p-0 py-2">
-        <h3 className="px-4 pt-1 text-sm font-semibold text-primary">
-          {title ?? group.csr_name ?? "Unassigned"}
-        </h3>
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-1">
+          <h3 className="text-sm font-semibold text-primary">
+            {title ?? group.csr_name ?? "Unassigned"}
+          </h3>
+          <Pagination
+            page={currentPage}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            className="py-0" />
+        </div>
         <ul className="divide-y divide-base-300">
           {pageSummaries.map((summary) => (
             <SummaryRow

@@ -262,7 +262,14 @@ const ProposalSection = ({ group, scope, order, viewerSub, rowRefs, highlightedF
   return (
     <div ref={sectionRef} className="card border border-base-300 bg-base-100 shadow-sm">
       <div className="card-body gap-1 p-0 py-2">
-        <h3 className="px-4 pt-1 text-sm font-semibold text-primary">{title}</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-1">
+          <h3 className="text-sm font-semibold text-primary">{title}</h3>
+          <Pagination
+            page={currentPage}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            className="py-0" />
+        </div>
         <ul className="divide-y divide-base-300">
           {pageProposals.map((proposal) => (
             <ProposalRow

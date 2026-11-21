@@ -8,15 +8,16 @@ type PaginationProps = {
   totalItems: number
   onPageChange: (page: number) => void
   scrollTargetRef?: React.RefObject<HTMLElement | null>
+  className?: string
 }
 
-function Pagination({ page, totalItems, onPageChange, scrollTargetRef }: PaginationProps) {
+function Pagination({ page, totalItems, onPageChange, scrollTargetRef, className = "justify-center py-2" }: PaginationProps) {
   const { visible, totalPages, goToPage } = handlePagination({ totalItems, onPageChange, scrollTargetRef })
 
   if(!visible) return null
 
   return (
-    <div className="join flex items-center justify-center py-2">
+    <div className={`join flex items-center ${ className }`}>
       <Components.PaginationBtn
         disabled={page === 0}
         onClick={() => goToPage(page - 1)}>
