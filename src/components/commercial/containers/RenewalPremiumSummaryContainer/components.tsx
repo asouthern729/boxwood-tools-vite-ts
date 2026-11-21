@@ -412,7 +412,7 @@ export const DocumentPreview = ({ groups }: { groups: AppTypes.RenewalPremiumSum
       fetchBlob={fetchBlob}
       footerActions={
         <>
-          <ShareDocumentButtons documentName={`${ entry.client_name } Renewal Premium Spreadsheet`} />
+          <ShareDocumentButtons clientName={entry.client_name} documentType="Renewal Premium Spreadsheet" />
           <DocumentLinkButtons links={entry.links} createLinked={createLinked} />
         </>
       }>
