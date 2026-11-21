@@ -35,11 +35,18 @@ export type DownloadReportManifest = {
   lastSync: DownloadReportLastSync | null
 }
 
+// One line of business on a renewal document and whether its renewal values are in yet (CL Renewal
+// Summary: renewal terms; Renewal Premium Spreadsheet: renewal premium). polno can list several
+// policies when the spreadsheet combines them on one row.
+export type LineStatus = { title: string, polno: string, renewed: boolean }
+
 export type RenewalPremiumSummaryManifestEntry = {
   filename: string
   generated_at: string
   last_refreshed_at?: string
   last_refresh_reason?: string
+  // Absent on spreadsheets whose renewal values haven't been recorded yet (the nightly Refresh does it)
+  sections?: LineStatus[]
   csr_code: string | null
   csr_name: string | null
   client_name: string
@@ -117,7 +124,7 @@ export type RenewalSummaryManifestEntry = {
   generated_at: string
   last_refreshed_at?: string
   last_refresh_reason?: string
-  sections?: { title: string, polno: string, renewed: boolean }[]
+  sections?: LineStatus[]
   csr_code: string | null
   csr_name: string | null
   client_name: string

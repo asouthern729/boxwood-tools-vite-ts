@@ -24,6 +24,7 @@ import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import PdfDropZone from "@components/team/utils/PdfDropZone"
+import LineItemStatus from "@components/team/utils/LineItemStatus"
 import SendButton from "@components/team/utils/SendButton"
 import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
@@ -404,7 +405,10 @@ const SummaryRowDetails = ({ summary, errors }: { summary: AppTypes.RenewalSumma
     <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
     <span className="text-sm text-base-content/60">{summary.polnos}</span>
     <CoverageGapsBadge gaps={summary.coverage_gaps} />
-    <LineItemStatus summary={summary} />
+    <LineItemStatus
+      lines={summary.sections}
+      pendingTitle="Awaiting renewal terms"
+      completeTitle="Every section has renewal terms from AMS360 or an uploaded quote" />
     {errors.map((error, i) => error && <span key={i} className="text-sm text-error">{error.message}</span>)}
   </div>
 )
@@ -423,43 +427,6 @@ const PreviewButton = ({ onClick }: { onClick: () => void }) => (
   <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary">
     Preview
   </button>
-)
-
-const LineItemStatus = ({ summary }: { summary: AppTypes.RenewalSummaryManifestEntry }) => {
-  if(!summary.sections?.length) return null
-
-  if(summary.sections.every((s) => s.renewed)) return (
-    <div className="mt-1">
-      <CompleteBadge />
-    </div>
-  )
-
-  return (
-    <ul className="mt-1 flex flex-wrap gap-x-3 text-sm">
-      {summary.sections.map((section) => (
-        <LineItemSection
-          key={`${ section.polno }-${ section.title }`}
-          section={section} />
-      ))}
-    </ul>
-  )
-}
-
-const LineItemSection = ({ section }: { section: { title: string, renewed: boolean } }) => {
-  const title = section.renewed ? "Renewed" : "Awaiting renewal terms"
-  const textColor = section.renewed ? "text-success/70" : "text-base-content/35"
-
-  return (
-    <li title={title} className={textColor}>
-      {section.renewed && "✓ "}{section.title}
-    </li>
-  )
-}
-
-const CompleteBadge = () => (
-  <span title="Every section has renewal terms from AMS360 or an uploaded quote" className="badge badge-soft badge-success badge-sm cursor-default rounded-sm border-success/30 text-success/70 not-italic">
-    ✓ Complete
-  </span>
 )
 
 const CreatedAt = ({ summary }: { summary: AppTypes.RenewalSummaryManifestEntry }) => {

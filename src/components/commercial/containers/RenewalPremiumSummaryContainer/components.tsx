@@ -23,6 +23,7 @@ import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
+import LineItemStatus from "@components/team/utils/LineItemStatus"
 import SendButton from "@components/team/utils/SendButton"
 import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
@@ -428,6 +429,10 @@ const SummaryRowDetails = ({ summary, error }: { summary: AppTypes.RenewalPremiu
     <span className="font-semibold">{summary.client_name}</span>
     <span className="text-sm text-base-content/60 italic">Renews {summary.renewal_date_label}</span>
     <span className="text-sm text-base-content/60">{summary.polnos}</span>
+    <LineItemStatus
+      lines={summary.sections}
+      pendingTitle="Awaiting renewal premium from AMS360"
+      completeTitle="Every line has its renewal premium from AMS360" />
     {error && <span className="text-sm text-error">{error.message}</span>}
   </div>
 )
