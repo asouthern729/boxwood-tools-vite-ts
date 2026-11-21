@@ -171,6 +171,38 @@ export const postPreRenewalRiskProfileChat = async (message: string, sessionId: 
   return await res.json()
 }
 
+// POST a linked-document build; the body's error is written for staff, so it's shown as-is.
+const postLinkedDocument = async (path: string, body: Record<string, string>): Promise<AppTypes.LinkedDocumentResult> => {
+  const res = await authorizedFetch(`${ API_BASE }${ path }`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+
+  if(!res.ok) {
+    const err = await res.json().catch(() => null)
+    throw new Error(err?.error ?? err?.error_description ?? `Couldn't build the document: HTTP ${ res.status }`)
+  }
+
+  return await res.json()
+}
+
+/**
+ * Build the CL Renewal Summary for a Renewal Premium Spreadsheet's policy terms (early builds allowed)
+ *
+ * POST /cl-renewal-summary/linked { spreadsheet_id }
+ */
+export const createLinkedRenewalSummary = (spreadsheetId: string) =>
+  postLinkedDocument("/cl-renewal-summary/linked", { spreadsheet_id: spreadsheetId })
+
+/**
+ * Build the Renewal Premium Spreadsheet for a CL Renewal Summary's renewal month
+ *
+ * POST /renewal-premium-summaries/linked { summary_id }
+ */
+export const createLinkedRenewalPremiumSummary = (summaryId: string) =>
+  postLinkedDocument("/renewal-premium-summaries/linked", { summary_id: summaryId })
+
 /**
  * List generated CL Renewal Summary docx files, grouped by CSR
  *

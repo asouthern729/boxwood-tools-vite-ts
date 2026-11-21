@@ -1,4 +1,5 @@
 import trashIcon from "@assets/icons/trash/trash.svg"
+import * as AppActions from "@context/App/AppActions"
 import pdfIcon from "@assets/icons/pdf/pdf.svg"
 import { useHandleChatScrolling, useDocumentParam, useMissingDocumentNotice, documentId } from "@utils/hooks"
 import { useDownloadRenewalSummaryFile, useDownloadRenewalSummaryPdf, useDeleteRenewalSummaryFile, useRenewalSummaryPreviewBlob, useDocumentEntry, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton, useRenewalSummaryQuotes, useUploadRenewalSummaryQuotes, useHandleQuoteRemoval } from "./hooks"
@@ -26,6 +27,7 @@ import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import PdfDropZone from "@components/team/utils/PdfDropZone"
 import LineItemStatus from "@components/team/utils/LineItemStatus"
 import DocumentLinkButtons from "@components/team/utils/DocumentLinkButtons"
+import ShareDocumentButtons from "@components/team/utils/ShareDocumentButtons"
 import SendButton from "@components/team/utils/SendButton"
 import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
@@ -412,13 +414,27 @@ export const DocumentPreview = ({ groups }: { groups: AppTypes.RenewalSummaryCsr
 
   if(!entry) return <FooterMessage message={missingMessage} error />
 
+  // Only a document with a backend id can be the source of a build (older manifests have none)
+  const sourceId = entry.id
+  const createLinked = sourceId ? {
+    tool: "renewal-premium-summary",
+    fromTool: "cl-renewal-summary",
+    label: "Renewal Premium Spreadsheet",
+    create: () => AppActions.createLinkedRenewalPremiumSummary(sourceId),
+  } as const : undefined
+
   return (
     <DocxPreviewModal
       title={entry.client_name}
       open
       onClose={closeDocument}
       fetchBlob={fetchBlob}
-      footerActions={<DocumentLinkButtons links={entry.links} />} />
+      footerActions={
+        <>
+          <ShareDocumentButtons documentName={`${ entry.client_name } CL Renewal Summary`} />
+          <DocumentLinkButtons links={entry.links} createLinked={createLinked} />
+        </>
+      } />
   )
 }
 

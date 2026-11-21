@@ -44,6 +44,9 @@ export type LineStatus = { title: string, polno: string, renewed: boolean }
 // shows a button to it. id is that document's id, the ?doc= key on its tool page.
 export type DocumentTool = "cl-renewal-summary" | "renewal-premium-summary"
 export type DocumentLink = { tool: DocumentTool, id: string, label: string }
+// POST .../linked: the other tool's document for these policy terms. created is false when it already
+// existed (a second click, or built since the page loaded) — either way, open id.
+export type LinkedDocumentResult = { id: string, created: boolean }
 
 export type RenewalPremiumSummaryManifestEntry = {
   // Opaque, stable document id — the ?doc= key in the page URL. Absent from older backends;

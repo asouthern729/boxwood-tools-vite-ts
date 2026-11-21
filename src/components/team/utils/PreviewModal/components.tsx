@@ -1,5 +1,5 @@
 export const ModalActions = ({ children }: { children?: React.ReactNode }) => (
-  <div className="modal-action">
+  <div className="modal-action flex-wrap">
     {children}
     <form method="dialog">
       <button type="submit" className="btn">Close</button>

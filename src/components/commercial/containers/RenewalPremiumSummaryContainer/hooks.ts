@@ -3,13 +3,13 @@ import { useCountedDownload } from "@components/team/utils/DownloadOdometer/hook
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useChatSession, documentId } from "@utils/hooks"
 import * as AppActions from '@context/App/AppActions'
-import { sortSummaries } from '@components/commercial/context/utils'
+import { sortSummaries, DOCUMENT_MANIFEST_QUERY_KEYS } from '@components/commercial/context/utils'
 import { PAGE_SIZE } from "@components/team/utils/Pagination/utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
 
-const MANIFEST_QUERY_KEY = ["renewal-premium-summary-manifest"]
+const MANIFEST_QUERY_KEY = DOCUMENT_MANIFEST_QUERY_KEYS["renewal-premium-summary"]
 const CHAT_SESSION_KEY = "boxwood_renewal_premium_spreadsheet_chat_session"
 
 export const useRenewalPremiumSummaryManifest = () => useQuery({

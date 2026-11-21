@@ -1,5 +1,13 @@
 // Types
 import type { OrderingOption } from '@components/team/utils/Ordering'
+import type { DocumentTool } from '@context/App/types'
+
+// Manifest query keys for the tools whose documents link to each other, so building one tool's
+// document can refresh the other tool's list.
+export const DOCUMENT_MANIFEST_QUERY_KEYS: Record<DocumentTool, string[]> = {
+  "cl-renewal-summary": ["renewal-summary-manifest"],
+  "renewal-premium-summary": ["renewal-premium-summary-manifest"],
+}
 
 export const SUMMARY_ORDER_OPTIONS: OrderingOption[] = [
   { value: "client_name_asc", label: "Client Name (A–Z)" },

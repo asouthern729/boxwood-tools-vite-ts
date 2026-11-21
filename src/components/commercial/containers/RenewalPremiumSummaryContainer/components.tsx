@@ -1,4 +1,5 @@
 import trashIcon from "@assets/icons/trash/trash.svg"
+import * as AppActions from "@context/App/AppActions"
 import { useHandleChatScrolling, useDocumentParam, useMissingDocumentNotice, documentId } from "@utils/hooks"
 import { useDownloadRenewalPremiumSummaryFile, useDeleteRenewalPremiumSummaryFile, useRenewalPremiumSummaryPreviewBlob, useDocumentEntry, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
 import { AVAILABLE_MCP_TOOLS, formatTimestamp, extractKeyPremiumRows, formatCurrency, formatPercentChange, type PremiumSummaryRow } from "./utils"
@@ -25,6 +26,7 @@ import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
 import LineItemStatus from "@components/team/utils/LineItemStatus"
 import DocumentLinkButtons from "@components/team/utils/DocumentLinkButtons"
+import ShareDocumentButtons from "@components/team/utils/ShareDocumentButtons"
 import SendButton from "@components/team/utils/SendButton"
 import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
@@ -393,13 +395,27 @@ export const DocumentPreview = ({ groups }: { groups: AppTypes.RenewalPremiumSum
 
   if(!entry) return <FooterMessage message={missingMessage} error />
 
+  // Only a document with a backend id can be the source of a build (older manifests have none)
+  const sourceId = entry.id
+  const createLinked = sourceId ? {
+    tool: "cl-renewal-summary",
+    fromTool: "renewal-premium-summary",
+    label: "CL Renewal Summary",
+    create: () => AppActions.createLinkedRenewalSummary(sourceId),
+  } as const : undefined
+
   return (
     <XlsxPreviewModal
       title={entry.client_name}
       open
       onClose={closeDocument}
       fetchBlob={fetchBlob}
-      footerActions={<DocumentLinkButtons links={entry.links} />}>
+      footerActions={
+        <>
+          <ShareDocumentButtons documentName={`${ entry.client_name } Renewal Premium Spreadsheet`} />
+          <DocumentLinkButtons links={entry.links} createLinked={createLinked} />
+        </>
+      }>
       {(workbook) => <PremiumSummaryTable workbook={workbook} />}
     </XlsxPreviewModal>
   )
