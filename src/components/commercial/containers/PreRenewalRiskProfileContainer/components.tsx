@@ -5,15 +5,19 @@ import { AVAILABLE_MCP_TOOLS, formatTimestamp } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
+import type { OrderingOption } from "@components/team/utils/Ordering"
 
 // Components
 import { useCommercialCtx } from "@components/commercial/context/hooks"
-import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterCurrentMonth, isToday, collectCreatedToday, collectSearchMatches } from "@components/commercial/context/utils"
+import { SUMMARY_ORDER_OPTIONS, filterPastRenewals, filterRenewalMonth, formatRenewalMonth, csrOptions, filterCsr, isToday, collectCreatedToday, collectSearchMatches } from "@components/commercial/context/utils"
 import ClaudeDisclaimer from "@components/team/utils/ClaudeDisclaimer"
 import DocxPreviewModal from "@components/team/utils/DocxPreviewModal"
 import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
 import TodayFilter from "@components/team/utils/TodayFilter"
+import MonthFilter from "@components/team/utils/MonthFilter"
+import CsrFilter from "@components/team/utils/CsrFilter"
+import ActiveFiltersNote from "@components/team/utils/ActiveFiltersNote"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
@@ -80,7 +84,7 @@ export const ChatPanel = ({ messages, onSend, isPending, onNewChat, canStartNewC
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRenewalRiskProfileCsrGroup[], scrollSignal: number }) => {
   const { rowRefs, highlightedFilename, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
-  const { showPastRenewals, setShowPastRenewals, currentMonthOnly, setCurrentMonthOnly, createdTodayOnly, setCreatedTodayOnly, searchQuery, setSearchQuery, order, setOrder } = useCommercialCtx()
+  const { showPastRenewals, setShowPastRenewals, renewalMonth, setRenewalMonth, csrFilter, setCsrFilter, createdTodayOnly, setCreatedTodayOnly, searchQuery, setSearchQuery, order, setOrder } = useCommercialCtx()
 
   if(groups.length === 0) {
     return (
@@ -92,6 +96,10 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
     )
   }
 
+  // A CSR picked on another page may have nothing here, so fall back to every CSR
+  const csrChoices = csrOptions(groups)
+  const activeCsr = csrChoices.some((choice) => choice.value === csrFilter) ? csrFilter : ""
+  const activeCsrName = csrChoices.find((choice) => choice.value === activeCsr)?.label ?? ""
   const createdToday = collectCreatedToday(groups)
   const searchResults = collectSearchMatches(groups, searchQuery)
   const searching = searchQuery.trim() !== ""
@@ -103,8 +111,8 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
     (searchResults.length > 0 ? [{ csr_code: "__search_results__", csr_name: null, summaries: searchResults }] : []) :
     showCreatedToday ?
     [{ csr_code: "__created_today__", csr_name: null, summaries: createdToday }] :
-    groups
-      .map((group) => ({ ...group, summaries: filterCurrentMonth(filterPastRenewals(group.summaries, showPastRenewals), currentMonthOnly) }))
+    filterCsr(groups, activeCsr)
+      .map((group) => ({ ...group, summaries: filterRenewalMonth(filterPastRenewals(group.summaries, showPastRenewals), renewalMonth) }))
       .filter((group) => group.summaries.length > 0)
 
   return (
@@ -115,8 +123,12 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
           setOrder={setOrder}
           showPastRenewals={showPastRenewals}
           setShowPastRenewals={setShowPastRenewals}
-          currentMonthOnly={currentMonthOnly}
-          setCurrentMonthOnly={setCurrentMonthOnly}
+          renewalMonth={renewalMonth}
+          setRenewalMonth={setRenewalMonth}
+          csrChoices={csrChoices}
+          csrFilter={activeCsr}
+          csrName={activeCsrName}
+          setCsrFilter={setCsrFilter}
           createdTodayCount={createdToday.length}
           showCreatedToday={showCreatedToday}
           setCreatedTodayOnly={setCreatedTodayOnly}
@@ -124,7 +136,8 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
           setSearchQuery={setSearchQuery} />
         <NoVisibleGroupsMsg
           visible={visibleGroups.length === 0}
-          currentMonthOnly={currentMonthOnly}
+          renewalMonth={renewalMonth}
+          csrName={activeCsrName}
           searchQuery={searchQuery} />
         {visibleGroups.map((group) => (
           <CsrSection
@@ -148,8 +161,12 @@ type ListControlsProps = {
   setOrder: (value: string) => void
   showPastRenewals: boolean
   setShowPastRenewals: (value: boolean) => void
-  currentMonthOnly: boolean
-  setCurrentMonthOnly: (value: boolean) => void
+  renewalMonth: string
+  setRenewalMonth: (value: string) => void
+  csrChoices: OrderingOption[]
+  csrFilter: string
+  csrName: string
+  setCsrFilter: (value: string) => void
   createdTodayCount: number
   showCreatedToday: boolean
   setCreatedTodayOnly: (value: boolean) => void
@@ -157,35 +174,39 @@ type ListControlsProps = {
   setSearchQuery: (value: string) => void
 }
 
-const ListControls = ({ order, setOrder, showPastRenewals, setShowPastRenewals, currentMonthOnly, setCurrentMonthOnly, createdTodayCount, showCreatedToday, setCreatedTodayOnly, searchQuery, setSearchQuery }: ListControlsProps) => {
+const ListControls = ({ order, setOrder, showPastRenewals, setShowPastRenewals, renewalMonth, setRenewalMonth, csrChoices, csrFilter, csrName, setCsrFilter, createdTodayCount, showCreatedToday, setCreatedTodayOnly, searchQuery, setSearchQuery }: ListControlsProps) => {
   const searching = searchQuery.trim() !== ""
   const filtersLocked = searching || showCreatedToday
 
   return (
     <>
-      <div className="mb-2 flex flex-wrap items-center justify-end gap-4">
-        <FilterToggle
-          label="Show past renewals"
-          checked={showPastRenewals}
-          onChange={setShowPastRenewals}
-          disabled={filtersLocked} />
-        <FilterToggle
-          label="Current month only"
-          checked={currentMonthOnly}
-          onChange={setCurrentMonthOnly}
-          disabled={filtersLocked} />
+      <div className="flex justify-center">
+        <CustomerSearch
+          value={searchQuery}
+          onChange={setSearchQuery} />
       </div>
-      <div className="flex flex-col items-center gap-4 sm:grid sm:grid-cols-[1fr_auto_1fr]">
-        <div className="self-start sm:justify-self-start">
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
           <Ordering
             value={order}
             onChange={setOrder}
             options={SUMMARY_ORDER_OPTIONS} />
+          <MonthFilter
+            value={renewalMonth}
+            onChange={setRenewalMonth}
+            disabled={filtersLocked} />
+          <CsrFilter
+            value={csrFilter}
+            onChange={setCsrFilter}
+            options={csrChoices}
+            disabled={filtersLocked} />
         </div>
-        <CustomerSearch
-          value={searchQuery}
-          onChange={setSearchQuery} />
-        <div className="self-end sm:justify-self-end">
+        <div className="flex flex-wrap items-center gap-4 self-end sm:self-auto">
+          <FilterToggle
+            label="Show past renewals"
+            checked={showPastRenewals}
+            onChange={setShowPastRenewals}
+            disabled={filtersLocked} />
           <TodayFilter
             label="Created Today"
             count={createdTodayCount}
@@ -194,6 +215,11 @@ const ListControls = ({ order, setOrder, showPastRenewals, setShowPastRenewals, 
             onChange={setCreatedTodayOnly} />
         </div>
       </div>
+      <ActiveFiltersNote
+        visible={!filtersLocked}
+        csrName={csrName}
+        renewalMonth={renewalMonth}
+        onClear={() => { setRenewalMonth(""); setCsrFilter("") }} />
     </>
   )
 }
@@ -219,17 +245,23 @@ const FilterToggle = ({ label, checked, onChange, disabled }: FilterToggleProps)
 
 type NoVisibleGroupsMsgProps = {
   visible: boolean
-  currentMonthOnly: boolean
+  renewalMonth: string
+  csrName: string
   searchQuery: string
 }
 
-const NoVisibleGroupsMsg = ({ visible, currentMonthOnly, searchQuery }: NoVisibleGroupsMsgProps) => {
+const NoVisibleGroupsMsg = ({ visible, renewalMonth, csrName, searchQuery }: NoVisibleGroupsMsgProps) => {
   if(!visible) return null
+
+  const scope = [
+    renewalMonth && `in ${ formatRenewalMonth(renewalMonth) }`,
+    csrName && `for ${ csrName }`,
+  ].filter(Boolean).join(" ")
 
   const msg = searchQuery.trim() ?
     `No customers or policies match "${ searchQuery.trim() }".` :
-    currentMonthOnly ?
-    "No renewals this month." :
+    scope ?
+    `No renewals ${ scope }.` :
     "No upcoming renewals — all generated profiles are past their renewal date."
 
   return (

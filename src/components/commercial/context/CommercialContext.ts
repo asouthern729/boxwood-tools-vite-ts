@@ -3,8 +3,10 @@ import { createContext } from "react"
 export type CommercialCtxValue = {
   showPastRenewals: boolean
   setShowPastRenewals: (value: boolean) => void
-  currentMonthOnly: boolean
-  setCurrentMonthOnly: (value: boolean) => void
+  renewalMonth: string
+  setRenewalMonth: (value: string) => void
+  csrFilter: string
+  setCsrFilter: (value: string) => void
   createdTodayOnly: boolean
   setCreatedTodayOnly: (value: boolean) => void
   updatedTodayOnly: boolean

@@ -28,10 +28,45 @@ export const isPastRenewal = (renewalDate: string) => renewalDate < todayISODate
 export const filterPastRenewals = <T extends { renewal_date: string }>(summaries: T[], showPastRenewals: boolean): T[] =>
   showPastRenewals ? summaries : summaries.filter((summary) => !isPastRenewal(summary.renewal_date))
 
-const currentISOMonth = () => todayISODate().slice(0, 7)
+const UPCOMING_MONTH_COUNT = 3
 
-export const filterCurrentMonth = <T extends { renewal_date: string }>(summaries: T[], currentMonthOnly: boolean): T[] =>
-  currentMonthOnly ? summaries.filter((summary) => summary.renewal_date.startsWith(currentISOMonth())) : summaries
+// "YYYY-MM" -> "November 2026"
+export const formatRenewalMonth = (isoMonth: string) => {
+  const [year, month] = isoMonth.split("-").map(Number)
+  return new Date(year, month - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+}
+
+// The current month plus the following two, as "YYYY-MM" values
+export const upcomingRenewalMonths = (): OrderingOption[] => {
+  const now = new Date()
+  return Array.from({ length: UPCOMING_MONTH_COUNT }, (_, offset) => {
+    const date = new Date(now.getFullYear(), now.getMonth() + offset, 1)
+    const value = `${ date.getFullYear() }-${ String(date.getMonth() + 1).padStart(2, "0") }`
+    return { value, label: formatRenewalMonth(value) }
+  })
+}
+
+export const isUpcomingRenewalMonth = (isoMonth: string) =>
+  upcomingRenewalMonths().some((month) => month.value === isoMonth)
+
+// An empty month means every month
+export const filterRenewalMonth = <T extends { renewal_date: string }>(summaries: T[], renewalMonth: string): T[] =>
+  renewalMonth ? summaries.filter((summary) => summary.renewal_date.startsWith(renewalMonth)) : summaries
+
+const UNASSIGNED_CSR = "__unassigned__"
+export const UNASSIGNED_CSR_LABEL = "Unassigned"
+
+type CsrGroupLike = { csr_code: string | null, csr_name: string | null }
+
+const csrKey = (group: CsrGroupLike) => group.csr_code ?? UNASSIGNED_CSR
+
+// One option per CSR group, in the order the server sent them
+export const csrOptions = (groups: CsrGroupLike[]): OrderingOption[] =>
+  groups.map((group) => ({ value: csrKey(group), label: group.csr_name ?? group.csr_code ?? UNASSIGNED_CSR_LABEL }))
+
+// An empty CSR means every CSR
+export const filterCsr = <T extends CsrGroupLike>(groups: T[], csr: string): T[] =>
+  csr ? groups.filter((group) => csrKey(group) === csr) : groups
 
 export const isToday = (dateStr: string) =>
   new Date(dateStr).toDateString() === new Date().toDateString()
