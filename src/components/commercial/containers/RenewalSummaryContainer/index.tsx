@@ -29,6 +29,7 @@ function RenewalSummaryContainer() {
             groups={manifest?.groups ?? []}
             scrollSignal={scrollSignal} />
         )}
+        {isReady && <Components.DocumentPreview groups={manifest?.groups ?? []} />}
       </div>
     </FadeIn>
   )

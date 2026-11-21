@@ -40,7 +40,16 @@ export type DownloadReportManifest = {
 // policies when the spreadsheet combines them on one row.
 export type LineStatus = { title: string, polno: string, renewed: boolean }
 
+// Another tool's document for the same policy terms (backend documentLinks.ts) — the preview modal
+// shows a button to it. id is that document's id, the ?doc= key on its tool page.
+export type DocumentTool = "cl-renewal-summary" | "renewal-premium-summary"
+export type DocumentLink = { tool: DocumentTool, id: string, label: string }
+
 export type RenewalPremiumSummaryManifestEntry = {
+  // Opaque, stable document id — the ?doc= key in the page URL. Absent from older backends;
+  // use documentId() rather than reading it directly.
+  id?: string
+  links?: DocumentLink[]
   filename: string
   generated_at: string
   last_refreshed_at?: string
@@ -120,6 +129,10 @@ export type PreRenewalRiskProfileChatTurn = {
 }
 
 export type RenewalSummaryManifestEntry = {
+  // Opaque, stable document id — the ?doc= key in the page URL. Absent from older backends;
+  // use documentId() rather than reading it directly.
+  id?: string
+  links?: DocumentLink[]
   filename: string
   generated_at: string
   last_refreshed_at?: string

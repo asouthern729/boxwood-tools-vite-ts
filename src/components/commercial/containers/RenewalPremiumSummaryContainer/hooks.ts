@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { useCountedDownload } from "@components/team/utils/DownloadOdometer/hooks"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { usePreviewModal } from "@components/team/utils/PreviewModal/hooks"
-import { useChatSession } from "@utils/hooks"
+import { useChatSession, documentId } from "@utils/hooks"
 import * as AppActions from '@context/App/AppActions'
 import { sortSummaries } from '@components/commercial/context/utils'
 import { PAGE_SIZE } from "@components/team/utils/Pagination/utils"
@@ -29,8 +28,13 @@ export const useDeleteRenewalPremiumSummaryFile = () => {
   })
 }
 
-export const usePreviewRenewalPremiumSummaryFile = (filename: string) =>
-  usePreviewModal(useCallback(() => AppActions.getRenewalPremiumSummaryFileBlob(filename, true), [filename]))
+// The page's one preview modal follows ?doc= (useDocumentParam); this is its document's fetch.
+export const useRenewalPremiumSummaryPreviewBlob = (filename: string) =>
+  useCallback(() => AppActions.getRenewalPremiumSummaryFileBlob(filename, true), [filename])
+
+// The manifest entry the URL's ?doc= names, wherever it sits — filters and pages don't hide it.
+export const useDocumentEntry = (groups: AppTypes.RenewalPremiumSummaryCsrGroup[], docId: string | null) =>
+  docId ? groups.flatMap((group) => group.summaries).find((summary) => documentId(summary) === docId) : undefined
 
 const CONFIRM_TIMEOUT_MS = 3000
 

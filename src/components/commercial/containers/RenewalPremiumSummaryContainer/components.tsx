@@ -1,6 +1,6 @@
 import trashIcon from "@assets/icons/trash/trash.svg"
-import { useHandleChatScrolling } from "@utils/hooks"
-import { useDownloadRenewalPremiumSummaryFile, useDeleteRenewalPremiumSummaryFile, usePreviewRenewalPremiumSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
+import { useHandleChatScrolling, useDocumentParam, useMissingDocumentNotice, documentId } from "@utils/hooks"
+import { useDownloadRenewalPremiumSummaryFile, useDeleteRenewalPremiumSummaryFile, useRenewalPremiumSummaryPreviewBlob, useDocumentEntry, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton } from "./hooks"
 import { AVAILABLE_MCP_TOOLS, formatTimestamp, extractKeyPremiumRows, formatCurrency, formatPercentChange, type PremiumSummaryRow } from "./utils"
 
 // Types
@@ -24,6 +24,7 @@ import FooterMessage from "@components/team/utils/FooterMessage"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
 import LineItemStatus from "@components/team/utils/LineItemStatus"
+import DocumentLinkButtons from "@components/team/utils/DocumentLinkButtons"
 import SendButton from "@components/team/utils/SendButton"
 import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
@@ -352,7 +353,7 @@ type SummaryRowProps = {
 const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProps) => {
   const { mutate: downloadFile, isPending: isDownloading } = useDownloadRenewalPremiumSummaryFile()
   const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeleteRenewalPremiumSummaryFile()
-  const preview = usePreviewRenewalPremiumSummaryFile(summary.filename)
+  const { openDocument } = useDocumentParam()
 
   return (
     <li
@@ -369,7 +370,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
           <DeleteButton
             isPending={isDeleting}
             onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onDeleted(summary.client_name) })} />
-          <PreviewButton onClick={preview.show} />
+          <PreviewButton onClick={() => openDocument(documentId(summary))} />
           <DownloadButton
             isPending={isDownloading}
             onClick={() => downloadFile(summary.filename)} />
@@ -378,15 +379,29 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onDeleted }: SummaryRowProp
           <CreatedAt summary={summary} />
         </div>
       </div>
-      <XlsxPreviewModal
-        title={summary.client_name}
-        open={preview.open}
-        onClose={preview.hide}
-        fetchBlob={preview.fetchBlob}
-        reloadKey={preview.reloadKey}>
-        {(workbook) => <PremiumSummaryTable workbook={workbook} />}
-      </XlsxPreviewModal>
     </li>
+  )
+}
+
+// The page's preview modal: whichever document ?doc= names, with buttons to its linked documents on
+// other tools (the CL Renewal Summaries for the same policy terms).
+export const DocumentPreview = ({ groups }: { groups: AppTypes.RenewalPremiumSummaryCsrGroup[] }) => {
+  const { docId, closeDocument } = useDocumentParam()
+  const entry = useDocumentEntry(groups, docId)
+  const fetchBlob = useRenewalPremiumSummaryPreviewBlob(entry?.filename ?? "")
+  const missingMessage = useMissingDocumentNotice(docId, !!entry, closeDocument)
+
+  if(!entry) return <FooterMessage message={missingMessage} error />
+
+  return (
+    <XlsxPreviewModal
+      title={entry.client_name}
+      open
+      onClose={closeDocument}
+      fetchBlob={fetchBlob}
+      footerActions={<DocumentLinkButtons links={entry.links} />}>
+      {(workbook) => <PremiumSummaryTable workbook={workbook} />}
+    </XlsxPreviewModal>
   )
 }
 

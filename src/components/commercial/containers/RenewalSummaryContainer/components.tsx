@@ -1,7 +1,7 @@
 import trashIcon from "@assets/icons/trash/trash.svg"
 import pdfIcon from "@assets/icons/pdf/pdf.svg"
-import { useHandleChatScrolling } from "@utils/hooks"
-import { useDownloadRenewalSummaryFile, useDownloadRenewalSummaryPdf, useDeleteRenewalSummaryFile, usePreviewRenewalSummaryFile, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton, useRenewalSummaryQuotes, useUploadRenewalSummaryQuotes, useHandleQuoteRemoval } from "./hooks"
+import { useHandleChatScrolling, useDocumentParam, useMissingDocumentNotice, documentId } from "@utils/hooks"
+import { useDownloadRenewalSummaryFile, useDownloadRenewalSummaryPdf, useDeleteRenewalSummaryFile, useRenewalSummaryPreviewBlob, useDocumentEntry, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton, useRenewalSummaryQuotes, useUploadRenewalSummaryQuotes, useHandleQuoteRemoval } from "./hooks"
 import { AVAILABLE_MCP_TOOLS, QUOTE_HELP_TEXT, formatTimestamp, formatQuoteLine } from "./utils"
 
 // Types
@@ -25,6 +25,7 @@ import FooterMessage from "@components/team/utils/FooterMessage"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import PdfDropZone from "@components/team/utils/PdfDropZone"
 import LineItemStatus from "@components/team/utils/LineItemStatus"
+import DocumentLinkButtons from "@components/team/utils/DocumentLinkButtons"
 import SendButton from "@components/team/utils/SendButton"
 import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
@@ -355,7 +356,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
   const { mutate: downloadFile, isPending: isDownloading } = useDownloadRenewalSummaryFile()
   const { mutate: downloadPdf, isPending: isDownloadingPdf, error: pdfError } = useDownloadRenewalSummaryPdf()
   const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeleteRenewalSummaryFile()
-  const preview = usePreviewRenewalSummaryFile(summary.filename)
+  const { openDocument } = useDocumentParam()
   const quotes = useRenewalSummaryQuotes(summary.filename, summary.client_name, onNotify)
   const { upload, uploading, errors: uploadErrors, clearErrors } = useUploadRenewalSummaryQuotes(summary.filename)
 
@@ -377,7 +378,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
                 isPending={isDeleting}
                 onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onNotify(`Deleted ${ summary.client_name }...`) })} />
               <UploadQuoteButton onFiles={upload} />
-              <PreviewButton onClick={preview.show} />
+              <PreviewButton onClick={() => openDocument(documentId(summary))} />
               <DownloadButton
                 isPending={isDownloading}
                 onClick={() => downloadFile(summary.filename)} />
@@ -397,12 +398,27 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
           errors={uploadErrors}
           onDismissErrors={clearErrors} />
       </PdfDropZone>
-      <DocxPreviewModal
-        title={summary.client_name}
-        open={preview.open}
-        onClose={preview.hide}
-        fetchBlob={preview.fetchBlob} />
     </li>
+  )
+}
+
+// The page's preview modal: whichever document ?doc= names, with buttons to its linked documents on
+// other tools (the Renewal Premium Spreadsheet for the same policy terms).
+export const DocumentPreview = ({ groups }: { groups: AppTypes.RenewalSummaryCsrGroup[] }) => {
+  const { docId, closeDocument } = useDocumentParam()
+  const entry = useDocumentEntry(groups, docId)
+  const fetchBlob = useRenewalSummaryPreviewBlob(entry?.filename ?? "")
+  const missingMessage = useMissingDocumentNotice(docId, !!entry, closeDocument)
+
+  if(!entry) return <FooterMessage message={missingMessage} error />
+
+  return (
+    <DocxPreviewModal
+      title={entry.client_name}
+      open
+      onClose={closeDocument}
+      fetchBlob={fetchBlob}
+      footerActions={<DocumentLinkButtons links={entry.links} />} />
   )
 }
 
