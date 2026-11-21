@@ -1,6 +1,6 @@
 services:
   boxwood-tools:
-    image: ghcr.io/asouthern729/boxwood-tools-vite-ts:1.0.3
+    image: ghcr.io/asouthern729/boxwood-tools-vite-ts:1.0.4
     restart: unless-stopped
     # Loopback only; the host nginx proxies /tools/ here.
     ports:
