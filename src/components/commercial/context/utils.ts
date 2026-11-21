@@ -28,7 +28,7 @@ export const isPastRenewal = (renewalDate: string) => renewalDate < todayISODate
 export const filterPastRenewals = <T extends { renewal_date: string }>(summaries: T[], showPastRenewals: boolean): T[] =>
   showPastRenewals ? summaries : summaries.filter((summary) => !isPastRenewal(summary.renewal_date))
 
-const UPCOMING_MONTH_COUNT = 3
+const UPCOMING_MONTH_COUNT = 4
 
 // "YYYY-MM" -> "November 2026"
 export const formatRenewalMonth = (isoMonth: string) => {
@@ -36,7 +36,7 @@ export const formatRenewalMonth = (isoMonth: string) => {
   return new Date(year, month - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" })
 }
 
-// The current month plus the following two, as "YYYY-MM" values
+// The current month plus the following three, as "YYYY-MM" values
 export const upcomingRenewalMonths = (): OrderingOption[] => {
   const now = new Date()
   return Array.from({ length: UPCOMING_MONTH_COUNT }, (_, offset) => {
