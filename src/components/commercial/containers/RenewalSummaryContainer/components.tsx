@@ -431,7 +431,7 @@ export const DocumentPreview = ({ groups }: { groups: AppTypes.RenewalSummaryCsr
       fetchBlob={fetchBlob}
       footerActions={
         <>
-          <ShareDocumentButtons clientName={entry.client_name} documentType="CL Renewal Summary" />
+          <ShareDocumentButtons documentName={`${ entry.client_name } CL Renewal Summary`} />
           <DocumentLinkButtons links={entry.links} createLinked={createLinked} />
         </>
       } />
