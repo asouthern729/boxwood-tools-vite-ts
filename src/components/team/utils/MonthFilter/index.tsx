@@ -17,8 +17,8 @@ function MonthFilter({ value, onChange, disabled }: MonthFilterProps) {
       aria-label="Renewal month"
       className="select select-bordered select-sm w-fit">
       <option value="">All Renewal Months</option>
-      {months.map((month, index) => (
-        <option key={month.value} value={month.value}>{index === 0 ? `Renewing ${ month.label }` : month.label}</option>
+      {months.map((month) => (
+        <option key={month.value} value={month.value}>{month.label}</option>
       ))}
     </select>
   )
