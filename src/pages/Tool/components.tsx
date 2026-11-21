@@ -31,7 +31,7 @@ const ToolHeaderBox = () => (
     layout
     initial={{ opacity: 0, y: -12 }}
     animate={{ opacity: 1, y: 0 }}
-    className="mx-auto my-8 flex w-3/4 min-w-fit max-w-3xl flex-col items-center gap-3 rounded-box border-t border-l border-r-2 border-b-2 border-t-neutral-content/50 border-l-neutral-content/50 border-r-primary border-b-primary bg-base-100/60 px-10 py-6 backdrop-blur-md">
+    className="mx-auto my-10 flex w-3/4 min-w-fit max-w-3xl flex-col items-center gap-3 rounded-box border-t border-l border-r-2 border-b-2 border-t-neutral-content/50 border-l-neutral-content/50 border-r-primary border-b-primary bg-base-100/60 shadow-lg px-10 py-8 backdrop-blur-md">
     <ToolName />
     <ToolSchedule />
   </motion.header>
