@@ -262,7 +262,7 @@ const ProposalSection = ({ group, scope, order, viewerSub, rowRefs, highlightedF
   return (
     <div ref={sectionRef} className="card border border-base-300 bg-base-100 shadow-sm">
       <div className="card-body gap-1 p-0 py-2">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-1">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 pt-1">
           <h3 className="text-sm font-semibold text-primary">{title}</h3>
           <Pagination
             page={currentPage}
