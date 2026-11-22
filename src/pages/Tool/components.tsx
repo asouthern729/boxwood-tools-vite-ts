@@ -3,6 +3,9 @@ import { NavLink, useLocation } from "react-router"
 import { AnimatePresence, MotionConfig, motion } from "framer-motion"
 import { teamNavDescriptions } from "@components/team/containers/TeamContainer/utils"
 import { useHandleToolName, useToolJobStatuses } from "./hooks"
+import { useIsSignedIn } from "@components/layout/LogoutButton/hooks"
+import { useAssistant } from "@components/assistant/AssistantContext"
+import { LogoDisc } from "@components/assistant/AssistantDrawer/messages"
 import { handleToolContent, toolSchedules, getScheduleRuns, formatScheduleRun, getJobLastRun, splitJobSummary } from "./utils"
 
 // Types
@@ -32,10 +35,34 @@ const ToolHeaderBox = () => (
     initial={{ opacity: 0, y: -12 }}
     animate={{ opacity: 1, y: 0 }}
     className="mx-auto my-10 flex w-3/4 min-w-fit max-w-3xl flex-col items-center gap-3 rounded-box border-t border-l border-r-2 border-b-2 border-t-neutral-content/50 border-l-neutral-content/50 border-r-primary border-b-primary bg-base-100/60 shadow-lg px-10 py-8 backdrop-blur-md">
-    <ToolName />
+    <div className="mb-3 flex flex-col items-center gap-1">
+      <ToolName />
+      <LearnAboutToolButton />
+    </div>
     <ToolSchedule />
   </motion.header>
 )
+
+// Opens the Boxwood Assistant and asks it about this tool; the chat already sends the page as
+// context, so the answer covers this page specifically
+const LearnAboutToolButton = () => {
+  const toolName = useHandleToolName()
+  const isSignedIn = useIsSignedIn()
+  const { ask, chat } = useAssistant()
+
+  if(!toolName || !isSignedIn) return null
+
+  return (
+    <button
+      type="button"
+      disabled={chat.isPending}
+      onClick={() => ask(`Tell me about the ${ toolName } tool: what it's for, when to use it, and how to use this page.`)}
+      className="flex cursor-pointer items-center gap-1 rounded-md border border-primary/30 bg-base-100/70 py-0.5 pr-2 pl-0.5 text-xs font-medium text-primary transition hover:border-primary disabled:cursor-default disabled:opacity-60">
+        <LogoDisc size="size-4" />
+        Learn about this tool
+    </button>
+  )
+}
 
 const ToolName = () => {
   const toolName = useHandleToolName()

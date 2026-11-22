@@ -20,6 +20,13 @@ const components: Components = {
 
     return <a href={href} target="_blank" rel="noopener noreferrer" className="link text-secondary break-all">{children}</a>
   },
+  // Headings sized for a chat bubble; the site's global h1–h3 styles are page-title sized
+  h1: ({ children }) => <h3 className="m-0 mt-1 text-base font-bold">{children}</h3>,
+  h2: ({ children }) => <h4 className="m-0 mt-1 text-sm font-bold">{children}</h4>,
+  h3: ({ children }) => <h5 className="m-0 mt-1 text-sm font-semibold">{children}</h5>,
+  h4: ({ children }) => <h6 className="m-0 mt-1 text-sm font-semibold">{children}</h6>,
+  h5: ({ children }) => <h6 className="m-0 mt-1 text-sm font-semibold">{children}</h6>,
+  h6: ({ children }) => <h6 className="m-0 mt-1 text-sm font-semibold">{children}</h6>,
   table: ({ children }) => (
     <div className="overflow-x-auto rounded-box border border-base-content/10">
       <table className="table table-xs">{children}</table>

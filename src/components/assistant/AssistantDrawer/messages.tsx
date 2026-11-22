@@ -31,7 +31,7 @@ export const AssistantMessage = ({ children }: { children: React.ReactNode }) =>
 export const ToolLinkButton = ({ path, children }: { path: string, children: React.ReactNode }) => (
   <Link
     to={`/${ path }`}
-    className="btn btn-sm btn-primary btn-outline h-auto w-full justify-start bg-base-100 py-1.5 text-left normal-case no-underline">
+    className="btn btn-sm btn-primary btn-outline h-auto w-full justify-center bg-base-100 py-1.5 text-center normal-case no-underline hover:bg-primary hover:text-primary-content">
       {children}
   </Link>
 )

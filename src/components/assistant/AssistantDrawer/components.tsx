@@ -92,7 +92,6 @@ type PanelHeaderProps = {
 
 const PanelHeader = ({ onClose, onNewChat }: PanelHeaderProps) => (
   <header className="flex items-center gap-3 border-b-2 border-primary px-4 py-3">
-    <LogoDisc size="size-12" />
     <div className="flex flex-1 flex-col items-end text-end">
       <h2 className="text-2xl leading-tight font-bold text-shadow-md">{ASSISTANT_NAME}</h2>
       <span className="text-sm leading-tight font-semibold text-secondary">
@@ -130,7 +129,7 @@ const WelcomeMessage = ({ onAsk, disabled }: { onAsk: (question: string) => void
           type="button"
           disabled={disabled}
           onClick={() => onAsk(question)}
-          className="btn btn-sm h-auto justify-start border-primary/40 bg-base-100 py-2 text-left font-normal normal-case">
+          className="btn btn-sm h-auto justify-center border-primary/40 bg-base-100 py-2 text-center font-normal normal-case hover:border-primary hover:bg-primary/10">
             {question}
         </button>
       ))}

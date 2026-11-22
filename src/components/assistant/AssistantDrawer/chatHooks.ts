@@ -35,8 +35,8 @@ const useAssistantContext = (): AssistantContext => {
   return { path: pathname, tool: tool ?? null }
 }
 
-// The conversation, kept per tab in sessionStorage. Lives in AssistantDrawer (mounted on every page
-// while signed in), so closing the drawer doesn't cut off a reply or lose the draft. Each turn sends the conversation so far
+// The conversation, kept per tab in sessionStorage. Lives in AssistantProvider (above the whole
+// layout), so closing the drawer doesn't cut off a reply or lose the draft. Each turn sends the conversation so far
 // (stateless server) and streams the reply into `streaming` until it's done.
 export const useAssistantChat = () => {
   const context = useAssistantContext()

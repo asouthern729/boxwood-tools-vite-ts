@@ -1,8 +1,7 @@
 import { createPortal } from "react-dom"
 import { AnimatePresence } from "framer-motion"
 import { useIsSignedIn } from "@components/layout/LogoutButton/hooks"
-import { useAssistantDrawer } from "./hooks"
-import { useAssistantChat } from "./chatHooks"
+import { useAssistant } from "@components/assistant/AssistantContext"
 
 // Components
 import * as Components from "./components"
@@ -11,8 +10,7 @@ import * as Components from "./components"
 // side drawer. The drawer is portalled to <body> so it isn't trapped in that row's stacking context.
 function AssistantDrawer() {
   const isSignedIn = useIsSignedIn()
-  const { open, show, hide } = useAssistantDrawer()
-  const chat = useAssistantChat()
+  const { open, show, hide, chat } = useAssistant()
 
   if(!isSignedIn) return null
 
