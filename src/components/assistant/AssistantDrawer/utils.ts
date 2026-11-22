@@ -24,6 +24,7 @@ export const TOOL_PATHS = new Set([
   "commercial/pre-renewal-risk-profile",
   "commercial/proposal-builder",
   "commercial/policy-check",
+  "commercial/coverage-comparison",
   "personal",
   "personal/download-change-report",
   "personal/premium-change-tool",

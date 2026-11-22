@@ -40,6 +40,11 @@ export const teamNavDescriptions: [Map<AppTypes.CommercialTools, TeamNavDescript
       to: "/commercial/policy-check",
       outputs: ["docx", "pdf"],
     }],
+    ["CL Coverage Comparison", {
+      description: "Compares two sets of commercial quotes or policies side by side in a branded Word comparison to review with the client.",
+      to: "/commercial/coverage-comparison",
+      outputs: ["docx", "pdf"],
+    }],
   ]),
   new Map([
     ["Download Change Report", {

@@ -758,6 +758,156 @@ export const postPolicyCheckChat = async (message: string, attachmentIds: string
 }
 
 /**
+ * List CL Coverage Comparison runs grouped by creator, newest first; "mine" returns only the signed-in user's
+ *
+ * GET /coverage-comparison/manifest?scope=mine
+ */
+export const getCoverageComparisonManifest = async (scope: AppTypes.CoverageComparisonScope): Promise<AppTypes.CoverageComparisonManifest> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-comparison/manifest?scope=${ scope }`)
+
+  if(!res.ok) throw new Error(`Failed to load coverage comparisons: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * Upload a PDF (raw bytes, not multipart) into Set A or Set B; the server reads it in the background
+ *
+ * POST /coverage-comparison/attachments?name=bop.pdf&role=set_a
+ */
+export const uploadCoverageComparisonAttachment = async (file: File, role: AppTypes.CoverageComparisonRole): Promise<AppTypes.CoverageComparisonAttachment> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-comparison/attachments?name=${ encodeURIComponent(file.name) }&role=${ role }`, {
+    method: "POST",
+    headers: { "Content-Type": file.type || "application/pdf" },
+    body: file,
+  })
+
+  if(res.status === 413) throw new Error("File is too large (24 MB max).")
+  if(!res.ok) throw await errorFrom(res, "Failed to upload file")
+
+  return await res.json()
+}
+
+/**
+ * GET /coverage-comparison/attachments/:id
+ */
+export const getCoverageComparisonAttachment = async (id: string): Promise<AppTypes.CoverageComparisonAttachment> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-comparison/attachments/${ encodeURIComponent(id) }`)
+
+  if(!res.ok) throw new Error(`Failed to load attachment: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * Move an attachment to the other set; 409 once it's part of a comparison
+ *
+ * PATCH /coverage-comparison/attachments/:id
+ */
+export const setCoverageComparisonAttachmentRole = async (id: string, role: AppTypes.CoverageComparisonRole): Promise<AppTypes.CoverageComparisonAttachment> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-comparison/attachments/${ encodeURIComponent(id) }`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role }),
+  })
+
+  if(!res.ok) throw await errorFrom(res, "Failed to move file")
+
+  return await res.json()
+}
+
+/**
+ * DELETE /coverage-comparison/attachments/:id (409 once it's part of a comparison; the comparison owns it then)
+ */
+export const deleteCoverageComparisonAttachment = async (id: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-comparison/attachments/${ encodeURIComponent(id) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404 && res.status !== 409) throw new Error(`Failed to remove attachment: HTTP ${ res.status }`)
+}
+
+/**
+ * Start a comparison in the background (a few minutes); needs a read file in each set. The set labels
+ * are optional column headers, read from the documents when left out.
+ *
+ * POST /coverage-comparison/comparisons
+ */
+export const createCoverageComparison = async (attachmentIds: string[], options: { notes?: string, setALabel?: string, setBLabel?: string }): Promise<AppTypes.CoverageComparisonEntry> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-comparison/comparisons`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      attachment_ids: attachmentIds,
+      notes: options.notes || undefined,
+      set_a_label: options.setALabel || undefined,
+      set_b_label: options.setBLabel || undefined,
+    }),
+  })
+
+  if(!res.ok) throw await errorFrom(res, "Failed to start the comparison")
+
+  return await res.json()
+}
+
+/**
+ * Delete a comparison and its attachments; only its creator may. A running comparison's result is discarded.
+ *
+ * DELETE /coverage-comparison/comparisons/:id
+ */
+export const deleteCoverageComparison = async (id: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-comparison/comparisons/${ encodeURIComponent(id) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404) throw await errorFrom(res, "Failed to delete comparison")
+}
+
+/**
+ * GET /coverage-comparison/files/Acme_Corp_....docx
+ */
+export const getCoverageComparisonFileBlob = async (filename: string, preview = false): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-comparison/files/${ encodeURIComponent(filename) }${ preview ? "?preview=1" : "" }`)
+
+  if(!res.ok) throw new Error(`Failed to load coverage comparison file: HTTP ${ res.status }`)
+
+  return await res.blob()
+}
+
+export const downloadCoverageComparisonFile = async (filename: string): Promise<void> => {
+  triggerBlobDownload(await getCoverageComparisonFileBlob(filename), filename)
+}
+
+/**
+ * GET /coverage-comparison/files/Acme_Corp_....docx/pdf
+ */
+export const downloadCoverageComparisonPdf = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-comparison/files/${ encodeURIComponent(filename) }/pdf`)
+
+  if(!res.ok) throw await errorFrom(res, "Failed to download coverage comparison PDF")
+
+  triggerBlobDownload(await res.blob(), filename.replace(/\.docx$/i, ".pdf"))
+}
+
+/**
+ * Send one turn of the CL Coverage Comparison chat with the ids of every file in the two sets; it may
+ * start a comparison itself (coverage_comparison tool)
+ *
+ * POST /coverage-comparison/chat
+ */
+export const postCoverageComparisonChat = async (message: string, attachmentIds: string[], sessionId: string | undefined): Promise<AppTypes.CoverageComparisonChatTurn> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-comparison/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, attachment_ids: attachmentIds, session_id: sessionId })
+  })
+
+  if(!res.ok) throw new Error(`Failed to send chat message: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
  * Status of scheduled cron jobs, in the order requested
  *
  * GET /jobs?names=cl-renewal-summaries,morning-download

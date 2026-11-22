@@ -4,6 +4,7 @@ export type CommercialTools =
   | "CL Renewal Summary"
   | "Proposal Builder"
   | "Policy Check"
+  | "CL Coverage Comparison"
 
 export type PersonalTools =
   | "Download Change Report"
@@ -333,6 +334,51 @@ export type PolicyCheckScope = ProposalScope
 export type PolicyCheckChatMessage = RenewalSummaryChatMessage
 export type PolicyCheckChatTurn = RenewalSummaryChatTurn
 
+// CL Coverage Comparison (/coverage-comparison/*): staff drop two sets of quote/policy PDFs (each may
+// hold several lines) and a background job builds a client-facing Word comparison
+export type CoverageComparisonRole = "set_a" | "set_b"
+
+export type CoverageComparisonAttachment = {
+  id: string
+  filename: string
+  role: CoverageComparisonRole
+  status: "processing" | "done" | "error"
+  error?: string
+  profile?: Omit<PolicyCheckProfile, "suggested_role">
+}
+
+export type CoverageComparisonEntry = {
+  id: string
+  client_name: string | null
+  status: "running" | "failed" | "done"
+  error?: string
+  created_by: ProposalCreator
+  prepared_by?: string | null
+  generated_at: string
+  finished_at?: string
+  filename?: string
+  sizeBytes?: number
+  sets?: { a: string, b: string }
+  premium?: { a: number | null, b: number | null, difference: number | null }
+  key_points?: number
+  sources: { id: string, filename: string, role: CoverageComparisonRole }[]
+}
+
+export type CoverageComparisonGroup = {
+  prepared_by: string | null
+  comparisons: CoverageComparisonEntry[]
+}
+
+export type CoverageComparisonManifest = {
+  viewer_sub: string
+  groups: CoverageComparisonGroup[]
+}
+
+export type CoverageComparisonScope = ProposalScope
+
+export type CoverageComparisonChatMessage = RenewalSummaryChatMessage
+export type CoverageComparisonChatTurn = RenewalSummaryChatTurn
+
 export type JobRun = {
   started_at: string
   finished_at: string
@@ -358,6 +404,7 @@ export type DownloadTool =
   | "pl-renewal-premium-change"
   | "proposal-builder"
   | "policy-check"
+  | "coverage-comparison"
   | "pl-renewal-summary"
   | "download-report"
 
