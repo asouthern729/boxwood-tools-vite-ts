@@ -12,7 +12,7 @@ export const LogoDisc = ({ size }: { size: string }) => (
 
 export const UserMessage = ({ children }: { children: React.ReactNode }) => (
   <div className="flex justify-end">
-    <div className="max-w-[85%] rounded-box rounded-tr-none bg-primary px-3 py-2 text-sm text-primary-content">
+    <div className="max-w-[85%] rounded-box rounded-tr-none bg-primary px-3 py-2 text-sm whitespace-pre-wrap break-words text-primary-content">
       {children}
     </div>
   </div>
@@ -21,7 +21,7 @@ export const UserMessage = ({ children }: { children: React.ReactNode }) => (
 export const AssistantMessage = ({ children }: { children: React.ReactNode }) => (
   <div className="flex items-start gap-2">
     <LogoDisc size="size-8" />
-    <div className="flex min-w-0 flex-col gap-2 rounded-box rounded-tl-none bg-base-200 p-3 text-sm [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1">
+    <div className="flex min-w-0 flex-col gap-2 rounded-box rounded-tl-none bg-base-200 p-3 text-sm [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1 [&_p:has(>a.btn)]:flex [&_p:has(>a.btn)]:flex-col">
       {children}
     </div>
   </div>
@@ -31,13 +31,9 @@ export const AssistantMessage = ({ children }: { children: React.ReactNode }) =>
 export const ToolLinkButton = ({ path, children }: { path: string, children: React.ReactNode }) => (
   <Link
     to={`/${ path }`}
-    className="btn btn-sm btn-primary btn-outline h-auto justify-start bg-base-100 py-1.5 text-left normal-case no-underline">
+    className="btn btn-sm btn-primary btn-outline h-auto w-full justify-start bg-base-100 py-1.5 text-left normal-case no-underline">
       {children}
   </Link>
-)
-
-export const ToolLinks = ({ children }: { children: React.ReactNode }) => (
-  <div className="mt-1 flex flex-col gap-1.5">{children}</div>
 )
 
 // Shown while a reply is streaming in, before its first words arrive

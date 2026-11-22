@@ -632,3 +632,69 @@ export const getDownloadStats = async (): Promise<AppTypes.DownloadCounts> => {
   const body: { counts: AppTypes.DownloadCounts } = await res.json()
   return body.counts
 }
+
+/**
+ * Send the Boxwood Assistant conversation and stream its reply. onDelta gets each chunk of text as it
+ * arrives; resolves when the reply is done. Errors carry a message written for staff: validation,
+ * rate-limit and auth errors come back as JSON before the stream, mid-stream ones as an error event.
+ *
+ * POST /assistant/chat (text/event-stream: delta {text} … done {} | error {message})
+ */
+export const streamAssistantChat = async (
+  messages: AppTypes.AssistantMessage[],
+  context: AppTypes.AssistantContext,
+  onDelta: (text: string) => void,
+  signal?: AbortSignal,
+): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/assistant/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+    body: JSON.stringify({ messages, context }),
+    signal,
+  })
+
+  if(!res.ok || !res.body) {
+    const err = await res.json().catch(() => null)
+    throw new Error(err?.error ?? (res.status === 429 ?
+      "You've sent a lot of messages in a short time. Please wait a few minutes and try again." :
+      `The assistant isn't available right now (HTTP ${ res.status }).`))
+  }
+
+  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
+  let buffer = ""
+
+  for(;;) {
+    const { value, done } = await reader.read()
+    if(done) break
+    buffer += value
+
+    // SSE events are separated by a blank line; keep any partial event for the next chunk
+    const events = buffer.split(/\r?\n\r?\n/)
+    buffer = events.pop() ?? ""
+
+    for(const raw of events) {
+      const { event, data } = parseSseEvent(raw)
+      if(event === "delta") onDelta(data?.text ?? "")
+      else if(event === "error") throw new Error(data?.message ?? "Something went wrong. Please try again.")
+      else if(event === "done") return
+    }
+  }
+
+  throw new Error("The reply was cut off. Please try again.")
+}
+
+const parseSseEvent = (raw: string) => {
+  let event = "message"
+  const dataLines: string[] = []
+
+  for(const line of raw.split(/\r?\n/)) {
+    if(line.startsWith("event:")) event = line.slice(6).trim()
+    else if(line.startsWith("data:")) dataLines.push(line.slice(5).replace(/^ /, ""))
+  }
+
+  try {
+    return { event, data: dataLines.length ? JSON.parse(dataLines.join("\n")) : null }
+  } catch {
+    return { event, data: null }
+  }
+}

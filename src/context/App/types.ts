@@ -288,3 +288,7 @@ export type DownloadTool =
   | "download-report"
 
 export type DownloadCounts = Partial<Record<DownloadTool | "chat-link", number>>
+
+// Boxwood Assistant (POST /assistant/chat). Stateless: each turn sends the conversation so far.
+export type AssistantMessage = { role: "user" | "assistant", content: string }
+export type AssistantContext = { path: string, tool: string | null }

@@ -2,6 +2,7 @@ import { createPortal } from "react-dom"
 import { AnimatePresence } from "framer-motion"
 import { useIsSignedIn } from "@components/layout/LogoutButton/hooks"
 import { useAssistantDrawer } from "./hooks"
+import { useAssistantChat } from "./chatHooks"
 
 // Components
 import * as Components from "./components"
@@ -11,6 +12,7 @@ import * as Components from "./components"
 function AssistantDrawer() {
   const isSignedIn = useIsSignedIn()
   const { open, show, hide } = useAssistantDrawer()
+  const chat = useAssistantChat()
 
   if(!isSignedIn) return null
 
@@ -21,7 +23,7 @@ function AssistantDrawer() {
       </AnimatePresence>
       {createPortal(
         <AnimatePresence>
-          {open && <Components.Panel key="panel" onClose={hide} />}
+          {open && <Components.Panel key="panel" chat={chat} onClose={hide} />}
         </AnimatePresence>,
         document.body
       )}

@@ -8,3 +8,29 @@ export const SUGGESTED_QUESTIONS = [
   "What's the difference between the Renewal Premium Spreadsheet and the CL Renewal Summary?",
   "What umbrella limit do we recommend for a homeowner?",
 ]
+
+// Server limits (POST /assistant/chat)
+export const MAX_MESSAGE_CHARS = 4000
+export const MAX_SENT_MESSAGES = 20
+
+export const CHAT_STORAGE_KEY = "boxwood_assistant_chat"
+
+// The pages the assistant may link to as boxwood://tool/<path>; anything else renders as plain text
+export const TOOL_LINK_PREFIX = "boxwood://tool/"
+export const TOOL_PATHS = new Set([
+  "commercial",
+  "commercial/renewal-premium-summary",
+  "commercial/renewal-summary",
+  "commercial/pre-renewal-risk-profile",
+  "commercial/proposal-builder",
+  "personal",
+  "personal/download-change-report",
+  "personal/premium-change-tool",
+  "personal/renewal-summary",
+])
+
+export const toolLinkPath = (href?: string) => {
+  if(!href?.startsWith(TOOL_LINK_PREFIX)) return null
+  const path = href.slice(TOOL_LINK_PREFIX.length).replace(/^\/+|\/+$/g, "")
+  return TOOL_PATHS.has(path) ? path : null
+}
