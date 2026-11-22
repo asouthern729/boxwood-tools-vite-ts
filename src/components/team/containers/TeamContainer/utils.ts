@@ -35,6 +35,11 @@ export const teamNavDescriptions: [Map<AppTypes.CommercialTools, TeamNavDescript
       to: "/commercial/proposal-builder",
       outputs: ["docx", "pdf"],
     }],
+    ["Policy Check", {
+      description: "Checks an issued or renewal policy against the quote, binder or expiring policy and flags every discrepancy before it goes to the client.",
+      to: "/commercial/policy-check",
+      outputs: ["docx", "pdf"],
+    }],
   ]),
   new Map([
     ["Download Change Report", {

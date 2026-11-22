@@ -3,6 +3,7 @@ export type CommercialTools =
   | "Renewal Premium Spreadsheet"
   | "CL Renewal Summary"
   | "Proposal Builder"
+  | "Policy Check"
 
 export type PersonalTools =
   | "Download Change Report"
@@ -260,6 +261,78 @@ export type ProposalScope = "mine" | "all"
 export type ProposalChatMessage = RenewalSummaryChatMessage
 export type ProposalChatTurn = RenewalSummaryChatTurn
 
+// Policy Check (/policy-check/*): staff drop the baseline (quote, binder or expiring policy), the
+// compared document (issued or renewal policy) and any references, then a background job checks them
+export type PolicyCheckRole = "baseline" | "compared" | "reference"
+
+export type PolicyCheckDocumentType =
+  | "quote"
+  | "binder"
+  | "issued_policy"
+  | "renewal_policy"
+  | "expiring_policy"
+  | "endorsement"
+  | "application"
+  | "contract"
+  | "other"
+
+// Only present once the attachment is read; any field but suggested_role may be null
+export type PolicyCheckProfile = {
+  document_type: PolicyCheckDocumentType | null
+  named_insured: string | null
+  carrier: string | null
+  policy_number: string | null
+  policy_period: string | null
+  pages: number | null
+  suggested_role: PolicyCheckRole
+}
+
+export type PolicyCheckAttachment = {
+  id: string
+  filename: string
+  role: PolicyCheckRole
+  status: "processing" | "done" | "error"
+  error?: string
+  profile?: PolicyCheckProfile
+}
+
+export type PolicyCheckStatus = "running" | "failed" | "done"
+
+export type PolicyCheckMode = "quote_to_issued" | "expiring_to_renewal" | "both"
+
+export type PolicyCheckEntry = {
+  id: string
+  client_name: string | null
+  status: PolicyCheckStatus
+  error?: string
+  mode: PolicyCheckMode | null
+  created_by: ProposalCreator
+  prepared_by?: string | null
+  generated_at: string
+  finished_at?: string
+  filename?: string
+  sizeBytes?: number
+  banner?: { level: "red" | "amber" | "green", text: string }
+  counts?: { correction: number, confirm: number, housekeeping: number, match: number }
+  premium_change?: { baseline: number | null, compared: number | null, change: number | null, percent: number | null }
+  sources: { id: string, filename: string, role: PolicyCheckRole }[]
+}
+
+export type PolicyCheckGroup = {
+  prepared_by: string | null
+  checks: PolicyCheckEntry[]
+}
+
+export type PolicyCheckManifest = {
+  viewer_sub: string
+  groups: PolicyCheckGroup[]
+}
+
+export type PolicyCheckScope = ProposalScope
+
+export type PolicyCheckChatMessage = RenewalSummaryChatMessage
+export type PolicyCheckChatTurn = RenewalSummaryChatTurn
+
 export type JobRun = {
   started_at: string
   finished_at: string
@@ -284,6 +357,7 @@ export type DownloadTool =
   | "risk-profile"
   | "pl-renewal-premium-change"
   | "proposal-builder"
+  | "policy-check"
   | "pl-renewal-summary"
   | "download-report"
 

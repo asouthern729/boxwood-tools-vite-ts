@@ -605,6 +605,158 @@ export const postProposalChat = async (message: string, attachmentIds: string[],
   return await res.json()
 }
 
+const errorFrom = async (res: Response, fallback: string) => {
+  const body = await res.json().catch(() => null)
+  return new Error(body?.error_description ?? `${ fallback }: HTTP ${ res.status }`)
+}
+
+/**
+ * List Policy Check runs grouped by creator, newest first; "mine" returns only the signed-in user's
+ *
+ * GET /policy-check/manifest?scope=mine
+ */
+export const getPolicyCheckManifest = async (scope: AppTypes.PolicyCheckScope): Promise<AppTypes.PolicyCheckManifest> => {
+  const res = await authorizedFetch(`${ API_BASE }/policy-check/manifest?scope=${ scope }`)
+
+  if(!res.ok) throw new Error(`Failed to load policy checks: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * Upload a PDF (raw bytes, not multipart) into one of the three role zones; the server reads it in
+ * the background
+ *
+ * POST /policy-check/attachments?name=policy.pdf&role=compared
+ */
+export const uploadPolicyCheckAttachment = async (file: File, role: AppTypes.PolicyCheckRole): Promise<AppTypes.PolicyCheckAttachment> => {
+  const res = await authorizedFetch(`${ API_BASE }/policy-check/attachments?name=${ encodeURIComponent(file.name) }&role=${ role }`, {
+    method: "POST",
+    headers: { "Content-Type": file.type || "application/pdf" },
+    body: file,
+  })
+
+  if(res.status === 413) throw new Error("File is too large (24 MB max).")
+  if(!res.ok) throw await errorFrom(res, "Failed to upload file")
+
+  return await res.json()
+}
+
+/**
+ * GET /policy-check/attachments/:id
+ */
+export const getPolicyCheckAttachment = async (id: string): Promise<AppTypes.PolicyCheckAttachment> => {
+  const res = await authorizedFetch(`${ API_BASE }/policy-check/attachments/${ encodeURIComponent(id) }`)
+
+  if(!res.ok) throw new Error(`Failed to load attachment: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * Move an attachment to another role zone; 409 once it's part of a check
+ *
+ * PATCH /policy-check/attachments/:id
+ */
+export const setPolicyCheckAttachmentRole = async (id: string, role: AppTypes.PolicyCheckRole): Promise<AppTypes.PolicyCheckAttachment> => {
+  const res = await authorizedFetch(`${ API_BASE }/policy-check/attachments/${ encodeURIComponent(id) }`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role }),
+  })
+
+  if(!res.ok) throw await errorFrom(res, "Failed to move file")
+
+  return await res.json()
+}
+
+/**
+ * DELETE /policy-check/attachments/:id (409 in_use once it's part of a check; the check owns it then)
+ */
+export const deletePolicyCheckAttachment = async (id: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/policy-check/attachments/${ encodeURIComponent(id) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404 && res.status !== 409) throw new Error(`Failed to remove attachment: HTTP ${ res.status }`)
+}
+
+/**
+ * Start a check in the background (2–6 minutes); needs a read baseline and a read compared document
+ *
+ * POST /policy-check/checks
+ */
+export const createPolicyCheck = async (attachmentIds: string[], notes?: string): Promise<AppTypes.PolicyCheckEntry> => {
+  const res = await authorizedFetch(`${ API_BASE }/policy-check/checks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ attachment_ids: attachmentIds, notes: notes || undefined }),
+  })
+
+  if(!res.ok) throw await errorFrom(res, "Failed to start the check")
+
+  return await res.json()
+}
+
+/**
+ * Delete a check and its attachments; only its creator may. A running check's result is discarded.
+ *
+ * DELETE /policy-check/checks/:id
+ */
+export const deletePolicyCheck = async (id: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/policy-check/checks/${ encodeURIComponent(id) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404) throw await errorFrom(res, "Failed to delete check")
+}
+
+/**
+ * Fetch a finished check's report docx as a blob, for download or preview
+ *
+ * GET /policy-check/files/Acme_Corp_....docx
+ */
+export const getPolicyCheckFileBlob = async (filename: string, preview = false): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/policy-check/files/${ encodeURIComponent(filename) }${ preview ? "?preview=1" : "" }`)
+
+  if(!res.ok) throw new Error(`Failed to load policy check file: HTTP ${ res.status }`)
+
+  return await res.blob()
+}
+
+export const downloadPolicyCheckFile = async (filename: string): Promise<void> => {
+  triggerBlobDownload(await getPolicyCheckFileBlob(filename), filename)
+}
+
+/**
+ * GET /policy-check/files/Acme_Corp_....docx/pdf (503 converter_unavailable possible)
+ */
+export const downloadPolicyCheckPdf = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/policy-check/files/${ encodeURIComponent(filename) }/pdf`)
+
+  if(!res.ok) throw await errorFrom(res, "Failed to download policy check PDF")
+
+  triggerBlobDownload(await res.blob(), filename.replace(/\.docx$/i, ".pdf"))
+}
+
+/**
+ * Send one turn of the Policy Check chat with the ids of every file currently in the zones, so
+ * Claude can see what's loaded; it may start a check itself (policy_check tool)
+ *
+ * POST /policy-check/chat
+ */
+export const postPolicyCheckChat = async (message: string, attachmentIds: string[], sessionId: string | undefined): Promise<AppTypes.PolicyCheckChatTurn> => {
+  const res = await authorizedFetch(`${ API_BASE }/policy-check/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, attachment_ids: attachmentIds, session_id: sessionId })
+  })
+
+  if(!res.ok) throw new Error(`Failed to send chat message: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
 /**
  * Status of scheduled cron jobs, in the order requested
  *

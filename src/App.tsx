@@ -29,6 +29,7 @@ function App() {
               <Route path="pre-renewal-risk-profile" element={<Tool />} />
               <Route path="renewal-summary" element={<Tool />} />
               <Route path="proposal-builder" element={<Tool />} />
+              <Route path="policy-check" element={<Tool />} />
             </Route>
             <Route path="/personal" element={<Personal />}>
               <Route index element={<TeamContainer />} />

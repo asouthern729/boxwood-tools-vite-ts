@@ -23,6 +23,7 @@ export const TOOL_PATHS = new Set([
   "commercial/renewal-summary",
   "commercial/pre-renewal-risk-profile",
   "commercial/proposal-builder",
+  "commercial/policy-check",
   "personal",
   "personal/download-change-report",
   "personal/premium-change-tool",
