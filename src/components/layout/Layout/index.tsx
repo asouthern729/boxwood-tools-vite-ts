@@ -4,12 +4,16 @@ import { Outlet } from "react-router"
 import * as Components from './components'
 import Nav from '../Nav'
 import LogoutButton from '../LogoutButton'
+import AssistantDrawer from '@components/assistant/AssistantDrawer'
 
 function Layout() {
 
   return (
     <div className="relative flex flex-col w-full min-h-screen lg:h-full">
-      <LogoutButton />
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <AssistantDrawer />
+        <LogoutButton />
+      </div>
       <Components.Header />
       <Nav />
       <main className="flex flex-col lg:flex-1">
