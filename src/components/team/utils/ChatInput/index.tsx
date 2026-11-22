@@ -6,6 +6,7 @@ import type { ChatAttachment } from "./types"
 
 // Components
 import PdfDropZone from "@components/team/utils/PdfDropZone"
+import UploadButton from "@components/team/utils/UploadButton"
 import * as Components from "./components"
 
 type ChatInputProps = {
@@ -51,7 +52,16 @@ function ChatInput({ draft, setDraft, isPending, send, placeholder, onFiles, acc
         <Components.AttachmentChips
           attachments={attachments}
           onRemove={onRemoveAttachment} />
-        {textarea}
+        <div className="relative flex flex-1 [&>textarea]:pr-28">
+          {textarea}
+          <UploadButton
+            onFiles={onFiles}
+            accept={accept}
+            disabled={isPending}
+            title="Choose files to attach, or drop them on the message box"
+            className="absolute right-1.5 bottom-1.5"
+            iconClassName="size-5" />
+        </div>
     </PdfDropZone>
   )
 }

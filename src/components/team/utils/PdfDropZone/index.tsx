@@ -13,9 +13,10 @@ type PdfDropZoneProps = {
   className?: string
   title?: string
   accept?: DropFileKind[]
+  disabled?: boolean
 }
 
-function PdfDropZone({ variant, onFiles, children, className = "", title, accept = ["pdf"] }: PdfDropZoneProps) {
+function PdfDropZone({ variant, onFiles, children, className = "", title, accept = ["pdf"], disabled = false }: PdfDropZoneProps) {
   const { isDragging, dropHandlers, inputRef, onInputChange, openPicker } = useHandlePdfDropZone(onFiles, accept)
 
   usePreventWindowFileDrop()
@@ -23,7 +24,7 @@ function PdfDropZone({ variant, onFiles, children, className = "", title, accept
   if(variant === "button") {
     return (
       <>
-        <button type="button" onClick={openPicker} title={title} className={className}>
+        <button type="button" onClick={openPicker} title={title} disabled={disabled} className={className}>
           {children}
         </button>
         <Components.HiddenFileInput
