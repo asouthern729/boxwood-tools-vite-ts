@@ -17,7 +17,7 @@ import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
-import FooterMessage from "@components/team/utils/FooterMessage"
+import { toastDeleted } from "@components/layout/Toast/utils"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import SendButton from "@components/team/utils/SendButton"
 import NewChatButton from "@components/team/utils/NewChatButton"
@@ -275,7 +275,7 @@ type ComparisonListProps = {
 }
 
 export const ComparisonList = ({ manifest, scope, onScopeChange, scrollSignal }: ComparisonListProps) => {
-  const { rowRefs, highlightedId, footerMessage, notify } = useHandleComparisonList(manifest.groups, scrollSignal)
+  const { rowRefs, highlightedId } = useHandleComparisonList(manifest.groups, scrollSignal)
   const [searchQuery, setSearchQuery] = useState("")
   const [order, setOrder] = useState(COMPARISON_ORDER_OPTIONS[0].value)
 
@@ -303,12 +303,10 @@ export const ComparisonList = ({ manifest, scope, onScopeChange, scrollSignal }:
             order={order}
             viewerSub={manifest.viewer_sub}
             rowRefs={rowRefs.current}
-            highlightedId={highlightedId}
-            onNotify={notify} />
+            highlightedId={highlightedId} />
         ))}
       </div>
       <DownloadOdometer tool="coverage-comparison" />
-      <FooterMessage message={footerMessage?.text ?? null} error={footerMessage?.error} />
     </>
   )
 }
@@ -396,10 +394,9 @@ type ComparisonSectionProps = {
   viewerSub: string
   rowRefs: Map<string, HTMLLIElement>
   highlightedId: string | null
-  onNotify: (message: string, error?: boolean) => void
 }
 
-const ComparisonSection = ({ group, scope, order, viewerSub, rowRefs, highlightedId, onNotify }: ComparisonSectionProps) => {
+const ComparisonSection = ({ group, scope, order, viewerSub, rowRefs, highlightedId }: ComparisonSectionProps) => {
   const { pageComparisons, currentPage, totalItems, setPage, sectionRef } = useHandleComparisonSection(group.comparisons, order)
 
   const title = scope === "mine" ?
@@ -424,8 +421,7 @@ const ComparisonSection = ({ group, scope, order, viewerSub, rowRefs, highlighte
               comparison={comparison}
               canDelete={comparison.created_by.sub === viewerSub}
               rowRefs={rowRefs}
-              highlighted={comparison.id === highlightedId}
-              onNotify={onNotify} />
+              highlighted={comparison.id === highlightedId} />
           ))}
         </ul>
         <Pagination
@@ -443,10 +439,9 @@ type ComparisonRowProps = {
   canDelete: boolean
   rowRefs: Map<string, HTMLLIElement>
   highlighted: boolean
-  onNotify: (message: string, error?: boolean) => void
 }
 
-const ComparisonRow = ({ comparison, canDelete, rowRefs, highlighted, onNotify }: ComparisonRowProps) => {
+const ComparisonRow = ({ comparison, canDelete, rowRefs, highlighted }: ComparisonRowProps) => {
   const { mutate: deleteComparison, isPending: isDeleting, error: deleteError } = useDeleteCoverageComparison()
 
   return (
@@ -465,7 +460,7 @@ const ComparisonRow = ({ comparison, canDelete, rowRefs, highlighted, onNotify }
             visible={canDelete}
             running={comparison.status === "running"}
             isPending={isDeleting}
-            onConfirm={() => deleteComparison(comparison.id, { onSuccess: () => onNotify(`Deleted ${ clientName(comparison) }...`) })} />
+            onConfirm={() => deleteComparison(comparison.id, { onSuccess: () => toastDeleted(clientName(comparison)) })} />
           <ComparisonActions comparison={comparison} />
         </div>
         <div className="flex items-center justify-center gap-2 text-xs text-base-content/50 italic sm:justify-end">

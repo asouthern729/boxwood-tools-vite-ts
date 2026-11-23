@@ -112,23 +112,11 @@ export const useHandleChatPanel = (onSend: (message: string) => void) => {
   return { messagesRef, send, draft, setDraft }
 }
 
-const DELETED_MESSAGE_TIMEOUT_MS = 4000
-
 export const useHandleCsrGroupList = (groups: AppTypes.PersonalRenewalSummaryCsrGroup[], scrollSignal: number) => {
   const rowRefs = useRef(new Map<string, HTMLLIElement>())
   const lastHandledSignal = useRef(0)
   const [highlightedFilename, setHighlightedFilename] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const [deletedMessage, setDeletedMessage] = useState<string | null>(null)
-  const deletedMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  const notifyDeleted = (clientName: string) => {
-    clearTimeout(deletedMessageTimeoutRef.current)
-    setDeletedMessage(`Deleted ${ clientName }...`)
-    deletedMessageTimeoutRef.current = setTimeout(() => setDeletedMessage(null), DELETED_MESSAGE_TIMEOUT_MS)
-  }
-
-  useEffect(() => () => clearTimeout(deletedMessageTimeoutRef.current), [])
 
   useEffect(() => {
     if(scrollSignal === 0 || scrollSignal === lastHandledSignal.current) return
@@ -147,7 +135,7 @@ export const useHandleCsrGroupList = (groups: AppTypes.PersonalRenewalSummaryCsr
 
   useEffect(() => () => clearTimeout(highlightTimeoutRef.current), [])
 
-  return { rowRefs, highlightedFilename, deletedMessage, notifyDeleted }
+  return { rowRefs, highlightedFilename }
 }
 
 export const useHandleCsrSection = (summaries: AppTypes.PersonalRenewalSummaryManifestEntry[], order: string) => {

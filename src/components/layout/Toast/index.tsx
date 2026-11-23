@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
-import { Toaster, toast } from "sonner"
+import { Toaster } from "sonner"
+import { toastLabeled } from "./utils"
 import { useHandleToolName } from "@pages/Tool/hooks"
 
 // App-wide toasts (sonner): bottom-left, black with white Teko text, 2s. Call `toast("...")` from
@@ -39,7 +40,7 @@ const ToolChangeToast = () => {
   const previous = useRef(toolName)
 
   useEffect(() => {
-    if(toolName && toolName !== previous.current) toast(<><span className="opacity-70">Showing</span> {toolName}</>, { id: "tool-change" })
+    if(toolName && toolName !== previous.current) toastLabeled("Showing", toolName, "tool-change")
     previous.current = toolName
   }, [toolName])
 

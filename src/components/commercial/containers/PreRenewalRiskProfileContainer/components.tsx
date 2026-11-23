@@ -20,7 +20,7 @@ import CsrFilter from "@components/team/utils/CsrFilter"
 import ActiveFiltersNote from "@components/team/utils/ActiveFiltersNote"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
-import FooterMessage from "@components/team/utils/FooterMessage"
+import { toastDeleted } from "@components/layout/Toast/utils"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import SendButton from "@components/team/utils/SendButton"
 import NewChatButton from "@components/team/utils/NewChatButton"
@@ -83,7 +83,7 @@ export const ChatPanel = ({ messages, onSend, isPending, onNewChat, canStartNewC
 }
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRenewalRiskProfileCsrGroup[], scrollSignal: number }) => {
-  const { rowRefs, highlightedFilename, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
+  const { rowRefs, highlightedFilename } = useHandleCsrGroupList(groups, scrollSignal)
   const { showPastRenewals, setShowPastRenewals, renewalMonth, setRenewalMonth, csrFilter, setCsrFilter, createdTodayOnly, setCreatedTodayOnly, searchQuery, setSearchQuery, order, setOrder } = useCommercialCtx()
 
   if(groups.length === 0) {
@@ -91,7 +91,6 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
       <>
         <p className="py-8 text-center text-base-content/70">No pre-renewal risk profiles generated yet.</p>
         <DownloadOdometer tool="risk-profile" />
-        <FooterMessage message={deletedMessage} />
       </>
     )
   }
@@ -147,11 +146,10 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.PreRen
             order={order}
             rowRefs={rowRefs.current}
             highlightedFilename={highlightedFilename}
-            onDeleted={notifyDeleted} />
+            onDeleted={toastDeleted} />
         ))}
       </div>
       <DownloadOdometer tool="risk-profile" />
-      <FooterMessage message={deletedMessage} />
     </>
   )
 }

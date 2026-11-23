@@ -17,7 +17,7 @@ import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
-import FooterMessage from "@components/team/utils/FooterMessage"
+import { toastDeleted } from "@components/layout/Toast/utils"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import SendButton from "@components/team/utils/SendButton"
 import NewChatButton from "@components/team/utils/NewChatButton"
@@ -271,7 +271,7 @@ type CheckListProps = {
 }
 
 export const CheckList = ({ manifest, scope, onScopeChange, scrollSignal }: CheckListProps) => {
-  const { rowRefs, highlightedId, footerMessage, notify } = useHandleCheckList(manifest.groups, scrollSignal)
+  const { rowRefs, highlightedId } = useHandleCheckList(manifest.groups, scrollSignal)
   const [searchQuery, setSearchQuery] = useState("")
   const [order, setOrder] = useState(CHECK_ORDER_OPTIONS[0].value)
 
@@ -299,12 +299,10 @@ export const CheckList = ({ manifest, scope, onScopeChange, scrollSignal }: Chec
             order={order}
             viewerSub={manifest.viewer_sub}
             rowRefs={rowRefs.current}
-            highlightedId={highlightedId}
-            onNotify={notify} />
+            highlightedId={highlightedId} />
         ))}
       </div>
       <DownloadOdometer tool="policy-check" />
-      <FooterMessage message={footerMessage?.text ?? null} error={footerMessage?.error} />
     </>
   )
 }
@@ -392,10 +390,9 @@ type CheckSectionProps = {
   viewerSub: string
   rowRefs: Map<string, HTMLLIElement>
   highlightedId: string | null
-  onNotify: (message: string, error?: boolean) => void
 }
 
-const CheckSection = ({ group, scope, order, viewerSub, rowRefs, highlightedId, onNotify }: CheckSectionProps) => {
+const CheckSection = ({ group, scope, order, viewerSub, rowRefs, highlightedId }: CheckSectionProps) => {
   const { pageChecks, currentPage, totalItems, setPage, sectionRef } = useHandleCheckSection(group.checks, order)
 
   const title = scope === "mine" ?
@@ -420,8 +417,7 @@ const CheckSection = ({ group, scope, order, viewerSub, rowRefs, highlightedId, 
               check={check}
               canDelete={check.created_by.sub === viewerSub}
               rowRefs={rowRefs}
-              highlighted={check.id === highlightedId}
-              onNotify={onNotify} />
+              highlighted={check.id === highlightedId} />
           ))}
         </ul>
         <Pagination
@@ -439,10 +435,9 @@ type CheckRowProps = {
   canDelete: boolean
   rowRefs: Map<string, HTMLLIElement>
   highlighted: boolean
-  onNotify: (message: string, error?: boolean) => void
 }
 
-const CheckRow = ({ check, canDelete, rowRefs, highlighted, onNotify }: CheckRowProps) => {
+const CheckRow = ({ check, canDelete, rowRefs, highlighted }: CheckRowProps) => {
   const { mutate: deleteCheck, isPending: isDeleting, error: deleteError } = useDeletePolicyCheck()
 
   return (
@@ -461,7 +456,7 @@ const CheckRow = ({ check, canDelete, rowRefs, highlighted, onNotify }: CheckRow
             visible={canDelete}
             running={check.status === "running"}
             isPending={isDeleting}
-            onConfirm={() => deleteCheck(check.id, { onSuccess: () => onNotify(`Deleted ${ clientName(check) }...`) })} />
+            onConfirm={() => deleteCheck(check.id, { onSuccess: () => toastDeleted(clientName(check)) })} />
           <CheckActions check={check} />
         </div>
         <div className="flex items-center justify-center gap-2 text-xs text-base-content/50 italic sm:justify-end">

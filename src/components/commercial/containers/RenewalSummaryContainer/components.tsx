@@ -23,6 +23,7 @@ import ActiveFiltersNote from "@components/team/utils/ActiveFiltersNote"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
+import { toastDeleted } from "@components/layout/Toast/utils"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import PdfDropZone from "@components/team/utils/PdfDropZone"
 import LineItemStatus from "@components/team/utils/LineItemStatus"
@@ -378,7 +379,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
             <div className="flex flex-wrap items-center justify-center gap-2 sm:flex-nowrap">
               <DeleteButton
                 isPending={isDeleting}
-                onConfirm={() => deleteFile(summary.filename, { onSuccess: () => onNotify(`Deleted ${ summary.client_name }...`) })} />
+                onConfirm={() => deleteFile(summary.filename, { onSuccess: () => toastDeleted(summary.client_name) })} />
               <UploadQuoteButton onFiles={upload} />
               <PreviewButton onClick={() => openDocument(documentId(summary))} />
               <DownloadButton

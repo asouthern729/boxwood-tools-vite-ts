@@ -244,23 +244,11 @@ export const useHandleChatPanel = (chat: CoverageComparisonChat, staged: Compari
   return { messagesRef, send, run, canRun, draft, setDraft }
 }
 
-const FOOTER_MESSAGE_TIMEOUT_MS = 4000
-
 export const useHandleComparisonList = (groups: AppTypes.CoverageComparisonGroup[], scrollSignal: number) => {
   const rowRefs = useRef(new Map<string, HTMLLIElement>())
   const lastHandledSignal = useRef(0)
   const [highlightedId, setHighlightedId] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const [footerMessage, setFooterMessage] = useState<{ text: string, error: boolean } | null>(null)
-  const footerMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  const notify = useCallback((text: string, error = false) => {
-    clearTimeout(footerMessageTimeoutRef.current)
-    setFooterMessage({ text, error })
-    footerMessageTimeoutRef.current = setTimeout(() => setFooterMessage(null), FOOTER_MESSAGE_TIMEOUT_MS)
-  }, [])
-
-  useEffect(() => () => clearTimeout(footerMessageTimeoutRef.current), [])
 
   useEffect(() => {
     if(scrollSignal === 0 || scrollSignal === lastHandledSignal.current) return
@@ -279,7 +267,7 @@ export const useHandleComparisonList = (groups: AppTypes.CoverageComparisonGroup
 
   useEffect(() => () => clearTimeout(highlightTimeoutRef.current), [])
 
-  return { rowRefs, highlightedId, footerMessage, notify }
+  return { rowRefs, highlightedId }
 }
 
 export const useHandleComparisonSection = (comparisons: AppTypes.CoverageComparisonEntry[], order: string) => {

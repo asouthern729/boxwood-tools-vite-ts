@@ -16,7 +16,7 @@ import ChatMessageText from "@components/team/utils/ChatMessageText"
 import Ordering from "@components/team/utils/Ordering"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
-import FooterMessage from "@components/team/utils/FooterMessage"
+import { toastDeleted } from "@components/layout/Toast/utils"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import SendButton from "@components/team/utils/SendButton"
 import NewChatButton from "@components/team/utils/NewChatButton"
@@ -128,7 +128,7 @@ type ProposalListProps = {
 }
 
 export const ProposalList = ({ manifest, scope, onScopeChange, scrollSignal }: ProposalListProps) => {
-  const { rowRefs, highlightedFilename, footerMessage, notify } = useHandleProposalList(manifest.groups, scrollSignal)
+  const { rowRefs, highlightedFilename } = useHandleProposalList(manifest.groups, scrollSignal)
   const [searchQuery, setSearchQuery] = useState("")
   const [order, setOrder] = useState(PROPOSAL_ORDER_OPTIONS[0].value)
 
@@ -156,12 +156,10 @@ export const ProposalList = ({ manifest, scope, onScopeChange, scrollSignal }: P
             order={order}
             viewerSub={manifest.viewer_sub}
             rowRefs={rowRefs.current}
-            highlightedFilename={highlightedFilename}
-            onNotify={notify} />
+            highlightedFilename={highlightedFilename} />
         ))}
       </div>
       <DownloadOdometer tool="proposal-builder" />
-      <FooterMessage message={footerMessage?.text ?? null} error={footerMessage?.error} />
     </>
   )
 }
@@ -249,10 +247,9 @@ type ProposalSectionProps = {
   viewerSub: string
   rowRefs: Map<string, HTMLLIElement>
   highlightedFilename: string | null
-  onNotify: (message: string, error?: boolean) => void
 }
 
-const ProposalSection = ({ group, scope, order, viewerSub, rowRefs, highlightedFilename, onNotify }: ProposalSectionProps) => {
+const ProposalSection = ({ group, scope, order, viewerSub, rowRefs, highlightedFilename }: ProposalSectionProps) => {
   const { pageProposals, currentPage, totalItems, setPage, sectionRef } = useHandleProposalSection(group.proposals, order)
 
   const title = scope === "mine" ?
@@ -277,8 +274,7 @@ const ProposalSection = ({ group, scope, order, viewerSub, rowRefs, highlightedF
               proposal={proposal}
               canDelete={proposal.created_by.sub === viewerSub}
               rowRefs={rowRefs}
-              highlighted={proposal.filename === highlightedFilename}
-              onNotify={onNotify} />
+              highlighted={proposal.filename === highlightedFilename} />
           ))}
         </ul>
         <Pagination
@@ -296,10 +292,9 @@ type ProposalRowProps = {
   canDelete: boolean
   rowRefs: Map<string, HTMLLIElement>
   highlighted: boolean
-  onNotify: (message: string, error?: boolean) => void
 }
 
-const ProposalRow = ({ proposal, canDelete, rowRefs, highlighted, onNotify }: ProposalRowProps) => {
+const ProposalRow = ({ proposal, canDelete, rowRefs, highlighted }: ProposalRowProps) => {
   const { mutate: downloadFile, isPending: isDownloading } = useDownloadProposalFile()
   const { mutate: downloadPdf, isPending: isDownloadingPdf, error: pdfError } = useDownloadProposalPdf()
   const { mutate: deleteFile, isPending: isDeleting, error: deleteError } = useDeleteProposalFile()
@@ -320,7 +315,7 @@ const ProposalRow = ({ proposal, canDelete, rowRefs, highlighted, onNotify }: Pr
           <DeleteButton
             visible={canDelete}
             isPending={isDeleting}
-            onConfirm={() => deleteFile(proposal.filename, { onSuccess: () => onNotify(`Deleted ${ proposal.client_name }...`) })} />
+            onConfirm={() => deleteFile(proposal.filename, { onSuccess: () => toastDeleted(proposal.client_name) })} />
           <PreviewButton onClick={preview.show} />
           <DownloadButton
             label="Word"

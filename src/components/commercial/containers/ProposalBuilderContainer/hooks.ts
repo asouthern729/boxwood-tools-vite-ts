@@ -214,23 +214,11 @@ export const useHandleChatPanel = (
   return { messagesRef, send, build, canBuild, draft, setDraft }
 }
 
-const FOOTER_MESSAGE_TIMEOUT_MS = 4000
-
 export const useHandleProposalList = (groups: AppTypes.ProposalGroup[], scrollSignal: number) => {
   const rowRefs = useRef(new Map<string, HTMLLIElement>())
   const lastHandledSignal = useRef(0)
   const [highlightedFilename, setHighlightedFilename] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const [footerMessage, setFooterMessage] = useState<{ text: string, error: boolean } | null>(null)
-  const footerMessageTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  const notify = useCallback((text: string, error = false) => {
-    clearTimeout(footerMessageTimeoutRef.current)
-    setFooterMessage({ text, error })
-    footerMessageTimeoutRef.current = setTimeout(() => setFooterMessage(null), FOOTER_MESSAGE_TIMEOUT_MS)
-  }, [])
-
-  useEffect(() => () => clearTimeout(footerMessageTimeoutRef.current), [])
 
   useEffect(() => {
     if(scrollSignal === 0 || scrollSignal === lastHandledSignal.current) return
@@ -249,7 +237,7 @@ export const useHandleProposalList = (groups: AppTypes.ProposalGroup[], scrollSi
 
   useEffect(() => () => clearTimeout(highlightTimeoutRef.current), [])
 
-  return { rowRefs, highlightedFilename, footerMessage, notify }
+  return { rowRefs, highlightedFilename }
 }
 
 export const useHandleProposalSection = (proposals: AppTypes.ProposalManifestEntry[], order: string) => {

@@ -22,6 +22,7 @@ import ActiveFiltersNote from "@components/team/utils/ActiveFiltersNote"
 import CustomerSearch from "@components/team/utils/CustomerSearch"
 import Pagination from "@components/team/utils/Pagination"
 import FooterMessage from "@components/team/utils/FooterMessage"
+import { toastDeleted } from "@components/layout/Toast/utils"
 import DownloadOdometer from "@components/team/utils/DownloadOdometer"
 import XlsxPreviewModal from "@components/team/utils/XlsxPreviewModal"
 import LineItemStatus from "@components/team/utils/LineItemStatus"
@@ -87,7 +88,7 @@ export const ChatPanel = ({ messages, onSend, isPending, onNewChat, canStartNewC
 }
 
 export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.RenewalPremiumSummaryCsrGroup[], scrollSignal: number }) => {
-  const { rowRefs, highlightedFilename, deletedMessage, notifyDeleted } = useHandleCsrGroupList(groups, scrollSignal)
+  const { rowRefs, highlightedFilename } = useHandleCsrGroupList(groups, scrollSignal)
   const { showPastRenewals, setShowPastRenewals, renewalMonth, setRenewalMonth, csrFilter, setCsrFilter, createdTodayOnly, setCreatedTodayOnly, updatedTodayOnly, setUpdatedTodayOnly, searchQuery, setSearchQuery, order, setOrder } = useCommercialCtx()
 
   if(groups.length === 0) {
@@ -95,7 +96,6 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
       <>
         <p className="py-8 text-center text-base-content/70">No renewal premium spreadsheets generated yet.</p>
         <DownloadOdometer tool="renewal-premium-summaries" />
-        <FooterMessage message={deletedMessage} />
       </>
     )
   }
@@ -168,11 +168,10 @@ export const CsrGroupList = ({ groups, scrollSignal }: { groups: AppTypes.Renewa
             order={order}
             rowRefs={rowRefs.current}
             highlightedFilename={highlightedFilename}
-            onDeleted={notifyDeleted} />
+            onDeleted={toastDeleted} />
         ))}
       </div>
       <DownloadOdometer tool="renewal-premium-summaries" />
-      <FooterMessage message={deletedMessage} />
     </>
   )
 }
