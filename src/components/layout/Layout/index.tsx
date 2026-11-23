@@ -6,6 +6,7 @@ import Nav from '../Nav'
 import LogoutButton from '../LogoutButton'
 import AssistantDrawer from '@components/assistant/AssistantDrawer'
 import { AssistantProvider } from '@components/assistant/AssistantContext'
+import Toasts from '../Toast'
 
 function Layout() {
 
@@ -26,6 +27,7 @@ function Layout() {
         <Components.FooterMessageSlot />
         <Components.Footer />
       </div>
+      <Toasts />
     </AssistantProvider>
   )
 }
