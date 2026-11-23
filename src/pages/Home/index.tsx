@@ -2,6 +2,7 @@
 import FadeIn from "../../utils/animations/FadeIn"
 import { Header } from "@components/layout/Layout/components"
 import LogoutButton from "@components/layout/LogoutButton"
+import LoginButton from "@components/layout/LoginButton"
 import * as Components from './components'
 
 function Home() {
@@ -9,6 +10,7 @@ function Home() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-16 text-center">
       <LogoutButton />
+      <LoginButton />
       <FadeIn duration={2}>
         <Header />
       </FadeIn>

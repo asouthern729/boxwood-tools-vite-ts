@@ -4,6 +4,7 @@ import { Outlet } from "react-router"
 import * as Components from './components'
 import Nav from '../Nav'
 import LogoutButton from '../LogoutButton'
+import LoginButton from '../LoginButton'
 import AssistantDrawer from '@components/assistant/AssistantDrawer'
 import { AssistantProvider } from '@components/assistant/AssistantContext'
 import Toasts from '../Toast'
@@ -16,6 +17,7 @@ function Layout() {
         <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
           <AssistantDrawer />
           <LogoutButton />
+          <LoginButton />
         </div>
         <Components.Header />
         <Nav />

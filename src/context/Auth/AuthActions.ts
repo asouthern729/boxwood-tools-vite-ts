@@ -91,6 +91,15 @@ export const logout = (): void => {
   window.location.href = url.toString()
 }
 
+/**
+ * Start a sign-in from a Login button, returning to the current page afterwards
+ *
+ * Same flow authorizedFetch kicks off on its own when a request needs a token.
+ */
+export const login = (): void => {
+  void startLogin()
+}
+
 const ORIGIN = window.location.origin
 const APP_BASE = import.meta.env.VITE_APP_BASE.replace(/\/$/, "")
 const REDIRECT_URI = `${ ORIGIN }${ APP_BASE }/login`
