@@ -13,7 +13,7 @@ export const formatTimestamp = (dateStr: string) => {
   return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
 }
 
-export const QUOTE_HELP_TEXT = "Sections added from a quote are marked with a comment in the Word file. Review them, then delete the comments before sending. Comments never appear in the PDF download."
+export const QUOTE_HELP_TEXT = "Check sections added from a quote against the quote before sending."
 
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
 
