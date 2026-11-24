@@ -1,5 +1,6 @@
 // Types
 import type * as AuthTypes from './types'
+import { APP_BASE as CONFIG_APP_BASE } from '../../config'
 
 /**
  * Exchange an Auth0 authorization code for an access token
@@ -101,7 +102,7 @@ export const login = (): void => {
 }
 
 const ORIGIN = window.location.origin
-const APP_BASE = import.meta.env.VITE_APP_BASE.replace(/\/$/, "")
+const APP_BASE = CONFIG_APP_BASE.replace(/\/$/, "")
 const REDIRECT_URI = `${ ORIGIN }${ APP_BASE }/login`
 const POST_LOGOUT_URI = `${ ORIGIN }${ APP_BASE }/`
 

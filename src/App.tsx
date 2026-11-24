@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router"
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query"
 import { useHandleVisibilityChange } from "./utils"
+import { APP_BASE } from "./config"
 
 const queryClient = new QueryClient()
 
@@ -18,7 +19,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Router basename={import.meta.env.VITE_APP_BASE}>
+      <Router basename={APP_BASE}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route element={<Layout />}>

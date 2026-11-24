@@ -5,7 +5,6 @@ interface ViteTypeOptions {
 }
 
 interface ImportMetaEnv {
-  readonly VITE_APP_BASE: string
   readonly VITE_APP_TITLE: string
   readonly VITE_CLIENT_ID: string
   readonly VITE_ENTRA_CLIENT_ID: string
