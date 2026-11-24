@@ -1,7 +1,7 @@
+# syntax=docker/dockerfile:1
 # Build stage. The app's base path comes from src/config.ts; APP_BASE below only places the bundle
 # and configures nginx, so it must match. Build with: docker build -t ghcr.io/...:<tag> .
 FROM node:24-bookworm-slim AS build
-ARG APP_BASE=/tools/
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -12,7 +12,28 @@ RUN npm run build
 # so the host nginx can proxy /tools/ straight through without rewriting.
 FROM nginxinc/nginx-unprivileged:1.29-alpine
 ARG APP_BASE=/tools/
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-RUN sed -i "s#__APP_BASE__#${APP_BASE}#g" /etc/nginx/conf.d/default.conf
+
+# The shell expands ${APP_BASE}; nginx variables are escaped (\$uri) so they reach the config as-is.
+# Hashed build assets never change under the same name, so they're cached for a year. Client-side
+# routes fall back to the SPA shell, which is never cached so a redeploy is picked up immediately.
+RUN cat > /etc/nginx/conf.d/default.conf <<EOF
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+
+    location ${APP_BASE}assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files \$uri =404;
+    }
+
+    location ${APP_BASE} {
+        add_header Cache-Control "no-cache";
+        try_files \$uri \$uri/ ${APP_BASE}index.html;
+    }
+}
+EOF
+
 COPY --from=build /app/dist /usr/share/nginx/html${APP_BASE}
 EXPOSE 8080
