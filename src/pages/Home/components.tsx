@@ -12,14 +12,16 @@ export const HomeBtns = () => (
       const SlideIn = index === 0 ? SlideInLeft : SlideInRight
 
       return (
-        <FadeIn key={to} duration={1}>
-          <SlideIn>
-            <Link
-              to={to}
-              className="btn btn-lg join-item bg-neutral-content text-neutral w-50 hover:bg-neutral hover:text-neutral-content">
-                {label}
-            </Link>
-          </SlideIn>
+        <FadeIn 
+          key={to} 
+          duration={1}>
+            <SlideIn>
+              <Link
+                to={to}
+                className="btn btn-lg join-item bg-neutral-content text-neutral w-50 hover:bg-neutral hover:text-neutral-content">
+                  {label}
+              </Link>
+            </SlideIn>
         </FadeIn>
       )
     })}

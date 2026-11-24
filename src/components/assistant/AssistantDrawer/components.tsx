@@ -10,8 +10,6 @@ import type * as AppTypes from "@context/App/types"
 
 const SLIDE_TRANSITION = { type: "spring", stiffness: 400, damping: 40 } as const
 
-// The launcher, beside Logout in the top-right corner: the Boxwood mark in a white disc plus the
-// assistant's name. Collapses to just the mark on small screens.
 export const LauncherButton = ({ onClick }: { onClick: () => void }) => (
   <motion.button
     type="button"
@@ -29,7 +27,6 @@ export const LauncherButton = ({ onClick }: { onClick: () => void }) => (
   </motion.button>
 )
 
-// The drawer: header, the conversation (or a welcome with starter questions), and the input.
 export const Panel = ({ chat, onClose }: { chat: AssistantChat, onClose: () => void }) => {
   const scrollRef = useScrollToBottom([chat.messages, chat.streaming, chat.error])
 
@@ -67,7 +64,6 @@ const ChatTurn = ({ message }: { message: AppTypes.AssistantMessage }) => (
     <AssistantMessage><AssistantMarkdown text={message.content} /></AssistantMessage>
 )
 
-// The reply as it streams in: typing dots until the first words arrive
 const StreamingReply = ({ text }: { text: string | null }) => {
   if(text === null) return null
   if(!text) return <TypingIndicator />

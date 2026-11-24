@@ -6,8 +6,6 @@ import { useAssistant } from "@components/assistant/AssistantContext"
 // Components
 import * as Components from "./components"
 
-// The Boxwood Assistant: a launcher in the page's top-right actions for signed-in users, opening a
-// side drawer. The drawer is portalled to <body> so it isn't trapped in that row's stacking context.
 function AssistantDrawer() {
   const isSignedIn = useIsSignedIn()
   const { open, show, hide, chat } = useAssistant()
@@ -17,11 +15,18 @@ function AssistantDrawer() {
   return (
     <>
       <AnimatePresence initial={false}>
-        {!open && <Components.LauncherButton key="launcher" onClick={show} />}
+        {!open && 
+          <Components.LauncherButton 
+            key="launcher" 
+            onClick={show} />}
       </AnimatePresence>
       {createPortal(
         <AnimatePresence>
-          {open && <Components.Panel key="panel" chat={chat} onClose={hide} />}
+          {open && 
+            <Components.Panel 
+              key="panel" 
+              chat={chat} 
+              onClose={hide} />}
         </AnimatePresence>,
         document.body
       )}

@@ -4,14 +4,11 @@ import { useAssistantChat } from "@components/assistant/AssistantDrawer/chatHook
 
 type AssistantValue = ReturnType<typeof useAssistantDrawer> & {
   chat: ReturnType<typeof useAssistantChat>
-  // Opens the drawer and sends a question, e.g. from a tool page's "Learn about this tool" button
   ask: (question: string) => void
 }
 
 const AssistantCtx = createContext<AssistantValue | null>(null)
 
-// Holds the Boxwood Assistant's drawer state and conversation above the whole layout, so anything on
-// a page can open the drawer or ask it something. Must sit inside the router (the chat reads the route).
 export function AssistantProvider({ children }: { children: React.ReactNode }) {
   const drawer = useAssistantDrawer()
   const chat = useAssistantChat()
