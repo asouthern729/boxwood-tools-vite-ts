@@ -1,12 +1,12 @@
-# Build stage: Vite bakes VITE_* values into the bundle, so the base path is a build arg, not a
-# runtime env var. Build with: docker build --build-arg APP_BASE=/tools/ -t ghcr.io/...:<tag> .
+# Build stage. The app's base path comes from src/config.ts; APP_BASE below only places the bundle
+# and configures nginx, so it must match. Build with: docker build -t ghcr.io/...:<tag> .
 FROM node:24-bookworm-slim AS build
 ARG APP_BASE=/tools/
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-RUN VITE_APP_BASE="$APP_BASE" npm run build
+RUN npm run build
 
 # Runtime: static files served by unprivileged nginx on :8080. The bundle sits under the base path
 # so the host nginx can proxy /tools/ straight through without rewriting.
