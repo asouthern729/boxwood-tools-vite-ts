@@ -1,6 +1,6 @@
 // Types
 import type * as AppTypes from "@context/App/types"
-import type { DropFileKind } from "@components/team/utils/PdfDropZone/utils"
+import { UPLOAD_FILES } from "@components/team/utils/PdfDropZone/utils"
 
 export const AVAILABLE_MCP_TOOLS = [
   { name: "Customer Lookup", description: "Look up a customer by name or ID, including contacts, policies, and related records." },
@@ -14,8 +14,7 @@ export const formatTimestamp = (dateStr: string) => {
   return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
 }
 
-// Carrier quotes can be a PDF or an Excel workbook
-export const QUOTE_FILES: DropFileKind[] = ["pdf", "xlsx"]
+export const QUOTE_FILES = UPLOAD_FILES
 
 export const QUOTE_HELP_TEXT = "Check sections added from a quote against the quote before sending."
 

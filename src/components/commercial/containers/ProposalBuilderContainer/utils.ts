@@ -1,14 +1,14 @@
 // Types
 import type * as AppTypes from "@context/App/types"
 import type { OrderingOption } from "@components/team/utils/Ordering"
-import type { DropFileKind } from "@components/team/utils/PdfDropZone/utils"
+import { UPLOAD_FILES } from "@components/team/utils/PdfDropZone/utils"
 
 export const AVAILABLE_MCP_TOOLS = [
   { name: "Customer Lookup", description: "Look up a customer by name or ID, including contacts, policies, and related records." },
   { name: "Proposal Builder", description: "Build a branded proposal Word document from the carrier quotes and AMS360 proposals dropped into this chat." },
 ]
 
-export const ACCEPTED_FILES: DropFileKind[] = ["pdf", "xlsx", "docx"]
+export const ACCEPTED_FILES = UPLOAD_FILES
 
 export const PROPOSAL_ORDER_OPTIONS: OrderingOption[] = [
   { value: "newest", label: "Newest First" },
@@ -40,7 +40,9 @@ export const filterProposals = (groups: AppTypes.ProposalGroup[], query: string)
 
 export const SOURCE_LABELS: Record<AppTypes.ProposalSourceKind, string> = {
   quote_pdf: "Quote",
+  quote_docx: "Quote",
   quote_xlsx: "Quote",
+  quote_image: "Quote",
   ams_docx: "AMS360",
   ams_pdf: "AMS360",
 }

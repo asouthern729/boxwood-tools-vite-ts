@@ -490,7 +490,8 @@ const ChatTip = ({ visible }: { visible: boolean }) => {
 
   return (
     <p className="text-sm text-base-content/60">
-      Drop carrier quotes (PDF or Excel .xlsx) or an AMS360 proposal (.docx or PDF) onto the message box, then ask
+      Drop carrier quotes (PDF, Word, Excel, or a screenshot/photo as PNG or JPEG) or an AMS360 proposal
+      (.docx or PDF) onto the message box, then ask
       Claude to build the proposal — e.g. "Build a proposal for Acme Corp from these quotes."
     </p>
   )

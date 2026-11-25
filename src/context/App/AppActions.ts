@@ -266,7 +266,7 @@ export const deleteRenewalSummaryFile = async (filename: string): Promise<void> 
 }
 
 /**
- * List quotes (PDF or Excel) attached to a CL Renewal Summary, oldest first
+ * List quotes attached to a CL Renewal Summary, oldest first
  *
  * GET /cl-renewal-summary/files/Acme_Corp_....docx/quotes
  */
@@ -280,7 +280,7 @@ export const getRenewalSummaryQuotes = async (filename: string): Promise<AppType
 }
 
 /**
- * Upload a carrier quote, PDF or Excel .xlsx (raw bytes, not multipart); the server sniffs the
+ * Upload a carrier quote, PDF, Word, Excel or a PNG/JPEG image (raw bytes, not multipart); the server sniffs the
  * bytes and reads it in the background
  *
  * POST /cl-renewal-summary/files/Acme_Corp_....docx/quotes?name=quote.pdf
@@ -545,7 +545,7 @@ export const deleteProposalFile = async (filename: string): Promise<void> => {
 }
 
 /**
- * Stage a quote (PDF or Excel .xlsx) or AMS360 proposal (raw bytes, not multipart) for the next chat turn; the
+ * Stage a quote (PDF, Word, Excel or a PNG/JPEG image) or AMS360 proposal (raw bytes, not multipart) for the next chat turn; the
  * server reads it in the background
  *
  * POST /proposal-builder/attachments?name=quote.pdf
@@ -633,7 +633,7 @@ export const getPolicyCheckManifest = async (scope: AppTypes.PolicyCheckScope): 
 export const uploadPolicyCheckAttachment = async (file: File, role: AppTypes.PolicyCheckRole): Promise<AppTypes.PolicyCheckAttachment> => {
   const res = await authorizedFetch(`${ API_BASE }/policy-check/attachments?name=${ encodeURIComponent(file.name) }&role=${ role }`, {
     method: "POST",
-    headers: { "Content-Type": file.type || "application/pdf" },
+    headers: { "Content-Type": file.type || "application/octet-stream" },
     body: file,
   })
 
@@ -779,7 +779,7 @@ export const getCoverageComparisonManifest = async (scope: AppTypes.CoverageComp
 export const uploadCoverageComparisonAttachment = async (file: File, role: AppTypes.CoverageComparisonRole): Promise<AppTypes.CoverageComparisonAttachment> => {
   const res = await authorizedFetch(`${ API_BASE }/coverage-comparison/attachments?name=${ encodeURIComponent(file.name) }&role=${ role }`, {
     method: "POST",
-    headers: { "Content-Type": file.type || "application/pdf" },
+    headers: { "Content-Type": file.type || "application/octet-stream" },
     body: file,
   })
 
@@ -927,7 +927,7 @@ export const getCoverageGapManifest = async (scope: AppTypes.CoverageGapScope): 
 export const uploadCoverageGapAttachment = async (file: File): Promise<AppTypes.CoverageGapAttachment> => {
   const res = await authorizedFetch(`${ API_BASE }/coverage-gap/attachments?name=${ encodeURIComponent(file.name) }`, {
     method: "POST",
-    headers: { "Content-Type": file.type || "application/pdf" },
+    headers: { "Content-Type": file.type || "application/octet-stream" },
     body: file,
   })
 

@@ -1,13 +1,13 @@
 // Types
 import type * as AppTypes from "@context/App/types"
 import type { OrderingOption } from "@components/team/utils/Ordering"
-import type { DropFileKind } from "@components/team/utils/PdfDropZone/utils"
+import { UPLOAD_FILES } from "@components/team/utils/PdfDropZone/utils"
 
 export const AVAILABLE_MCP_TOOLS = [
   { name: "CL Coverage Comparison", description: "Compares two sets of commercial quote or policy PDFs into a branded Word comparison to review with the client: premium, key points and a side-by-side table for each coverage line." },
 ]
 
-export const ACCEPTED_FILES: DropFileKind[] = ["pdf"]
+export const ACCEPTED_FILES = UPLOAD_FILES
 
 // One drop zone per set; each set may hold several lines (e.g. BOP + umbrella + WC)
 export const SET_ZONES: { role: AppTypes.CoverageComparisonRole, label: string, hint: string, labelPlaceholder: string }[] = [

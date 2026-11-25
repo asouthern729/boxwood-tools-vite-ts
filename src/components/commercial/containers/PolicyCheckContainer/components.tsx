@@ -24,7 +24,7 @@ import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
 import AvailableTools from "@components/team/utils/AvailableTools"
 import PdfDropZone from "@components/team/utils/PdfDropZone"
-import UploadButton from "@components/team/utils/UploadButton"
+import UploadControls from "@components/team/utils/UploadControls"
 
 type ChatPanelProps = {
   chat: PolicyCheckChat
@@ -153,18 +153,13 @@ const RoleZone = ({ zone, files, onFiles, onRemove, onMove }: RoleZoneProps) => 
     variant="area"
     onFiles={onFiles}
     accept={ACCEPTED_FILES}
-    title={`Drop PDFs here: ${ zone.hint }`}
+    title={`Drop files here: ${ zone.hint }`}
     className="flex min-h-28 flex-col gap-2 rounded-box border-2 border-dashed border-base-300 p-3">
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start gap-2">
         <div className="flex flex-col">
           <span className="text-sm font-semibold">{zone.label}</span>
           <span className="text-xs text-base-content/60">{zone.hint}{zone.optional ? " · optional" : ""}</span>
         </div>
-        <UploadButton
-          onFiles={onFiles}
-          accept={ACCEPTED_FILES}
-          title={`Choose PDFs for "${ zone.label }"`}
-          showLabel={false} />
       </div>
       <EmptyZoneMsg visible={files.length === 0} />
       <ul className="flex flex-col gap-1.5">
@@ -176,6 +171,11 @@ const RoleZone = ({ zone, files, onFiles, onRemove, onMove }: RoleZoneProps) => 
             onMove={onMove} />
         ))}
       </ul>
+      <UploadControls
+        onFiles={onFiles}
+        accept={ACCEPTED_FILES}
+        title={`Choose files for "${ zone.label }"`}
+        className="mt-auto" />
   </PdfDropZone>
 )
 
@@ -183,7 +183,7 @@ const EmptyZoneMsg = ({ visible }: { visible: boolean }) => {
   if(!visible) return null
 
   return (
-    <p className="m-auto text-xs text-base-content/40 italic">Drop PDFs here</p>
+    <p className="m-auto text-xs text-base-content/40 italic">Drop files here</p>
   )
 }
 

@@ -1,14 +1,14 @@
 // Types
 import type * as AppTypes from "@context/App/types"
 import type { OrderingOption } from "@components/team/utils/Ordering"
-import type { DropFileKind } from "@components/team/utils/PdfDropZone/utils"
+import { UPLOAD_FILES } from "@components/team/utils/PdfDropZone/utils"
 import { DOCUMENT_TYPE_LABELS } from "@components/commercial/containers/CoverageComparisonContainer/utils"
 
 export const AVAILABLE_MCP_TOOLS = [
   { name: "Coverage Gap", description: "Runs Boxwood's 11-step coverage gap review on a commercial account's policy PDFs and builds an internal Word report: scorecard, priority findings, exhibits and questions to confirm with the client." },
 ]
 
-export const ACCEPTED_FILES: DropFileKind[] = ["pdf"]
+export const ACCEPTED_FILES = UPLOAD_FILES
 
 // Mirrors MAX_NOTES_LENGTH on the backend
 export const MAX_NOTES_LENGTH = 4000

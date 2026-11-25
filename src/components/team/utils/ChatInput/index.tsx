@@ -1,12 +1,14 @@
 import { useFocusOnSlash } from "./hooks"
 
+import { UPLOAD_FILES } from "@components/team/utils/PdfDropZone/utils"
+
 // Types
 import type { DropFileKind } from "@components/team/utils/PdfDropZone/utils"
 import type { ChatAttachment } from "./types"
 
 // Components
 import PdfDropZone from "@components/team/utils/PdfDropZone"
-import UploadButton from "@components/team/utils/UploadButton"
+import UploadControls from "@components/team/utils/UploadControls"
 import * as Components from "./components"
 
 type ChatInputProps = {
@@ -52,15 +54,15 @@ function ChatInput({ draft, setDraft, isPending, send, placeholder, onFiles, acc
         <Components.AttachmentChips
           attachments={attachments}
           onRemove={onRemoveAttachment} />
-        <div className="relative flex flex-1 [&>textarea]:pr-28">
+        {/* Bottom padding keeps typed text clear of the Accepts hint and Browse button */}
+        <div className="relative flex flex-1 [&>textarea]:pb-11">
           {textarea}
-          <UploadButton
+          <UploadControls
             onFiles={onFiles}
-            accept={accept}
+            accept={accept ?? UPLOAD_FILES}
             disabled={isPending}
             title="Choose files to attach, or drop them on the message box"
-            className="absolute right-1.5 bottom-1.5"
-            iconClassName="size-5" />
+            className="absolute right-1.5 bottom-1.5" />
         </div>
     </PdfDropZone>
   )

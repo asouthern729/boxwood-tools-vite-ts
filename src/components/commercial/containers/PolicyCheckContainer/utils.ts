@@ -1,14 +1,14 @@
 // Types
 import type * as AppTypes from "@context/App/types"
 import type { OrderingOption } from "@components/team/utils/Ordering"
-import type { DropFileKind } from "@components/team/utils/PdfDropZone/utils"
+import { UPLOAD_FILES } from "@components/team/utils/PdfDropZone/utils"
 
 export const AVAILABLE_MCP_TOOLS = [
   { name: "Customer Lookup", description: "Look up a customer by name or ID, including contacts, policies, and related records." },
   { name: "Policy Check", description: "Checks an issued or renewal policy against the quote, binder or expiring policy, line by line, with an AMS360 cross-check, and produces an internal report with every discrepancy by priority on page one." },
 ]
 
-export const ACCEPTED_FILES: DropFileKind[] = ["pdf"]
+export const ACCEPTED_FILES = UPLOAD_FILES
 
 // One labeled drop zone per role (Patrick asked for separate upload areas)
 export const ROLE_ZONES: { role: AppTypes.PolicyCheckRole, label: string, hint: string, optional?: boolean }[] = [

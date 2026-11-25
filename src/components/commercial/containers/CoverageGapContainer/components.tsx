@@ -24,7 +24,7 @@ import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
 import AvailableTools from "@components/team/utils/AvailableTools"
 import PdfDropZone from "@components/team/utils/PdfDropZone"
-import UploadButton from "@components/team/utils/UploadButton"
+import UploadControls from "@components/team/utils/UploadControls"
 
 type ChatPanelProps = {
   chat: CoverageGapChat
@@ -105,7 +105,7 @@ type RunButtonProps = {
 
 const runButtonState = (staged: GapFiles) => {
   if(staged.busy) return { label: "Reading files…", title: "Waiting for the files to finish reading" }
-  if(!staged.hasRead) return { label: "Run", title: "Add at least one policy PDF first" }
+  if(!staged.hasRead) return { label: "Run", title: "Add at least one policy file first" }
   return { label: "Run", title: "Run the gap analysis on these policies, with the account notes" }
 }
 
@@ -137,18 +137,13 @@ const PolicyZone = ({ files, onFiles, onRemove }: PolicyZoneProps) => (
     variant="area"
     onFiles={onFiles}
     accept={ACCEPTED_FILES}
-    title="Drop the account's policy PDFs here"
+    title="Drop the account's policy files here"
     className="flex min-h-28 flex-col gap-2 rounded-box border-2 border-dashed border-base-300 p-3">
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start gap-2">
         <div className="flex flex-col">
           <span className="text-sm font-semibold">Policies</span>
           <span className="text-xs text-base-content/60">Every policy on the account: dec pages, forms and endorsements</span>
         </div>
-        <UploadButton
-          onFiles={onFiles}
-          accept={ACCEPTED_FILES}
-          title="Choose policy PDFs"
-          showLabel={false} />
       </div>
       <EmptyZoneMsg visible={files.length === 0} />
       <ul className="flex flex-col gap-1.5">
@@ -159,6 +154,11 @@ const PolicyZone = ({ files, onFiles, onRemove }: PolicyZoneProps) => (
             onRemove={onRemove} />
         ))}
       </ul>
+      <UploadControls
+        onFiles={onFiles}
+        accept={ACCEPTED_FILES}
+        title="Choose policy files"
+        className="mt-auto" />
   </PdfDropZone>
 )
 
@@ -174,7 +174,8 @@ const AccountNotes = ({ value, onChange }: { value: string, onChange: (value: st
       onChange={(e) => onChange(e.target.value)}
       maxLength={MAX_NOTES_LENGTH}
       rows={4}
-      className="textarea textarea-bordered min-h-28 w-full flex-1 text-sm" />
+      placeholder="e.g. ~$4.2M revenue, $1.1M payroll, 18 employees. GC contracts require $2M/$4M GL and a $5M umbrella. Client mentioned adding a second location in spring."
+      className="textarea textarea-bordered min-h-28 w-full flex-1 text-sm placeholder:italic" />
     <NotesLength length={value.length} />
   </label>
 )
@@ -192,7 +193,7 @@ const EmptyZoneMsg = ({ visible }: { visible: boolean }) => {
   if(!visible) return null
 
   return (
-    <p className="m-auto text-xs text-base-content/40 italic">Drop PDFs here</p>
+    <p className="m-auto text-xs text-base-content/40 italic">Drop files here</p>
   )
 }
 

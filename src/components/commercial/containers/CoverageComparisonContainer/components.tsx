@@ -24,7 +24,7 @@ import NewChatButton from "@components/team/utils/NewChatButton"
 import ChatInput from "@components/team/utils/ChatInput"
 import AvailableTools from "@components/team/utils/AvailableTools"
 import PdfDropZone from "@components/team/utils/PdfDropZone"
-import UploadButton from "@components/team/utils/UploadButton"
+import UploadControls from "@components/team/utils/UploadControls"
 
 type ChatPanelProps = {
   chat: CoverageComparisonChat
@@ -157,18 +157,13 @@ const SetZone = ({ zone, files, columnLabel, onColumnLabel, onFiles, onRemove, o
     variant="area"
     onFiles={onFiles}
     accept={ACCEPTED_FILES}
-    title={`Drop PDFs here: ${ zone.hint }`}
-    className="flex min-h-28 flex-col gap-2 rounded-box border-2 border-dashed border-base-300 p-3">
-      <div className="flex items-start justify-between gap-2">
+    title={`Drop files here: ${ zone.hint }`}
+    className="flex min-h-40 flex-col gap-2 rounded-box border-2 border-dashed border-base-300 p-3">
+      <div className="flex items-start gap-2">
         <div className="flex flex-col">
           <span className="text-sm font-semibold">{zone.label}</span>
           <span className="text-xs text-base-content/60">{zone.hint}</span>
         </div>
-        <UploadButton
-          onFiles={onFiles}
-          accept={ACCEPTED_FILES}
-          title={`Choose PDFs for ${ zone.label }`}
-          showLabel={false} />
       </div>
       <input
         type="text"
@@ -187,6 +182,11 @@ const SetZone = ({ zone, files, columnLabel, onColumnLabel, onFiles, onRemove, o
             onMove={onMove} />
         ))}
       </ul>
+      <UploadControls
+        onFiles={onFiles}
+        accept={ACCEPTED_FILES}
+        title={`Choose files for ${ zone.label }`}
+        className="mt-auto" />
   </PdfDropZone>
 )
 
@@ -194,7 +194,7 @@ const EmptyZoneMsg = ({ visible }: { visible: boolean }) => {
   if(!visible) return null
 
   return (
-    <p className="m-auto text-xs text-base-content/40 italic">Drop PDFs here</p>
+    <p className="m-auto text-xs text-base-content/40 italic">Drop files here</p>
   )
 }
 
@@ -673,7 +673,7 @@ const ChatTip = ({ visible }: { visible: boolean }) => {
   return (
     <p className="text-sm text-base-content/60">
       Drop the current program, expiring policy or first quote in Set A and the proposed program,
-      renewal or second quote in Set B — several PDFs per set is fine (e.g. BOP, umbrella and WC).
+      renewal or second quote in Set B — several files per set is fine (e.g. BOP, umbrella and WC).
       Add column headings if you like, then press Compare.
     </p>
   )

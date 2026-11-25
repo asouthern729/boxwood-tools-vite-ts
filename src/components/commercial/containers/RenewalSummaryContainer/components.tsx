@@ -458,7 +458,7 @@ const UploadQuoteButton = ({ onFiles }: { onFiles: (files: File[], rejected: str
     variant="button"
     onFiles={onFiles}
     accept={QUOTE_FILES}
-    title={`Upload a carrier quote, PDF or Excel (.xlsx), or drop it on this row. ${ QUOTE_HELP_TEXT }`}
+    title={`Upload a carrier quote (PDF, Word, Excel, or a screenshot/photo as PNG or JPEG), or drop it on this row. ${ QUOTE_HELP_TEXT }`}
     className="btn btn-ghost btn-sm hover:bg-secondary">
       Upload Quote
   </PdfDropZone>
