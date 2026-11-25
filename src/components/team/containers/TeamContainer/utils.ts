@@ -45,6 +45,11 @@ export const teamNavDescriptions: [Map<AppTypes.CommercialTools, TeamNavDescript
       to: "/commercial/coverage-comparison",
       outputs: ["docx", "pdf"],
     }],
+    ["Coverage Gap", {
+      description: "Reviews a commercial account's policies for gaps, conflicts and limits that don't fit the exposures, in an internal Word report.",
+      to: "/commercial/coverage-gap",
+      outputs: ["docx", "pdf"],
+    }],
   ]),
   new Map([
     ["Download Change Report", {

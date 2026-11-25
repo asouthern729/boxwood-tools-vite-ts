@@ -5,6 +5,7 @@ export type CommercialTools =
   | "Proposal Builder"
   | "Policy Check"
   | "CL Coverage Comparison"
+  | "Coverage Gap"
 
 export type PersonalTools =
   | "Download Change Report"
@@ -379,6 +380,51 @@ export type CoverageComparisonScope = ProposalScope
 export type CoverageComparisonChatMessage = RenewalSummaryChatMessage
 export type CoverageComparisonChatTurn = RenewalSummaryChatTurn
 
+// Coverage Gap (/coverage-gap/*): staff drop a commercial account's policy PDFs (one zone, every file
+// is a "policy") plus optional account notes, and a background job builds an internal Word gap analysis
+export type CoverageGapAttachment = {
+  id: string
+  filename: string
+  role: "policy"
+  status: "processing" | "done" | "error"
+  error?: string
+  profile?: Omit<PolicyCheckProfile, "suggested_role">
+}
+
+export type CoverageGapEntry = {
+  id: string
+  client_name: string | null
+  status: "running" | "failed" | "done"
+  error?: string
+  created_by: ProposalCreator
+  prepared_by?: string | null
+  generated_at: string
+  finished_at?: string
+  filename?: string
+  sizeBytes?: number
+  sources: { id: string, filename: string, role: "policy" }[]
+  has_notes: boolean
+  // Only returned to the person who ran it
+  notes?: string
+  policies?: number
+  counts?: { gap: number, confirm: number, high: number }
+}
+
+export type CoverageGapGroup = {
+  prepared_by: string | null
+  analyses: CoverageGapEntry[]
+}
+
+export type CoverageGapManifest = {
+  viewer_sub: string
+  groups: CoverageGapGroup[]
+}
+
+export type CoverageGapScope = ProposalScope
+
+export type CoverageGapChatMessage = RenewalSummaryChatMessage
+export type CoverageGapChatTurn = RenewalSummaryChatTurn
+
 export type JobRun = {
   started_at: string
   finished_at: string
@@ -405,6 +451,7 @@ export type DownloadTool =
   | "proposal-builder"
   | "policy-check"
   | "coverage-comparison"
+  | "coverage-gap"
   | "pl-renewal-summary"
   | "download-report"
 

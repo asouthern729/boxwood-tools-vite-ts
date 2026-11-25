@@ -11,6 +11,7 @@ import PersonalRenewalSummaryContainer from '@components/personal/containers/Ren
 import ProposalBuilderContainer from '@components/commercial/containers/ProposalBuilderContainer'
 import PolicyCheckContainer from '@components/commercial/containers/PolicyCheckContainer'
 import CoverageComparisonContainer from '@components/commercial/containers/CoverageComparisonContainer'
+import CoverageGapContainer from '@components/commercial/containers/CoverageGapContainer'
 
 // Keyed by "section/slug" since both teams have a renewal-summary route
 export const toolNames: Record<string, AppTypes.AllTools> = {
@@ -20,6 +21,7 @@ export const toolNames: Record<string, AppTypes.AllTools> = {
   "commercial/proposal-builder": "Proposal Builder",
   "commercial/policy-check": "Policy Check",
   "commercial/coverage-comparison": "CL Coverage Comparison",
+  "commercial/coverage-gap": "Coverage Gap",
   "personal/download-change-report": "Download Change Report",
   "personal/premium-change-tool": "Premium Change Tool",
   "personal/renewal-summary": "PL Renewal Summary",
@@ -41,6 +43,8 @@ export const handleToolContent = (toolName: AppTypes.AllTools) => {
       return PolicyCheckContainer
     case "CL Coverage Comparison":
       return CoverageComparisonContainer
+    case "Coverage Gap":
+      return CoverageGapContainer
     case "Download Change Report":
       return DownloadChangeReportContainer
     case "Premium Change Tool":

@@ -908,6 +908,129 @@ export const postCoverageComparisonChat = async (message: string, attachmentIds:
 }
 
 /**
+ * GET /coverage-gap/manifest?scope=mine
+ */
+export const getCoverageGapManifest = async (scope: AppTypes.CoverageGapScope): Promise<AppTypes.CoverageGapManifest> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-gap/manifest?scope=${ scope }`)
+
+  if(!res.ok) throw new Error(`Failed to load gap analyses: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * Upload a policy PDF (raw bytes, not multipart); the server reads it in the background
+ *
+ * POST /coverage-gap/attachments?name=bop.pdf
+ */
+export const uploadCoverageGapAttachment = async (file: File): Promise<AppTypes.CoverageGapAttachment> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-gap/attachments?name=${ encodeURIComponent(file.name) }`, {
+    method: "POST",
+    headers: { "Content-Type": file.type || "application/pdf" },
+    body: file,
+  })
+
+  if(res.status === 413) throw new Error("File is too large (24 MB max).")
+  if(!res.ok) throw await errorFrom(res, "Failed to upload file")
+
+  return await res.json()
+}
+
+/**
+ * GET /coverage-gap/attachments/:id
+ */
+export const getCoverageGapAttachment = async (id: string): Promise<AppTypes.CoverageGapAttachment> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-gap/attachments/${ encodeURIComponent(id) }`)
+
+  if(!res.ok) throw new Error(`Failed to load attachment: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * DELETE /coverage-gap/attachments/:id (409 once it's part of an analysis; the analysis owns it then)
+ */
+export const deleteCoverageGapAttachment = async (id: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-gap/attachments/${ encodeURIComponent(id) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404 && res.status !== 409) throw new Error(`Failed to remove attachment: HTTP ${ res.status }`)
+}
+
+/**
+ * Start a gap analysis in the background (a few minutes); needs at least one read policy
+ *
+ * POST /coverage-gap/analyses
+ */
+export const createCoverageGapAnalysis = async (attachmentIds: string[], notes: string): Promise<AppTypes.CoverageGapEntry> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-gap/analyses`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ attachment_ids: attachmentIds, notes: notes || undefined }),
+  })
+
+  if(!res.ok) throw await errorFrom(res, "Failed to start the gap analysis")
+
+  return await res.json()
+}
+
+/**
+ * DELETE /coverage-gap/analyses/:id
+ */
+export const deleteCoverageGapAnalysis = async (id: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-gap/analyses/${ encodeURIComponent(id) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404) throw await errorFrom(res, "Failed to delete gap analysis")
+}
+
+/**
+ * GET /coverage-gap/files/Acme_Corp_....docx
+ */
+export const getCoverageGapFileBlob = async (filename: string, preview = false): Promise<Blob> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-gap/files/${ encodeURIComponent(filename) }${ preview ? "?preview=1" : "" }`)
+
+  if(!res.ok) throw new Error(`Failed to load gap analysis file: HTTP ${ res.status }`)
+
+  return await res.blob()
+}
+
+export const downloadCoverageGapFile = async (filename: string): Promise<void> => {
+  triggerBlobDownload(await getCoverageGapFileBlob(filename), filename)
+}
+
+/**
+ * GET /coverage-gap/files/Acme_Corp_....docx/pdf
+ */
+export const downloadCoverageGapPdf = async (filename: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-gap/files/${ encodeURIComponent(filename) }/pdf`)
+
+  if(!res.ok) throw await errorFrom(res, "Failed to download gap analysis PDF")
+
+  triggerBlobDownload(await res.blob(), filename.replace(/\.docx$/i, ".pdf"))
+}
+
+/**
+ * Send one turn of the Coverage Gap chat with the staged file ids and the current account notes; it may
+ * start an analysis itself (coverage_gap_analysis tool)
+ *
+ * POST /coverage-gap/chat
+ */
+export const postCoverageGapChat = async (message: string, attachmentIds: string[], accountNotes: string, sessionId: string | undefined): Promise<AppTypes.CoverageGapChatTurn> => {
+  const res = await authorizedFetch(`${ API_BASE }/coverage-gap/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, attachment_ids: attachmentIds, account_notes: accountNotes || undefined, session_id: sessionId })
+  })
+
+  if(!res.ok) throw new Error(`Failed to send chat message: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
  * Status of scheduled cron jobs, in the order requested
  *
  * GET /jobs?names=cl-renewal-summaries,morning-download
