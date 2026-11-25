@@ -266,7 +266,7 @@ export const deleteRenewalSummaryFile = async (filename: string): Promise<void> 
 }
 
 /**
- * List quote PDFs attached to a CL Renewal Summary, oldest first
+ * List quotes (PDF or Excel) attached to a CL Renewal Summary, oldest first
  *
  * GET /cl-renewal-summary/files/Acme_Corp_....docx/quotes
  */
@@ -280,14 +280,15 @@ export const getRenewalSummaryQuotes = async (filename: string): Promise<AppType
 }
 
 /**
- * Upload a carrier quote PDF (raw bytes, not multipart); the server reads it in the background
+ * Upload a carrier quote, PDF or Excel .xlsx (raw bytes, not multipart); the server sniffs the
+ * bytes and reads it in the background
  *
  * POST /cl-renewal-summary/files/Acme_Corp_....docx/quotes?name=quote.pdf
  */
 export const uploadRenewalSummaryQuote = async (filename: string, file: File): Promise<AppTypes.RenewalSummaryQuote> => {
   const res = await authorizedFetch(`${ API_BASE }/cl-renewal-summary/files/${ encodeURIComponent(filename) }/quotes?name=${ encodeURIComponent(file.name) }`, {
     method: "POST",
-    headers: { "Content-Type": "application/pdf" },
+    headers: { "Content-Type": file.type || "application/octet-stream" },
     body: file,
   })
 
@@ -544,7 +545,7 @@ export const deleteProposalFile = async (filename: string): Promise<void> => {
 }
 
 /**
- * Stage a quote PDF or AMS360 proposal (raw bytes, not multipart) for the next chat turn; the
+ * Stage a quote (PDF or Excel .xlsx) or AMS360 proposal (raw bytes, not multipart) for the next chat turn; the
  * server reads it in the background
  *
  * POST /proposal-builder/attachments?name=quote.pdf

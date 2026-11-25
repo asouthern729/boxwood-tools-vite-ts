@@ -3,7 +3,7 @@ import * as AppActions from "@context/App/AppActions"
 import pdfIcon from "@assets/icons/pdf/pdf.svg"
 import { useHandleChatScrolling, useDocumentParam, useMissingDocumentNotice, documentId } from "@utils/hooks"
 import { useDownloadRenewalSummaryFile, useDownloadRenewalSummaryPdf, useDeleteRenewalSummaryFile, useRenewalSummaryPreviewBlob, useDocumentEntry, useHandleChatPanel, useHandleCsrGroupList, useHandleCsrSection, useHandleConfirmButton, useRenewalSummaryQuotes, useUploadRenewalSummaryQuotes, useHandleQuoteRemoval } from "./hooks"
-import { AVAILABLE_MCP_TOOLS, QUOTE_HELP_TEXT, formatTimestamp, formatQuoteLine } from "./utils"
+import { AVAILABLE_MCP_TOOLS, QUOTE_FILES, QUOTE_HELP_TEXT, formatTimestamp, formatQuoteLine } from "./utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
@@ -370,7 +370,7 @@ const SummaryRow = ({ summary, rowRefs, highlighted, onNotify }: SummaryRowProps
         else rowRefs.delete(summary.filename)
       }}
       className={`transition-colors duration-1000 ${ highlighted ? "bg-base-200" : "" }`}>
-      <PdfDropZone variant="area" onFiles={upload} className="flex flex-col gap-2 px-4 py-3">
+      <PdfDropZone variant="area" onFiles={upload} accept={QUOTE_FILES} className="flex flex-col gap-2 px-4 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <SummaryRowDetails
             summary={summary}
@@ -457,7 +457,8 @@ const UploadQuoteButton = ({ onFiles }: { onFiles: (files: File[], rejected: str
   <PdfDropZone
     variant="button"
     onFiles={onFiles}
-    title={`Upload a carrier quote PDF, or drop it on this row. ${ QUOTE_HELP_TEXT }`}
+    accept={QUOTE_FILES}
+    title={`Upload a carrier quote, PDF or Excel (.xlsx), or drop it on this row. ${ QUOTE_HELP_TEXT }`}
     className="btn btn-ghost btn-sm hover:bg-secondary">
       Upload Quote
   </PdfDropZone>

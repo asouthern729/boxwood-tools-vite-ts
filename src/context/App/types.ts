@@ -218,7 +218,7 @@ export type PersonalPremiumChangeManifest = {
 export type PersonalPremiumChangeChatMessage = RenewalSummaryChatMessage
 export type PersonalPremiumChangeChatTurn = RenewalSummaryChatTurn
 
-export type ProposalSourceKind = "quote_pdf" | "ams_docx" | "ams_pdf"
+export type ProposalSourceKind = "quote_pdf" | "quote_xlsx" | "ams_docx" | "ams_pdf"
 
 export type ProposalAttachment = {
   id: string

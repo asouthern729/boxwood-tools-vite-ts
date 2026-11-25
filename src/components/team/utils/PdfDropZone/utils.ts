@@ -1,10 +1,12 @@
 export const MAX_PDF_BYTES = 24 * 1024 * 1024
 
-export type DropFileKind = "pdf" | "docx"
+export type DropFileKind = "pdf" | "docx" | "xlsx"
 
 const FILE_KINDS: Record<DropFileKind, { label: string, mime: string, extension: RegExp }> = {
   pdf: { label: "PDF", mime: "application/pdf", extension: /\.pdf$/i },
   docx: { label: "Word document", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", extension: /\.docx$/i },
+  // .xlsx only; the server explains how to resave an old .xls if someone forces one through
+  xlsx: { label: "Excel workbook (.xlsx)", mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", extension: /\.xlsx$/i },
 }
 
 const matchesKind = (file: File, kind: DropFileKind) => file.type === FILE_KINDS[kind].mime || FILE_KINDS[kind].extension.test(file.name)

@@ -8,7 +8,7 @@ export const AVAILABLE_MCP_TOOLS = [
   { name: "Proposal Builder", description: "Build a branded proposal Word document from the carrier quotes and AMS360 proposals dropped into this chat." },
 ]
 
-export const ACCEPTED_FILES: DropFileKind[] = ["pdf", "docx"]
+export const ACCEPTED_FILES: DropFileKind[] = ["pdf", "xlsx", "docx"]
 
 export const PROPOSAL_ORDER_OPTIONS: OrderingOption[] = [
   { value: "newest", label: "Newest First" },
@@ -40,6 +40,7 @@ export const filterProposals = (groups: AppTypes.ProposalGroup[], query: string)
 
 export const SOURCE_LABELS: Record<AppTypes.ProposalSourceKind, string> = {
   quote_pdf: "Quote",
+  quote_xlsx: "Quote",
   ams_docx: "AMS360",
   ams_pdf: "AMS360",
 }
