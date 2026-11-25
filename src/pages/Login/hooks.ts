@@ -18,7 +18,9 @@ export const useCompleteLogin = () => {
     const code = searchParams.get("code")
     const state = searchParams.get("state")
 
-    if(!code || !state) {
+    // error=login_required etc. means a silent sign-in found no Auth0 session; go back and let
+    // the page show its Login button
+    if(!code || !state || searchParams.has("error")) {
       navigate(consumeReturnTo(), { replace: true })
       return
     }

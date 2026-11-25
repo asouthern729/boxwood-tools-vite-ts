@@ -86,6 +86,8 @@ export const hasStoredToken = (): boolean => sessionStorage.getItem(TOKEN_KEY) !
  */
 export const logout = (): void => {
   sessionStorage.clear()
+  // Auth0's session is about to end, so a silent sign-in on the landing page could only fail
+  sessionStorage.setItem(SILENT_TRIED_KEY, "1")
 
   const url = new URL(`${ ORIGIN }/logout`)
   url.searchParams.set("return_to", POST_LOGOUT_URI)
@@ -101,6 +103,28 @@ export const login = (): void => {
   void startLogin()
 }
 
+/**
+ * Whether a silent sign-in is worth trying: no usable token, and not already tried this tab
+ *
+ * Tried once per tab so a failed attempt (no Auth0 session) doesn't redirect on every visit.
+ */
+export const canTrySilentLogin = (): boolean =>
+  getStoredToken() === null && sessionStorage.getItem(SILENT_TRIED_KEY) === null
+
+/**
+ * Sign in from an existing Auth0 session without any login UI (prompt=none)
+ *
+ * The browser round-trips through Auth0 either way: back to /login with a code when there's a
+ * session, or with error=login_required when there isn't, after which the Login button shows.
+ * Marks the attempt synchronously so a second call (e.g. StrictMode's double effect) is a no-op.
+ */
+export const silentLogin = (): void => {
+  if(!canTrySilentLogin()) return
+
+  sessionStorage.setItem(SILENT_TRIED_KEY, "1")
+  void startLogin({ silent: true })
+}
+
 const ORIGIN = window.location.origin
 const APP_BASE = CONFIG_APP_BASE.replace(/\/$/, "")
 const REDIRECT_URI = `${ ORIGIN }${ APP_BASE }/login`
@@ -111,6 +135,7 @@ const CLIENT_KEY = "boxwood_tools_client_id"
 const VERIFIER_KEY = "boxwood_tools_code_verifier"
 const STATE_KEY = "boxwood_tools_oauth_state"
 const RETURN_TO_KEY = "boxwood_tools_return_to"
+const SILENT_TRIED_KEY = "boxwood_tools_silent_login_tried"
 
 const base64Url = (bytes: Uint8Array) => {
   let binary = ""
@@ -148,7 +173,7 @@ const getStoredToken = (): string | null => {
  *
  * Never resolves — the browser navigates away before any caller could act on a return value.
  */
-const startLogin = async (): Promise<never> => {
+const startLogin = async ({ silent = false } = {}): Promise<never> => {
   // Router's basename re-prepends APP_BASE on navigate, so strip it here to avoid /tools/tools/…
   const path = window.location.pathname.startsWith(APP_BASE)
     ? window.location.pathname.slice(APP_BASE.length) || "/"
@@ -178,6 +203,7 @@ const startLogin = async (): Promise<never> => {
   url.searchParams.set("code_challenge", challenge)
   url.searchParams.set("code_challenge_method", "S256")
   url.searchParams.set("state", state)
+  if(silent) url.searchParams.set("prompt", "none")
 
   window.location.href = url.toString()
 
