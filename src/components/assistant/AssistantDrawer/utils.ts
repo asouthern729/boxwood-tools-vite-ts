@@ -14,6 +14,10 @@ export const MAX_MESSAGE_CHARS = 4000
 export const MAX_SENT_MESSAGES = 20
 
 export const CHAT_STORAGE_KEY = "boxwood_assistant_chat"
+export const ATTACHMENTS_STORAGE_KEY = "boxwood_assistant_attachments"
+
+// Server limits (POST /assistant/attachments): files per chat; 150 pages in total is checked server side
+export const MAX_ATTACHMENTS = 3
 
 // The pages the assistant may link to as boxwood://tool/<path>; anything else renders as plain text
 export const TOOL_LINK_PREFIX = "boxwood://tool/"

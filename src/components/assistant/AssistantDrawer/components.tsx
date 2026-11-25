@@ -1,12 +1,17 @@
 import claudeLogo from "@assets/claude.png"
 import { motion } from "framer-motion"
-import { ASSISTANT_NAME, ASSISTANT_TAGLINE, MAX_MESSAGE_CHARS, SUGGESTED_QUESTIONS } from "./utils"
+import { ASSISTANT_NAME, ASSISTANT_TAGLINE, MAX_ATTACHMENTS, MAX_MESSAGE_CHARS, SUGGESTED_QUESTIONS } from "./utils"
 import { AssistantMessage, LogoDisc, TypingIndicator, UserMessage } from "./messages"
-import { useScrollToBottom, type AssistantChat } from "./chatHooks"
+import { useScrollToBottom, type AssistantChat, type AssistantFile } from "./chatHooks"
 import AssistantMarkdown from "./markdown"
+import { UPLOAD_FILES } from "@components/team/utils/PdfDropZone/utils"
 
 // Types
 import type * as AppTypes from "@context/App/types"
+
+// Components
+import PdfDropZone from "@components/team/utils/PdfDropZone"
+import UploadControls from "@components/team/utils/UploadControls"
 
 const SLIDE_TRANSITION = { type: "spring", stiffness: 400, damping: 40 } as const
 
@@ -41,19 +46,22 @@ export const Panel = ({ chat, onClose }: { chat: AssistantChat, onClose: () => v
       className="fixed inset-y-0 right-0 z-40 flex w-full flex-col border-l border-base-300 bg-base-100 shadow-2xl sm:w-[26rem]">
         <PanelHeader
           onClose={onClose}
-          onNewChat={chat.messages.length ? chat.newChat : undefined} />
-        <div ref={scrollRef} className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-          {chat.messages.length ?
-            chat.messages.map((message, i) => <ChatTurn key={i} message={message} />) :
-            <WelcomeMessage onAsk={chat.send} disabled={chat.isPending} />}
-          <StreamingReply text={chat.streaming} />
-          <ChatError message={chat.error} />
-        </div>
-        <PanelFooter
-          draft={chat.draft}
-          setDraft={chat.setDraft}
-          isPending={chat.isPending}
-          onSend={() => chat.send()} />
+          onNewChat={chat.messages.length || chat.attachments.files.length ? chat.newChat : undefined} />
+        {/* Files can be dropped anywhere on the panel */}
+        <PdfDropZone
+          variant="area"
+          onFiles={chat.addFiles}
+          accept={UPLOAD_FILES}
+          className="flex min-h-0 flex-1 flex-col">
+            <div ref={scrollRef} className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+              {chat.messages.length ?
+                chat.messages.map((message, i) => <ChatTurn key={i} message={message} />) :
+                <WelcomeMessage onAsk={chat.send} disabled={chat.isPending} />}
+              <StreamingReply text={chat.streaming} />
+              <ChatError message={chat.error} />
+            </div>
+            <PanelFooter chat={chat} />
+        </PdfDropZone>
     </motion.aside>
   )
 }
@@ -133,41 +141,106 @@ const WelcomeMessage = ({ onAsk, disabled }: { onAsk: (question: string) => void
   </AssistantMessage>
 )
 
-type PanelFooterProps = {
-  draft: string
-  setDraft: (value: string) => void
-  isPending: boolean
-  onSend: () => void
+const PanelFooter = ({ chat }: { chat: AssistantChat }) => {
+  const { draft, setDraft, isPending, attachments } = chat
+  const hasFiles = attachments.ids.length > 0
+  const placeholder = hasFiles ? "Ask about the attached files…" : "Ask about the Boxwood tools or insurance, or drop in files to ask about…"
+
+  return (
+    <footer className="flex flex-col gap-2 border-t border-base-300 p-3">
+      <FileChips
+        files={attachments.files}
+        onRemove={attachments.remove} />
+      <div className="flex items-end gap-2">
+        {/* Browse and the Accepts hint sit inside the box, like the other tools' upload inputs */}
+        <div className="relative flex flex-1 [&>textarea]:pb-11">
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if(e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                chat.send()
+              }
+            }}
+            rows={3}
+            maxLength={MAX_MESSAGE_CHARS}
+            aria-label={`Message ${ ASSISTANT_NAME }`}
+            placeholder={placeholder}
+            className="textarea textarea-sm w-full flex-1 resize-none" />
+          <UploadControls
+            onFiles={chat.addFiles}
+            accept={UPLOAD_FILES}
+            disabled={!attachments.canAttach}
+            title={attachments.canAttach ? `Attach files to ask about (up to ${ MAX_ATTACHMENTS }), or drop them on the panel` : `Up to ${ MAX_ATTACHMENTS } files per chat`}
+            className="absolute right-1.5 bottom-1.5" />
+        </div>
+        <button
+          type="button"
+          onClick={() => chat.send()}
+          disabled={isPending || attachments.uploading || !draft.trim()}
+          title={attachments.uploading ? "Waiting for the files to finish attaching" : undefined}
+          className="btn btn-primary btn-sm">
+            {isPending ? <span className="loading loading-spinner loading-xs" /> : "Send"}
+        </button>
+      </div>
+      <PoweredByClaude />
+    </footer>
+  )
 }
 
-const PanelFooter = ({ draft, setDraft, isPending, onSend }: PanelFooterProps) => (
-  <footer className="flex flex-col gap-2 border-t border-base-300 p-3">
-    <div className="flex items-end gap-2">
-      <textarea
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={(e) => {
-          if(e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault()
-            onSend()
-          }
-        }}
-        rows={2}
-        maxLength={MAX_MESSAGE_CHARS}
-        aria-label={`Message ${ ASSISTANT_NAME }`}
-        placeholder="Ask about the Boxwood tools or insurance…"
-        className="textarea textarea-sm flex-1 resize-none" />
+const FileChips = ({ files, onRemove }: { files: AssistantFile[], onRemove: (key: string) => void }) => {
+  if(files.length === 0) return null
+
+  return (
+    <ul className="flex flex-wrap gap-1.5">
+      {files.map((file) => (
+        <FileChip
+          key={file.key}
+          file={file}
+          onRemove={onRemove} />
+      ))}
+    </ul>
+  )
+}
+
+const FileChip = ({ file, onRemove }: { file: AssistantFile, onRemove: (key: string) => void }) => {
+  const isError = file.status === "error"
+  const chipStyle = isError ?
+    "badge-soft badge-error h-auto py-0.5 whitespace-normal" :
+    "badge-ghost text-base-content/90"
+
+  return (
+    <li title={file.error ?? file.filename} className={`badge gap-1 rounded-sm ${ chipStyle }`}>
+      <FileChipStatus status={file.status} />
+      <span className={isError ? "" : "max-w-40 truncate"}>{isError ? file.error : file.filename}</span>
+      <FilePages pages={file.status === "done" ? file.pages : undefined} />
       <button
         type="button"
-        onClick={onSend}
-        disabled={isPending || !draft.trim()}
-        className="btn btn-primary btn-sm">
-          {isPending ? <span className="loading loading-spinner loading-xs" /> : "Send"}
+        disabled={file.status === "uploading"}
+        aria-label={`Remove ${ file.filename }`}
+        onClick={() => onRemove(file.key)}
+        className="cursor-pointer opacity-60 hover:opacity-100 disabled:hidden">
+          ✕
       </button>
-    </div>
-    <PoweredByClaude />
-  </footer>
-)
+    </li>
+  )
+}
+
+const FileChipStatus = ({ status }: { status: AssistantFile["status"] }) => {
+  if(status === "error") return <span>!</span>
+  if(status === "uploading") return <span className="loading loading-spinner loading-xs text-base-content/90" />
+
+  return null
+}
+
+const FilePages = ({ pages }: { pages?: number }) => {
+  if(pages == null) return null
+
+  return (
+    <span className="text-base-content/50">· {pages} {pages === 1 ? "page" : "pages"}</span>
+  )
+}
 
 // Claude's mark and name in its brand orange (#d97757), with the usual AI disclaimer
 const PoweredByClaude = () => (

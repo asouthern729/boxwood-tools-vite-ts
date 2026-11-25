@@ -460,3 +460,5 @@ export type DownloadCounts = Partial<Record<DownloadTool | "chat-link", number>>
 // Boxwood Assistant (POST /assistant/chat). Stateless: each turn sends the conversation so far.
 export type AssistantMessage = { role: "user" | "assistant", content: string }
 export type AssistantContext = { path: string, tool: string | null }
+// A file attached to the Assistant chat (POST /assistant/attachments); expires 24 hours after upload
+export type AssistantAttachment = { id: string, filename: string, pages: number, uploaded_at: string }

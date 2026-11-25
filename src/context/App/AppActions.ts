@@ -1060,28 +1060,86 @@ export const getDownloadStats = async (): Promise<AppTypes.DownloadCounts> => {
 }
 
 /**
+ * Attach a file to the Boxwood Assistant chat (raw bytes, not multipart). Synchronous: the server
+ * converts it before answering, a few seconds for Word or .xls.
+ *
+ * POST /assistant/attachments?name=quote.pdf
+ */
+export const uploadAssistantAttachment = async (file: File): Promise<AppTypes.AssistantAttachment> => {
+  const res = await authorizedFetch(`${ API_BASE }/assistant/attachments?name=${ encodeURIComponent(file.name) }`, {
+    method: "POST",
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  })
+
+  if(res.status === 413) throw new Error("File is too large (24 MB max).")
+  if(!res.ok) throw await errorFrom(res, "Failed to attach file")
+
+  return await res.json()
+}
+
+/**
+ * GET /assistant/attachments/:id, or null once it has expired or been removed (404)
+ */
+export const getAssistantAttachment = async (id: string): Promise<AppTypes.AssistantAttachment | null> => {
+  const res = await authorizedFetch(`${ API_BASE }/assistant/attachments/${ encodeURIComponent(id) }`)
+
+  if(res.status === 404) return null
+  if(!res.ok) throw new Error(`Failed to load attachment: HTTP ${ res.status }`)
+
+  return await res.json()
+}
+
+/**
+ * DELETE /assistant/attachments/:id (404 means it's already gone)
+ */
+export const deleteAssistantAttachment = async (id: string): Promise<void> => {
+  const res = await authorizedFetch(`${ API_BASE }/assistant/attachments/${ encodeURIComponent(id) }`, {
+    method: "DELETE",
+  })
+
+  if(!res.ok && res.status !== 404) throw new Error(`Failed to remove attachment: HTTP ${ res.status }`)
+}
+
+/**
+ * Thrown when files on the chat have expired or been removed, so the chat can drop their chips
+ */
+export class AssistantAttachmentsMissingError extends Error {
+  readonly missing: string[]
+
+  constructor(message: string, missing: string[]) {
+    super(message)
+    this.missing = missing
+  }
+}
+
+/**
  * Send the Boxwood Assistant conversation and stream its reply. onDelta gets each chunk of text as it
  * arrives; resolves when the reply is done. Errors carry a message written for staff: validation,
  * rate-limit and auth errors come back as JSON before the stream, mid-stream ones as an error event.
  *
  * POST /assistant/chat (text/event-stream: delta {text} … done {} | error {message})
+ * 404 attachment_not_found → AssistantAttachmentsMissingError with the ids that are gone
  */
 export const streamAssistantChat = async (
   messages: AppTypes.AssistantMessage[],
   context: AppTypes.AssistantContext,
+  attachmentIds: string[],
   onDelta: (text: string) => void,
   signal?: AbortSignal,
 ): Promise<void> => {
+  // Every turn sends all the chat's files; the server puts them at the start of the conversation
   const res = await authorizedFetch(`${ API_BASE }/assistant/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
-    body: JSON.stringify({ messages, context }),
+    body: JSON.stringify({ messages, context, attachment_ids: attachmentIds.length ? attachmentIds : undefined }),
     signal,
   })
 
   if(!res.ok || !res.body) {
     const err = await res.json().catch(() => null)
-    throw new Error(err?.error ?? (res.status === 429 ?
+    if(err?.error === "attachment_not_found") throw new AssistantAttachmentsMissingError(err.error_description, err.missing ?? [])
+    throw new Error(err?.error_description ?? err?.error ?? (res.status === 429 ?
       "You've sent a lot of messages in a short time. Please wait a few minutes and try again." :
       `The assistant isn't available right now (HTTP ${ res.status }).`))
   }
