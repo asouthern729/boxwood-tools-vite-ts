@@ -610,7 +610,7 @@ const SourceList = ({ sources }: { sources: AppTypes.PolicyCheckEntry["sources"]
 }
 
 const PreviewButton = ({ onClick }: { onClick: () => void }) => (
-  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary">
+  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary hover:text-white">
     Preview
   </button>
 )
@@ -673,7 +673,7 @@ const DownloadButton = ({ label, title, isPending, onClick }: DownloadButtonProp
       disabled={isPending}
       onClick={onClick}
       title={title}
-      className="btn btn-neutral btn-sm hover:bg-secondary">
+      className="btn btn-neutral btn-sm hover:bg-secondary hover:text-white">
         {btnContent}
     </button>
   )

@@ -66,7 +66,7 @@ const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
       type="button"
       disabled={isPending}
       onClick={onClick}
-      className="btn btn-neutral btn-sm ml-auto hover:bg-secondary">
+      className="btn btn-neutral btn-sm ml-auto hover:bg-secondary hover:text-white">
         {btnContent}
     </button>
   )

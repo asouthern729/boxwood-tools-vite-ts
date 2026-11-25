@@ -475,7 +475,7 @@ const SummaryRowDetails = ({ summary, error }: { summary: AppTypes.RenewalPremiu
 )
 
 const PreviewButton = ({ onClick }: { onClick: () => void }) => (
-  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary">
+  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary hover:text-white">
     Preview
   </button>
 )
@@ -543,7 +543,7 @@ const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
       type="button"
       disabled={isPending}
       onClick={onClick}
-      className="btn btn-neutral btn-sm hover:bg-secondary">
+      className="btn btn-neutral btn-sm hover:bg-secondary hover:text-white">
         {btnContent}
     </button>
   )

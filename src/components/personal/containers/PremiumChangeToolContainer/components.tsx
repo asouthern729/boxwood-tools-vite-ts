@@ -372,7 +372,7 @@ const SummaryRowDetails = ({ summary, error }: { summary: AppTypes.PersonalPremi
 )
 
 const PreviewButton = ({ onClick }: { onClick: () => void }) => (
-  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary">
+  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary hover:text-white">
     Preview
   </button>
 )
@@ -436,7 +436,7 @@ const CopyForAmsButton = ({ note }: { note: string }) => {
       type="button"
       onClick={copy}
       title="Copy the renewal premium change, column-aligned, for pasting into AMS360"
-      className="btn btn-ghost btn-sm hover:bg-secondary">
+      className="btn btn-ghost btn-sm hover:bg-secondary hover:text-white">
         {btnContent}
     </button>
   )
@@ -479,7 +479,7 @@ const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
       type="button"
       disabled={isPending}
       onClick={onClick}
-      className="btn btn-neutral btn-sm hover:bg-secondary">
+      className="btn btn-neutral btn-sm hover:bg-secondary hover:text-white">
         {btnContent}
     </button>
   )

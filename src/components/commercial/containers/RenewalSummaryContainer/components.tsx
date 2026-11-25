@@ -459,13 +459,13 @@ const UploadQuoteButton = ({ onFiles }: { onFiles: (files: File[], rejected: str
     onFiles={onFiles}
     accept={QUOTE_FILES}
     title={`Upload a carrier quote (PDF, Word, Excel, or a screenshot/photo as PNG or JPEG), or drop it on this row. ${ QUOTE_HELP_TEXT }`}
-    className="btn btn-ghost btn-sm hover:bg-secondary">
+    className="btn btn-ghost btn-sm hover:bg-secondary hover:text-white">
       Upload Quote
   </PdfDropZone>
 )
 
 const PreviewButton = ({ onClick }: { onClick: () => void }) => (
-  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary">
+  <button type="button" onClick={onClick} className="btn btn-ghost btn-sm hover:bg-secondary hover:text-white">
     Preview
   </button>
 )
@@ -688,7 +688,7 @@ const DownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
       disabled={isPending}
       onClick={onClick}
       title="Download as Word (.docx)"
-      className="btn btn-neutral btn-sm hover:bg-secondary">
+      className="btn btn-neutral btn-sm hover:bg-secondary hover:text-white">
         {btnContent}
     </button>
   )
@@ -705,7 +705,7 @@ const PdfDownloadButton = ({ isPending, onClick }: DownloadButtonProps) => {
       disabled={isPending}
       onClick={onClick}
       title="Download as PDF"
-      className="btn btn-neutral btn-sm hover:bg-secondary">
+      className="btn btn-neutral btn-sm hover:bg-secondary hover:text-white">
         {btnContent}
     </button>
   )
