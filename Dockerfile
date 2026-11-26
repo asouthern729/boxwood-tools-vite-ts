@@ -22,6 +22,13 @@ server {
     server_name _;
     root /usr/share/nginx/html;
 
+    # Liveness probe for the container HEALTHCHECK; outside the base path, so the host nginx never exposes it.
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
     location ${APP_BASE}assets/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
@@ -37,3 +44,6 @@ EOF
 
 COPY --from=build /app/dist /usr/share/nginx/html${APP_BASE}
 EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD wget -qO /dev/null http://127.0.0.1:8080/healthz || exit 1

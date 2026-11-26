@@ -1,6 +1,7 @@
 services:
   boxwood-tools:
     image: ghcr.io/asouthern729/boxwood-tools-vite-ts:1.1.0
+    container_name: boxwood-tools
     restart: unless-stopped
     ports:
       - "127.0.0.1:6000:8080"
@@ -13,12 +14,13 @@ services:
       - no-new-privileges:true
     mem_limit: 64m
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/tools/"]
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8080/healthz"]
       interval: 30s
       timeout: 3s
       retries: 3
   boxwood-mcp:
     image: ghcr.io/asouthern729/boxwood-mcp-ts:1.1.7
+    container_name: boxwood-mcp
     restart: unless-stopped
     network_mode: host
     environment:
@@ -59,10 +61,13 @@ services:
     security_opt:
       - no-new-privileges:true
     mem_limit: 512m
-  jobs:
+  boxwood-jobs:
     image: ghcr.io/asouthern729/boxwood-mcp-ts:1.1.7
+    container_name: boxwood-jobs
     restart: unless-stopped
     command: ["supercronic", "/app/cron/crontab"]
+    healthcheck:
+      disable: true
     network_mode: host
     environment:
       HOME: /tmp
